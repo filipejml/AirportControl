@@ -12,7 +12,7 @@ class AuthController extends Controller
     // Tela de login
     public function showLogin()
     {
-        return view('login');
+        return view('auth.login');
     }
 
     // Login
@@ -41,7 +41,7 @@ class AuthController extends Controller
     // Tela de cadastro
     public function showRegister()
     {
-        return view('register');
+        return view('auth.register');
     }
 
     // Cadastro (somente usuário comum)
@@ -72,7 +72,7 @@ class AuthController extends Controller
             return redirect()->route('login');
         }
 
-        return view('home');
+        return view('dashboard.home');
     }
 
     // Logout

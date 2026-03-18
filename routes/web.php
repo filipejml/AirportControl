@@ -6,23 +6,42 @@ use App\Http\Controllers\AeronaveController;
 use App\Http\Controllers\CompanhiaAereaController;
 use App\Http\Controllers\AeroportoController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
+/*
+|--------------------------------------------------------------------------
+| ROTAS PÚBLICAS
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
-Route::get('/home', [AuthController::class, 'home'])->name('home');
+/*
+|--------------------------------------------------------------------------
+| ROTAS AUTENTICADAS
+|--------------------------------------------------------------------------
+*/
 
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::middleware('auth')->group(function () {
 
-Route::resource('aeronaves', AeronaveController::class);
-Route::resource('companhias', CompanhiaAereaController::class);
-Route::resource('aeroportos', AeroportoController::class);
+    Route::get('/home', [AuthController::class, 'home'])->name('home');
+
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROTAS ADMIN
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware('admin')->group(function () {
+
+        Route::resource('aeronaves', AeronaveController::class);
+        Route::resource('companhias', CompanhiaAereaController::class);
+        Route::resource('aeroportos', AeroportoController::class);
+
+    });
+
+});
