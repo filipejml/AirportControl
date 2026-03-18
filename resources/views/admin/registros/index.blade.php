@@ -27,6 +27,22 @@
         </div>
     </div>
 
+    <!-- Fabricantes -->
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 h-100">
+            <h5>🏭 Fabricantes</h5>
+            <p class="text-muted">Gerenciar fabricantes de aeronaves</p>
+
+            <a href="{{ route('fabricantes.index') }}" class="btn btn-outline-primary btn-sm mb-2">
+                Ver lista
+            </a>
+
+            <a href="{{ route('fabricantes.create') }}" class="btn btn-primary btn-sm">
+                + Novo Fabricante
+            </a>
+        </div>
+    </div>
+
     <!-- Companhias -->
     <div class="col-md-4">
         <div class="card shadow-sm p-3 h-100">

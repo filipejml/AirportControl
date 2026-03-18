@@ -6,6 +6,7 @@ use App\Http\Controllers\AeronaveController;
 use App\Http\Controllers\CompanhiaAereaController;
 use App\Http\Controllers\AeroportoController;
 use App\Http\Controllers\RelatorioController;
+use App\Http\Controllers\FabricanteController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,9 +15,7 @@ use App\Http\Controllers\RelatorioController;
 */
 
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
-
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
@@ -27,12 +26,8 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 */
 
 Route::middleware('auth')->group(function () {
-
     Route::get('/home', [AuthController::class, 'home'])->name('home');
-
-    Route::get('/relatorios', [RelatorioController::class, 'index'])
-        ->name('relatorios');
-
+    Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     /*
@@ -41,7 +36,6 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware('admin')->group(function () {
-
         Route::get('/registros', function () {
             return view('admin.registros.index');
         })->name('registros');
@@ -49,10 +43,17 @@ Route::middleware('auth')->group(function () {
         Route::resource('relatorios.admin', RelatorioController::class)
             ->except(['index', 'show']);
 
-        Route::resource('aeronaves', AeronaveController::class);
-        Route::resource('companhias', CompanhiaAereaController::class);
-        Route::resource('aeroportos', AeroportoController::class);
+        // REMOVA esta linha duplicada:
+        // Route::post('/fabricantes', [FabricanteController::class, 'store'])->name('fabricantes.store');
 
+        // Use apenas os resources com os parâmetros corretos
+        Route::resource('fabricantes', FabricanteController::class);
+        Route::resource('aeronaves', AeronaveController::class, [
+            'parameters' => [
+                'aeronaves' => 'aeronave' // Força o nome correto
+            ]
+        ])->except(['show']);
+        Route::resource('companhias', CompanhiaAereaController::class)->except(['show']);
+        Route::resource('aeroportos', AeroportoController::class)->except(['show']);
     });
-
 });
