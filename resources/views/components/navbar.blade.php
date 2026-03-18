@@ -3,7 +3,7 @@
 
         <!-- Logo / Nome -->
         <a class="navbar-brand fw-bold" href="{{ route('home') }}">
-            📊 Monitoramento UESPI
+            Airport Manager
         </a>
 
         <!-- Botão mobile -->
@@ -40,7 +40,9 @@
                 <!-- SOMENTE ADMIN -->
                 @if(auth()->user()->tipo == 0)
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Registros</a>
+                        <a class="nav-link" href="{{ route('registros') }}">
+                            Registros
+                        </a>
                     </li>
                 @endif
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - Monitoramento UESPI</title>
+    <title>Home - Airport Manager</title>
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -80,6 +80,7 @@
             </div>
 
             <!-- SOMENTE ADMIN -->
+
             @if(auth()->user()->tipo == 0)
             <div class="col-md-4">
                 <div class="card card-dashboard shadow-sm p-3 border-danger">
@@ -87,7 +88,9 @@
                         <i class="bi bi-shield-lock"></i> Registros
                     </h5>
                     <p class="text-muted">Logs e atividades do sistema</p>
-                    <a href="#" class="btn btn-danger btn-sm">Acessar</a>
+                    <a href="{{ route('registros') }}" class="btn btn-danger btn-sm">
+                        Acessar
+                    </a>
                 </div>
             </div>
             @endif

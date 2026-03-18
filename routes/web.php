@@ -38,6 +38,10 @@ Route::middleware('auth')->group(function () {
     */
     Route::middleware('admin')->group(function () {
 
+        Route::get('/registros', function () {
+            return view('admin.registros.index');
+        })->name('registros');
+
         Route::resource('aeronaves', AeronaveController::class);
         Route::resource('companhias', CompanhiaAereaController::class);
         Route::resource('aeroportos', AeroportoController::class);
