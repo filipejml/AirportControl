@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('aeronaves', function (Blueprint $table) {
             $table->id();
+            $table->string('modelo');
+            $table->integer('capacidade');
             $table->timestamps();
         });
     }
