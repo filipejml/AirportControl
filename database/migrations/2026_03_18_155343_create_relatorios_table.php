@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('relatorios', function (Blueprint $table) {
             $table->id();
+            $table->string('nome');
+            $table->text('descricao')->nullable();
+            $table->boolean('visivel_usuario')->default(false);
             $table->timestamps();
         });
     }

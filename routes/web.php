@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AeronaveController;
 use App\Http\Controllers\CompanhiaAereaController;
 use App\Http\Controllers\AeroportoController;
+use App\Http\Controllers\RelatorioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,6 +30,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/home', [AuthController::class, 'home'])->name('home');
 
+    Route::get('/relatorios', [RelatorioController::class, 'index'])
+        ->name('relatorios');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     /*
@@ -41,6 +45,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/registros', function () {
             return view('admin.registros.index');
         })->name('registros');
+
+        Route::resource('relatorios.admin', RelatorioController::class)
+            ->except(['index', 'show']);
 
         Route::resource('aeronaves', AeronaveController::class);
         Route::resource('companhias', CompanhiaAereaController::class);

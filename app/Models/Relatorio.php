@@ -6,5 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Relatorio extends Model
 {
-    //
+    protected $fillable = [
+        'nome',
+        'descricao',
+        'visivel_usuario'
+    ];
 }
