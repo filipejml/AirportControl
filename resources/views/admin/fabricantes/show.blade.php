@@ -72,7 +72,7 @@
                                 <th>Porte</th>
                                 <th>Companhias que operam</th>
                                 <th>Data de Cadastro</th>
-                                <th>Ações</th>
+                                <th width="200">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -97,12 +97,24 @@
                                     </td>
                                     <td>{{ $aeronave->created_at?->format('d/m/Y H:i') ?? 'Data não disponível' }}</td>
                                     <td>
-                                        <div class="btn-group btn-group-sm">
+                                        <div class="d-flex gap-2">
                                             <a href="{{ route('aeronaves.edit', $aeronave) }}" 
-                                               class="btn btn-outline-primary"
+                                               class="btn btn-sm btn-primary"
                                                title="Editar Aeronave">
-                                                <i class="bi bi-pencil"></i>
+                                                <i class="bi bi-pencil"></i> Editar
                                             </a>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-danger"
+                                                    title="Excluir Aeronave"
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#deleteAeronaveModal{{ $aeronave->id }}">
+                                                <i class="bi bi-trash"></i> Excluir
+                                            </button>
+                                        </div>
+
+                                        <!-- Modal de confirmação de exclusão -->
+                                        <div class="modal fade" id="deleteAeronaveModal{{ $aeronave->id }}" tabindex="-1">
+                                            <!-- ... conteúdo do modal ... -->
                                         </div>
                                     </td>
                                 </tr>

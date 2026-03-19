@@ -14,10 +14,6 @@
             <ul class="navbar-nav me-auto">
 
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('home') }}">Tela Inicial</a>
-                </li>
-
-                <li class="nav-item">
                     <a class="nav-link" href="#">Cadastro de Voos</a>
                 </li>
 
@@ -29,7 +25,13 @@
                     <a class="nav-link" href="#">Companhias Aéreas</a>
                 </li>
 
-                <!-- 🔥 NOVO -->
+                <!-- 📊 DASHBOARD -->
+                <li class="nav-item">
+                    <a class="nav-link" href="#">
+                        Dashboard
+                    </a>
+                </li>
+
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('relatorios') }}">
                         Relatórios

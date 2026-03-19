@@ -42,7 +42,11 @@
                         @forelse($aeronaves as $aeronave)
                             <tr>
                                 <td>{{ $aeronave->id }}</td>
-                                <td class="fw-semibold">{{ $aeronave->modelo }}</td>
+                                <td class="fw-semibold">
+                                    <a href="{{ route('aeronaves.show', $aeronave->id) }}" class="text-decoration-none text-dark">
+                                        {{ $aeronave->modelo }}
+                                    </a>
+                                </td>
                                 <td>
                                     @if($aeronave->fabricante)
                                         <a href="{{ route('fabricantes.show', $aeronave->fabricante) }}" 
@@ -67,18 +71,18 @@
                                 </td>
                                 <td>{{ $aeronave->created_at?->format('d/m/Y H:i') ?? 'Data não disponível' }}</td>
                                 <td>
-                                    <div class="btn-group btn-group-sm" role="group">
+                                    <div class="btn-group" role="group">
                                         <a href="{{ route('aeronaves.edit', $aeronave->id) }}" 
                                             class="btn btn-outline-primary"
                                             title="Editar">
-                                                <i class="bi bi-pencil"></i>
+                                                <i class="bi bi-pencil me-1"></i> Editar
                                         </a>
                                         <button type="button" 
                                                 class="btn btn-outline-danger"
                                                 title="Excluir"
                                                 data-bs-toggle="modal" 
                                                 data-bs-target="#deleteModal{{ $aeronave->id }}">
-                                            <i class="bi bi-trash"></i>
+                                            <i class="bi bi-trash me-1"></i> Excluir
                                         </button>
                                     </div>
 

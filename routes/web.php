@@ -43,17 +43,14 @@ Route::middleware('auth')->group(function () {
         Route::resource('relatorios.admin', RelatorioController::class)
             ->except(['index', 'show']);
 
-        // REMOVA esta linha duplicada:
-        // Route::post('/fabricantes', [FabricanteController::class, 'store'])->name('fabricantes.store');
-
-        // Use apenas os resources com os parâmetros corretos
         Route::resource('fabricantes', FabricanteController::class);
         Route::resource('aeronaves', AeronaveController::class, [
             'parameters' => [
                 'aeronaves' => 'aeronave' // Força o nome correto
             ]
-        ])->except(['show']);
-        Route::resource('companhias', CompanhiaAereaController::class)->except(['show']);
-        Route::resource('aeroportos', AeroportoController::class)->except(['show']);
+        ]);
+        
+        Route::resource('companhias', CompanhiaAereaController::class);
+        Route::resource('aeroportos', AeroportoController::class);;
     });
 });

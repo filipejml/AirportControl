@@ -46,13 +46,16 @@ class Aeronave extends Model
         };
     }
 
+    // Relacionamento com Fabricante
     public function fabricante()
     {
         return $this->belongsTo(Fabricante::class);
     }
 
+    // Relacionamento com Companhias Aéreas (muitos-para-muitos)
     public function companhias()
     {
-        return $this->belongsToMany(CompanhiaAerea::class, 'companhia_aeronave');
+        return $this->belongsToMany(CompanhiaAerea::class, 'companhia_aeronave', 'aeronave_id', 'companhia_aerea_id')
+                    ->withTimestamps();
     }
 }

@@ -15,6 +15,15 @@ class AeronaveController extends Controller
         return view('admin.aeronaves.index', compact('aeronaves'));
     }
 
+    // NOVO MÉTODO SHOW
+    public function show(Aeronave $aeronave)
+    {
+        // Carrega o relacionamento com fabricante
+        $aeronave->load('fabricante');
+        
+        return view('admin.aeronaves.show', compact('aeronave'));
+    }
+
     public function create()
     {
         $fabricantes = Fabricante::orderBy('nome')->get();

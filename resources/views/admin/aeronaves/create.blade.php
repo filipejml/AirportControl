@@ -140,7 +140,6 @@
 
 @push('scripts')
 <script>
-
 function classificarPorte() {
     const capacidade = document.getElementById('capacidade').value;
     const porteTexto = document.getElementById('porteTexto');
@@ -152,7 +151,7 @@ function classificarPorte() {
     let descricao = '';
     let bgClass = 'bg-light';
     
-    if (capacidade) {
+    if (capacidade && capacidade > 0) {
         if (capacidade <= 100) {
             porte = 'PC';
             descricao = 'Pequeno Porte (≤100 passageiros)';
@@ -166,6 +165,11 @@ function classificarPorte() {
             descricao = 'Grande Porte (≥300 passageiros)';
             bgClass = 'bg-danger text-white';
         }
+    } else {
+        // Se não houver capacidade ou for inválido, mostra placeholder
+        porte = '-';
+        descricao = '';
+        bgClass = 'bg-light';
     }
     
     porteTexto.textContent = porte;
@@ -174,13 +178,19 @@ function classificarPorte() {
     porteDisplay.className = `form-control ${bgClass}`;
 }
 
+// Adicionar evento para atualizar enquanto digita
+document.getElementById('capacidade').addEventListener('input', classificarPorte);
+
+// Adicionar evento para atualizar quando sair do campo (onblur)
+document.getElementById('capacidade').addEventListener('blur', classificarPorte);
+
 // Executar na carga da página se houver valor antigo
 document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('capacidade').value) {
-        classificarPorte();
-    }
+    // Forçar atualização mesmo se tiver valor antigo
+    setTimeout(classificarPorte, 100);
 });
 
+// Restante do código para o modal de fabricante permanece igual
 document.getElementById('formFabricante').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -214,13 +224,17 @@ document.getElementById('formFabricante').addEventListener('submit', function(e)
             select.appendChild(option);
             
             // Fechar modal e resetar formulário
-            bootstrap.Modal.getInstance(document.getElementById('modalFabricante')).hide();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalFabricante'));
+            if (modal) {
+                modal.hide();
+            }
             document.getElementById('formFabricante').reset();
         } else {
             feedback.innerHTML = 'Erro ao cadastrar fabricante.';
         }
     })
     .catch(error => {
+        console.error('Erro:', error);
         feedback.innerHTML = 'Erro na requisição. Tente novamente.';
     })
     .finally(() => {
