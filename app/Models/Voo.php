@@ -22,7 +22,8 @@ class Voo extends Model
         'nota_obj',
         'nota_pontualidade',
         'nota_servicos',
-        'nota_patio'
+        'nota_patio',
+        'media_notas'
     ];
 
     protected $casts = [
@@ -32,7 +33,10 @@ class Voo extends Model
         'nota_obj' => 'integer',
         'nota_pontualidade' => 'integer',
         'nota_servicos' => 'integer',
-        'nota_patio' => 'integer'
+        'nota_patio' => 'integer',
+        'media_notas' => 'float',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
     ];
 
     // Relacionamentos
@@ -51,7 +55,46 @@ class Voo extends Model
         return $this->belongsTo(Aeronave::class);
     }
 
-    // Accessors para converter número para letra
+    // Calcula a média das notas
+    public function calcularMediaNotas(): ?float
+    {
+        $notas = [];
+        
+        if ($this->nota_obj !== null) {
+            $notas[] = $this->nota_obj;
+        }
+        if ($this->nota_pontualidade !== null) {
+            $notas[] = $this->nota_pontualidade;
+        }
+        if ($this->nota_servicos !== null) {
+            $notas[] = $this->nota_servicos;
+        }
+        if ($this->nota_patio !== null) {
+            $notas[] = $this->nota_patio;
+        }
+
+        if (empty($notas)) {
+            return null;
+        }
+
+        return round(array_sum($notas) / count($notas), 2);
+    }
+
+    // Boot para calcular média automaticamente
+    protected static function booted()
+    {
+        static::saving(function ($voo) {
+            $voo->media_notas = $voo->calcularMediaNotas();
+        });
+
+        static::updating(function ($voo) {
+            if ($voo->isDirty(['nota_obj', 'nota_pontualidade', 'nota_servicos', 'nota_patio'])) {
+                $voo->media_notas = $voo->calcularMediaNotas();
+            }
+        });
+    }
+
+    // Accessors para converter número para letra nas notas
     public function getNotaObjLetraAttribute(): ?string
     {
         return $this->numeroParaLetra($this->nota_obj);
@@ -72,7 +115,65 @@ class Voo extends Model
         return $this->numeroParaLetra($this->nota_patio);
     }
 
-    // Método auxiliar para converter número para letra
+    // Accessor para média em letra
+    public function getMediaNotasLetraAttribute(): ?string
+    {
+        if ($this->media_notas === null) {
+            return null;
+        }
+
+        // Arredonda para o valor mais próximo na escala
+        $valor = round($this->media_notas);
+        
+        $mapa = [
+            10 => 'A',
+            9 => 'B',
+            8 => 'C',
+            6 => 'D',
+            4 => 'E',
+            2 => 'F'
+        ];
+
+        return $mapa[$valor] ?? $this->media_notas;
+    }
+
+    // Accessor para cor da média
+    public function getMediaNotasCorAttribute(): string
+    {
+        if ($this->media_notas === null) {
+            return 'secondary';
+        }
+
+        return match(true) {
+            $this->media_notas >= 9 => 'success',
+            $this->media_notas >= 7 => 'info',
+            $this->media_notas >= 5 => 'warning',
+            default => 'danger'
+        };
+    }
+
+    // Mutators para converter letra para número
+    public function setNotaObjAttribute($value): void
+    {
+        $this->attributes['nota_obj'] = $this->letraParaNumero($value);
+    }
+
+    public function setNotaPontualidadeAttribute($value): void
+    {
+        $this->attributes['nota_pontualidade'] = $this->letraParaNumero($value);
+    }
+
+    public function setNotaServicosAttribute($value): void
+    {
+        $this->attributes['nota_servicos'] = $this->letraParaNumero($value);
+    }
+
+    public function setNotaPatioAttribute($value): void
+    {
+        $this->attributes['nota_patio'] = $this->letraParaNumero($value);
+    }
+
+    // Métodos auxiliares
     private function numeroParaLetra(?int $numero): ?string
     {
         $mapa = [
@@ -87,28 +188,6 @@ class Voo extends Model
         return $numero !== null ? ($mapa[$numero] ?? null) : null;
     }
 
-    // Mutator para converter letra para número
-    public function setNotaObjAttribute($value)
-    {
-        $this->attributes['nota_obj'] = $this->letraParaNumero($value);
-    }
-
-    public function setNotaPontualidadeAttribute($value)
-    {
-        $this->attributes['nota_pontualidade'] = $this->letraParaNumero($value);
-    }
-
-    public function setNotaServicosAttribute($value)
-    {
-        $this->attributes['nota_servicos'] = $this->letraParaNumero($value);
-    }
-
-    public function setNotaPatioAttribute($value)
-    {
-        $this->attributes['nota_patio'] = $this->letraParaNumero($value);
-    }
-
-    // Método auxiliar para converter letra para número
     private function letraParaNumero($letra): ?int
     {
         if (empty($letra)) {

@@ -1,3 +1,4 @@
+{{-- resources/views/home.blade.php --}}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -19,10 +20,18 @@
         .card-dashboard {
             border-radius: 12px;
             transition: 0.3s;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .card-dashboard:hover {
             transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
+        
+        .card-dashboard .btn {
+            margin-top: auto;
         }
     </style>
 </head>
@@ -40,56 +49,100 @@
                 Bem-vindo, {{ auth()->user()->name }}
             </h3>
             <p class="text-muted">
-                {{ auth()->user()->tipo == 0 ? 'Administrador' : 'Usuário comum' }}
+                @if(auth()->user()->tipo == 0)
+                    <span class="badge bg-danger">Administrador</span>
+                @else
+                    <span class="badge bg-secondary">Usuário comum</span>
+                @endif
             </p>
         </div>
 
         <!-- Cards do sistema -->
         <div class="row g-4">
 
+            <!-- Card Cadastro de Voos -->
             <div class="col-md-4">
                 <div class="card card-dashboard shadow-sm p-3">
-                    <h5><i class="bi bi-airplane"></i> Cadastro de Voos</h5>
-                    <p class="text-muted">Cadastrar novos voos no sistema</p>
-                    <a href="#" class="btn btn-primary btn-sm">Acessar</a>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-plus-circle fs-1 text-primary me-3"></i>
+                        <h5 class="mb-0">Cadastro de Voos</h5>
+                    </div>
+                    <p class="text-muted flex-grow-1">Cadastrar novos voos no sistema</p>
+                    <a href="{{ route('voos.create') }}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>Acessar
+                    </a>
                 </div>
             </div>
 
+            <!-- Card Lista de Voos -->
             <div class="col-md-4">
                 <div class="card card-dashboard shadow-sm p-3">
-                    <h5><i class="bi bi-list"></i> Lista de Voos</h5>
-                    <p class="text-muted">Visualizar todos os voos</p>
-                    <a href="#" class="btn btn-primary btn-sm">Acessar</a>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-list-ul fs-1 text-primary me-3"></i>
+                        <h5 class="mb-0">Lista de Voos</h5>
+                    </div>
+                    <p class="text-muted flex-grow-1">Visualizar todos os voos cadastrados</p>
+                    <a href="{{ route('voos.index') }}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>Acessar
+                    </a>
                 </div>
             </div>
 
+            <!-- Card Companhias Aéreas (apenas admin) -->
+            @if(auth()->user()->tipo == 0)
             <div class="col-md-4">
                 <div class="card card-dashboard shadow-sm p-3">
-                    <h5><i class="bi bi-building"></i> Companhias</h5>
-                    <p class="text-muted">Gerenciar companhias aéreas</p>
-                    <a href="#" class="btn btn-primary btn-sm">Acessar</a>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-building fs-1 text-primary me-3"></i>
+                        <h5 class="mb-0">Companhias Aéreas</h5>
+                    </div>
+                    <p class="text-muted flex-grow-1">Gerenciar companhias aéreas</p>
+                    <a href="{{ route('companhias.index') }}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>Acessar
+                    </a>
+                </div>
+            </div>
+            @endif
+
+            <!-- Card Dashboard -->
+            <div class="col-md-4">
+                <div class="card card-dashboard shadow-sm p-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-bar-chart fs-1 text-primary me-3"></i>
+                        <h5 class="mb-0">Dashboard</h5>
+                    </div>
+                    <p class="text-muted flex-grow-1">Análises e estatísticas</p>
+                    <a href="#" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>Acessar
+                    </a>
                 </div>
             </div>
 
+            <!-- Card Relatórios -->
             <div class="col-md-4">
                 <div class="card card-dashboard shadow-sm p-3">
-                    <h5><i class="bi bi-bar-chart"></i> Dashboard</h5>
-                    <p class="text-muted">Análises e relatórios</p>
-                    <a href="#" class="btn btn-primary btn-sm">Acessar</a>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-file-text fs-1 text-primary me-3"></i>
+                        <h5 class="mb-0">Relatórios</h5>
+                    </div>
+                    <p class="text-muted flex-grow-1">Gerar relatórios do sistema</p>
+                    <a href="{{ route('relatorios') }}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>Acessar
+                    </a>
                 </div>
             </div>
 
-            <!-- SOMENTE ADMIN -->
-
+            <!-- SOMENTE ADMIN - Registros -->
             @if(auth()->user()->tipo == 0)
             <div class="col-md-4">
                 <div class="card card-dashboard shadow-sm p-3 border-danger">
-                    <h5 class="text-danger">
-                        <i class="bi bi-shield-lock"></i> Registros
-                    </h5>
-                    <p class="text-muted">Logs e atividades do sistema</p>
-                    <a href="{{ route('registros') }}" class="btn btn-danger btn-sm">
-                        Acessar
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-shield-lock fs-1 text-danger me-3"></i>
+                        <h5 class="mb-0 text-danger">Registros</h5>
+                    </div>
+                    <p class="text-muted flex-grow-1">Logs e atividades do sistema</p>
+                    <a href="{{ route('registros') }}" class="btn btn-danger btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>Acessar
                     </a>
                 </div>
             </div>

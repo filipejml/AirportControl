@@ -11,6 +11,10 @@ class Aeronave extends Model
     use HasFactory;
 
     protected $fillable = ['modelo', 'capacidade', 'fabricante_id', 'porte'];
+    protected $table = 'aeronaves';
+    protected $casts = [
+        'capacidade' => 'integer'
+    ];
 
     protected static function booted()
     {
@@ -46,7 +50,7 @@ class Aeronave extends Model
         };
     }
 
-    // Relacionamento com Fabricante
+    // Relacionamento com Fabricante (CORRIGIDO - removido os dois pontos)
     public function fabricante()
     {
         return $this->belongsTo(Fabricante::class);
@@ -57,5 +61,37 @@ class Aeronave extends Model
     {
         return $this->belongsToMany(CompanhiaAerea::class, 'companhia_aeronave', 'aeronave_id', 'companhia_aerea_id')
                     ->withTimestamps();
+    }
+
+    // NOVO: Relacionamento com Voos
+    public function voos()
+    {
+        return $this->hasMany(Voo::class);
+    }
+
+    // Método auxiliar para verificar se a aeronave pertence a uma companhia
+    public function pertenceACompanhia($companhiaId)
+    {
+        return $this->companhias()->where('companhia_aerea_id', $companhiaId)->exists();
+    }
+
+    // Scope para filtrar por porte
+    public function scopePorPorte($query, $porte)
+    {
+        return $query->where('porte', $porte);
+    }
+
+    // Scope para filtrar por capacidade mínima
+    public function scopeCapacidadeMinima($query, $capacidade)
+    {
+        return $query->where('capacidade', '>=', $capacidade);
+    }
+
+    // Scope para filtrar aeronaves disponíveis (que não estão em uso em voos ativos)
+    public function scopeDisponiveis($query)
+    {
+        return $query->whereDoesntHave('voos', function($q) {
+            $q->whereDate('created_at', today());
+        });
     }
 }
