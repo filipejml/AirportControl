@@ -9,8 +9,10 @@ use App\Models\CompanhiaAerea;
 use App\Models\Aeronave;
 use App\Helpers\CompanhiaHelper;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class VooController extends Controller
 {
@@ -260,5 +262,175 @@ class VooController extends Controller
             'message' => 'Código válido!',
             'companhia' => CompanhiaHelper::getNomeCompanhia($codigo)
         ]);
+    }
+
+    /**
+     * Exporta a lista de voos para CSV com suporte a filtros
+     */
+    public function exportCSV(Request $request)
+    {
+        // Buscar voos com relacionamentos, aplicando os mesmos filtros da listagem
+        $query = Voo::with(['aeroporto', 'companhiaAerea', 'aeronave'])
+            ->orderBy('created_at', 'desc');
+        
+        // Aplicar filtros se existirem
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('id_voo', 'like', "%{$search}%")
+                ->orWhereHas('aeroporto', function($sq) use ($search) {
+                    $sq->where('nome_aeroporto', 'like', "%{$search}%");
+                })
+                ->orWhereHas('companhiaAerea', function($sq) use ($search) {
+                    $sq->where('nome', 'like', "%{$search}%");
+                })
+                ->orWhereHas('aeronave', function($sq) use ($search) {
+                    $sq->where('modelo', 'like', "%{$search}%");
+                });
+            });
+        }
+        
+        if ($request->has('tipo') && $request->tipo) {
+            $query->where('tipo_voo', $request->tipo);
+        }
+        
+        if ($request->has('horario') && $request->horario) {
+            $query->where('horario_voo', $request->horario);
+        }
+        
+        if ($request->has('dias') && $request->dias) {
+            $dataLimite = now()->subDays((int)$request->dias);
+            $query->where('created_at', '>=', $dataLimite);
+        }
+        
+        $voos = $query->get();
+        
+        // Se não houver dados, retornar com mensagem de erro
+        if ($voos->isEmpty()) {
+            return redirect()->back()->with('error', 'Não há voos para exportar com os filtros selecionados.');
+        }
+        
+        // Nome do arquivo com quantidade de registros
+        $filename = 'voos_' . date('Y-m-d_His') . '_' . $voos->count() . '_registros.csv';
+        
+        // Headers para download
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+            'Pragma' => 'public'
+        ];
+        
+        // Callback para gerar o CSV
+        $callback = function() use ($voos) {
+            $file = fopen('php://output', 'w');
+            
+            // Adicionar BOM para UTF-8 (resolve problemas de acentuação no Excel)
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // Cabeçalho do CSV (corrigido para corresponder aos dados)
+            fputcsv($file, [
+                'ID do Voo',
+                'Data Cadastro',
+                'Companhia Aérea',
+                'Aeroporto',
+                'Aeronave',
+                'Tipo de Voo',
+                'Tipo Aeronave',
+                'Quantidade Voos',
+                'Horário',
+                'Capacidade (pax/voo)',
+                'Total Passageiros',
+                'Nota Objetivo',
+                'Nota Pontualidade',
+                'Nota Serviços',
+                'Nota Pátio',
+                'Média das Notas',
+                'Classificação'
+            ], ';');
+            
+            // Dados
+            foreach ($voos as $voo) {
+                // Mapeamento de notas
+                $notaObj = $voo->nota_obj ? $voo->nota_obj . ' (' . $this->getNotaLetra($voo->nota_obj) . ')' : '';
+                $notaPont = $voo->nota_pontualidade ? $voo->nota_pontualidade . ' (' . $this->getNotaLetra($voo->nota_pontualidade) . ')' : '';
+                $notaServ = $voo->nota_servicos ? $voo->nota_servicos . ' (' . $this->getNotaLetra($voo->nota_servicos) . ')' : '';
+                $notaPatio = $voo->nota_patio ? $voo->nota_patio . ' (' . $this->getNotaLetra($voo->nota_patio) . ')' : '';
+                
+                // Converter tipo de aeronave para texto
+                $tipoAeronaveTexto = match($voo->tipo_aeronave) {
+                    'PC' => 'Pequeno Porte',
+                    'MC' => 'Médio Porte',
+                    'LC' => 'Grande Porte',
+                    default => $voo->tipo_aeronave ?? ''
+                };
+                
+                // Converter horário para texto
+                $horarioTexto = match($voo->horario_voo) {
+                    'EAM' => 'Early Morning (00h-06h)',
+                    'AM' => 'Morning (06h-12h)',
+                    'AN' => 'Afternoon (12h-18h)',
+                    'PM' => 'Evening (18h-00h)',
+                    'ALL' => 'Diário',
+                    default => $voo->horario_voo ?? ''
+                };
+                
+                fputcsv($file, [
+                    $voo->id_voo,
+                    $voo->created_at ? $voo->created_at->format('d/m/Y H:i:s') : '',
+                    $voo->companhiaAerea->nome ?? '',
+                    $voo->aeroporto->nome_aeroporto ?? '',
+                    $voo->aeronave->modelo ?? '',
+                    $voo->tipo_voo ?? '',
+                    $tipoAeronaveTexto,
+                    $voo->qtd_voos,
+                    $horarioTexto,
+                    $voo->qtd_passageiros ?? 0,
+                    number_format($voo->total_passageiros, 0, ',', '.'),
+                    $notaObj,
+                    $notaPont,
+                    $notaServ,
+                    $notaPatio,
+                    $voo->media_notas ? number_format($voo->media_notas, 1) : '',
+                    $this->getClassificacaoMedia($voo->media_notas)
+                ], ';');
+            }
+            
+            fclose($file);
+        };
+        
+        return new StreamedResponse($callback, 200, $headers);
+    }
+
+    /**
+     * Converte nota numérica para letra
+     */
+    private function getNotaLetra($nota)
+    {
+        return match($nota) {
+            10 => 'A',
+            9 => 'B',
+            8 => 'C',
+            6 => 'D',
+            4 => 'E',
+            2 => 'F',
+            default => ''
+        };
+    }
+
+    /**
+     * Retorna classificação baseada na média
+     */
+    private function getClassificacaoMedia($media)
+    {
+        if (!$media) return '';
+        
+        return match(true) {
+            $media >= 9 => 'Excelente',
+            $media >= 7 => 'Bom',
+            $media >= 5 => 'Regular',
+            default => 'Ruim'
+        };
     }
 }

@@ -31,14 +31,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Rotas para voos (acessível para todos usuários autenticados)
+    // Rotas para voos - CRUD completo
     Route::resource('voos', VooController::class);
 
-    // Rota AJAX para buscar aeronaves por companhia
+    // Rota AJAX para buscar aeronaves por companhia - página de cadastro de voo
     Route::get('/api/companhias/{companhia}/aeronaves', [VooController::class, 'getAeronavesByCompanhia']);
 
-    // Rota AJAX para verificar ID do voo
+    // Rota AJAX para verificar ID do voo - página de cadastro de voo (para evitar duplicidade)
     Route::post('/api/verificar-id-voo', [VooController::class, 'verificarIdVoo'])->name('verificar.id.voo');
+
+    // Rota para exportar CSV - página de listagem de voos
+    Route::get('/voos/export/csv', [VooController::class, 'exportCSV'])->name('voos.export.csv');
 
     /*
     |--------------------------------------------------------------------------

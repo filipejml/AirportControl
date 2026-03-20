@@ -8,18 +8,8 @@
     <!-- Cabeçalho com breadcrumb -->
     <div class="row mb-4">
         <div class="col-12">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}" class="text-decoration-none">Home</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Voos</li>
-                </ol>
-            </nav>
-            
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
-                    <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-3">
-                        <i class="bi bi-airplane-fill text-primary fs-1"></i>
-                    </div>
                     <div>
                         <h2 class="fw-bold mb-1">Gerenciamento de Voos</h2>
                         <p class="text-muted mb-0">Lista completa de todos os voos cadastrados no sistema</p>
@@ -273,59 +263,59 @@
                                     </div>
                                 </td>
                                 
-                                <!-- Nota Objetivo -->
+                                <!-- Nota Objetivo - AGORA EM FORMATO NUMÉRICO -->
                                 <td class="px-4 text-center">
                                     @if($voo->nota_obj)
                                         <span class="badge bg-info bg-opacity-10 text-info p-2" 
                                               data-bs-toggle="tooltip" 
-                                              title="{{ $voo->nota_obj }} pontos">
-                                            {{ $voo->nota_obj_letra }}
+                                              title="Nota: {{ $voo->nota_obj_letra }} ({{ $voo->nota_obj }} pontos)">
+                                            {{ $voo->nota_obj }}
                                         </span>
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 
-                                <!-- Nota Pontualidade -->
+                                <!-- Nota Pontualidade - AGORA EM FORMATO NUMÉRICO -->
                                 <td class="px-4 text-center">
                                     @if($voo->nota_pontualidade)
                                         <span class="badge bg-info bg-opacity-10 text-info p-2" 
                                               data-bs-toggle="tooltip" 
-                                              title="{{ $voo->nota_pontualidade }} pontos">
-                                            {{ $voo->nota_pontualidade_letra }}
+                                              title="Nota: {{ $voo->nota_pontualidade_letra }} ({{ $voo->nota_pontualidade }} pontos)">
+                                            {{ $voo->nota_pontualidade }}
                                         </span>
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 
-                                <!-- Nota Serviços -->
+                                <!-- Nota Serviços - AGORA EM FORMATO NUMÉRICO -->
                                 <td class="px-4 text-center">
                                     @if($voo->nota_servicos)
                                         <span class="badge bg-info bg-opacity-10 text-info p-2" 
                                               data-bs-toggle="tooltip" 
-                                              title="{{ $voo->nota_servicos }} pontos">
-                                            {{ $voo->nota_servicos_letra }}
+                                              title="Nota: {{ $voo->nota_servicos_letra }} ({{ $voo->nota_servicos }} pontos)">
+                                            {{ $voo->nota_servicos }}
                                         </span>
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 
-                                <!-- Nota Patio -->
+                                <!-- Nota Pátio - AGORA EM FORMATO NUMÉRICO -->
                                 <td class="px-4 text-center">
                                     @if($voo->nota_patio)
                                         <span class="badge bg-info bg-opacity-10 text-info p-2" 
                                               data-bs-toggle="tooltip" 
-                                              title="{{ $voo->nota_patio }} pontos">
-                                            {{ $voo->nota_patio_letra }}
+                                              title="Nota: {{ $voo->nota_patio_letra }} ({{ $voo->nota_patio }} pontos)">
+                                            {{ $voo->nota_patio }}
                                         </span>
                                     @else
                                         <span class="text-muted">-</span>
                                     @endif
                                 </td>
                                 
-                                <!-- Média -->
+                                <!-- Média - Mantém formato numérico -->
                                 <td class="px-4 text-center">
                                     @if($voo->media_notas)
                                         @php
@@ -338,10 +328,11 @@
                                         @endphp
                                         <div class="d-flex flex-column align-items-center">
                                             <span class="badge bg-{{ $mediaCor }} rounded-pill p-2" 
-                                                  style="font-size: 1rem;">
+                                                  style="font-size: 1rem;"
+                                                  data-bs-toggle="tooltip"
+                                                  title="Classificação: {{ $voo->media_notas_letra }}">
                                                 {{ number_format($voo->media_notas, 1) }}
                                             </span>
-                                            <small class="text-muted">{{ $voo->media_notas_letra }}</small>
                                         </div>
                                     @else
                                         <span class="text-muted">-</span>
@@ -396,28 +387,13 @@
                 <div class="card-footer bg-light border-0 py-3">
                     <div class="row align-items-center">
                         <div class="col-md-6">
-                            <p class="text-muted mb-0">
-                                <i class="bi bi-info-circle me-2"></i>
-                                Total de <strong>{{ $voos->count() }}</strong> voos encontrados
-                                @if($estatisticas['voos_com_notas'] > 0)
-                                    | <strong>{{ $estatisticas['voos_com_notas'] }}</strong> com notas
-                                    | Média geral: <strong class="text-{{ 
-                                        $estatisticas['media_geral_notas'] >= 9 ? 'success' : 
-                                        ($estatisticas['media_geral_notas'] >= 7 ? 'info' : 
-                                        ($estatisticas['media_geral_notas'] >= 5 ? 'warning' : 'danger')) 
-                                    }}">{{ number_format($estatisticas['media_geral_notas'], 1) }}</strong>
-                                @endif
-                            </p>
                         </div>
                         <div class="col-md-6">
+                            <!-- Botão de Exportar - Substituir o botão existente -->
                             <div class="d-flex justify-content-end gap-2">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="exportToCSV()">
+                                <button class="btn btn-sm btn-outline-secondary" id="btnExportarCSV">
                                     <i class="bi bi-download me-2"></i>
                                     Exportar CSV
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary" onclick="printTable()">
-                                    <i class="bi bi-printer me-2"></i>
-                                    Imprimir
                                 </button>
                             </div>
                         </div>
@@ -556,14 +532,16 @@ html {
 </style>
 
 <script>
-// Inicializar tooltips
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function(tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Filtros
+    // ==========================================
+    // FILTROS E BUSCA
+    // ==========================================
     const searchInput = document.getElementById('searchInput');
     const filterTipo = document.getElementById('filterTipo');
     const filterHorario = document.getElementById('filterHorario');
@@ -629,54 +607,153 @@ document.addEventListener('DOMContentLoaded', function() {
         filterRows();
     });
 
-    // Exportar para CSV
-    window.exportToCSV = function() {
-        const rows = document.querySelectorAll('.voo-row');
-        let csv = [];
-        
-        // Cabeçalho
-        csv.push(['ID Voo', 'Aeroporto', 'Companhia', 'Aeronave', 'Tipo', 'Horário', 
-                  'Nota Obj', 'Nota Pont', 'Nota Serv', 'Nota Patio', 'Média', 'Qtd Voos', 'Total Pax']);
-        
-        // Dados
-        rows.forEach(row => {
-            const cells = row.cells;
+    // ==========================================
+    // EXPORTAÇÃO CSV (NOVA VERSÃO COM FILTROS)
+    // ==========================================
+    const btnExportarCSV = document.getElementById('btnExportarCSV');
+    
+    if (btnExportarCSV) {
+        btnExportarCSV.addEventListener('click', function() {
+            // Coletar os valores dos filtros atuais
+            const searchValue = document.getElementById('searchInput')?.value || '';
+            const tipoValue = document.getElementById('filterTipo')?.value || '';
+            const horarioValue = document.getElementById('filterHorario')?.value || '';
+            const dataValue = document.getElementById('filterData')?.value || '';
             
-            const linha = [
-                cells[0].textContent.trim().replace(/\n.*$/, ''), // Pega só o ID, sem a data
-                cells[1].textContent.trim(),
-                cells[2].textContent.trim(),
-                cells[3].textContent.trim(),
-                cells[4].querySelector('.badge:first-child')?.textContent.trim() || '',
-                cells[4].querySelector('.badge:last-child')?.textContent.trim() || '',
-                cells[5].textContent.trim() || '',
-                cells[6].textContent.trim() || '',
-                cells[7].textContent.trim() || '',
-                cells[8].textContent.trim() || '',
-                cells[9].textContent.trim() || '',
-                cells[10].querySelector('.fw-semibold')?.textContent.replace('x', '').trim() || '',
-                cells[10].querySelector('.fw-bold')?.textContent.replace(/[^\d]/g, '') || ''
-            ];
-            csv.push(linha);
+            // Verificar se há registros visíveis
+            const visibleRows = Array.from(document.querySelectorAll('.voo-row')).filter(row => row.style.display !== 'none');
+            
+            if (visibleRows.length === 0) {
+                showToast('warning', 'Não há voos para exportar com os filtros atuais.', 'warning');
+                return;
+            }
+            
+            // Construir URL com os parâmetros dos filtros
+            let url = '{{ route("voos.export.csv") }}?';
+            const params = [];
+            
+            if (searchValue) params.push(`search=${encodeURIComponent(searchValue)}`);
+            if (tipoValue) params.push(`tipo=${encodeURIComponent(tipoValue)}`);
+            if (horarioValue) params.push(`horario=${encodeURIComponent(horarioValue)}`);
+            if (dataValue) params.push(`dias=${encodeURIComponent(dataValue)}`);
+            
+            url += params.join('&');
+            
+            // Salvar texto original do botão
+            const originalText = btnExportarCSV.innerHTML;
+            btnExportarCSV.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Exportando...';
+            btnExportarCSV.disabled = true;
+            
+            // Fazer o download via fetch
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status}`);
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Criar link para download
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                
+                // Extrair nome do arquivo do header Content-Disposition
+                let filename = `voos_filtrados_${visibleRows.length}_registros_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`;
+                
+                // Tentar extrair o nome do arquivo do response headers (se disponível)
+                if (response.headers && response.headers.get('Content-Disposition')) {
+                    const contentDisposition = response.headers.get('Content-Disposition');
+                    const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (match && match[1]) {
+                        filename = match[1].replace(/['"]/g, '');
+                    }
+                }
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+                
+                // Feedback de sucesso
+                showToast('success', `${visibleRows.length} voos exportados com sucesso!`, 'success');
+            })
+            .catch(error => {
+                console.error('Erro na exportação:', error);
+                showToast('error', 'Erro ao exportar. Tente novamente.', 'danger');
+            })
+            .finally(() => {
+                // Restaurar botão
+                setTimeout(() => {
+                    btnExportarCSV.innerHTML = originalText;
+                    btnExportarCSV.disabled = false;
+                }, 500);
+            });
         });
-        
-        // Converter para string
-        const csvString = csv.map(row => row.join(';')).join('\n');
-        
-        // Download
-        const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'voos_' + new Date().toISOString().slice(0,10) + '.csv';
-        link.click();
-    };
+    }
 
-    // Imprimir
+    // ==========================================
+    // FUNÇÃO DE TOAST (FEEDBACK VISUAL)
+    // ==========================================
+    function showToast(type, message, iconType = null) {
+        // Configurações de cores e ícones
+        const config = {
+            success: { bg: 'bg-success', icon: 'check-circle-fill' },
+            error: { bg: 'bg-danger', icon: 'exclamation-triangle-fill' },
+            warning: { bg: 'bg-warning', icon: 'exclamation-triangle-fill' },
+            info: { bg: 'bg-info', icon: 'info-circle-fill' }
+        };
+        
+        const selectedConfig = config[type] || config.info;
+        const toastIcon = iconType || selectedConfig.icon;
+        
+        // Criar elemento toast
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white ${selectedConfig.bg} border-0 position-fixed top-0 end-0 m-3`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.style.zIndex = '9999';
+        toast.style.minWidth = '300px';
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-${toastIcon} me-2"></i>
+                    <strong>${type === 'success' ? 'Sucesso!' : type === 'error' ? 'Erro!' : type === 'warning' ? 'Atenção!' : 'Info'}</strong>
+                    <br>
+                    <small>${message}</small>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(toast);
+        
+        // Inicializar e mostrar toast
+        const bsToast = new bootstrap.Toast(toast, { autohide: true, delay: 3000 });
+        bsToast.show();
+        
+        // Remover do DOM após fechar
+        toast.addEventListener('hidden.bs.toast', () => toast.remove());
+    }
+
+    // ==========================================
+    // FUNÇÃO DE IMPRESSÃO (OPCIONAL)
+    // ==========================================
     window.printTable = function() {
         window.print();
     };
 
-    // Confirmar exclusão
+    // ==========================================
+    // FUNÇÃO DE CONFIRMAÇÃO DE EXCLUSÃO
+    // ==========================================
     window.confirmDelete = function(id, idVoo) {
         document.getElementById('vooIdToDelete').textContent = idVoo;
         const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
@@ -686,11 +763,212 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('delete-form-' + id).submit();
         };
     };
-});
 
-// Atualizar a cada 5 minutos
-setTimeout(function() {
-    location.reload();
-}, 300000);
+    // ==========================================
+    // FUNÇÃO DE ATUALIZAÇÃO AUTOMÁTICA (OPCIONAL)
+    // ==========================================
+    // Atualizar a cada 5 minutos (comentado para não atrapalhar)
+    // setTimeout(function() {
+    //     location.reload();
+    // }, 300000);
+    
+    // ==========================================
+    // FUNÇÃO PARA EXPORTAR APENAS LINHAS VISÍVEIS (CLIENT-SIDE)
+    // Caso queira manter a opção de exportação client-side como fallback
+    // ==========================================
+    window.exportToCSVClientSide = function() {
+        try {
+            // Pegar apenas as linhas visíveis (após filtros)
+            const rows = document.querySelectorAll('.voo-row');
+            const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+            
+            if (visibleRows.length === 0) {
+                showToast('warning', 'Não há voos para exportar com os filtros atuais.', 'warning');
+                return;
+            }
+            
+            // Mostrar indicador de carregamento
+            const exportBtn = document.querySelector('[onclick="exportToCSVClientSide()"]');
+            let originalText = '';
+            if (exportBtn) {
+                originalText = exportBtn.innerHTML;
+                exportBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Exportando...';
+                exportBtn.disabled = true;
+            }
+            
+            // Preparar dados para CSV
+            const csv = [];
+            
+            // Cabeçalho
+            csv.push([
+                'ID Voo',
+                'Data Cadastro',
+                'Companhia Aérea',
+                'Aeroporto',
+                'Aeronave',
+                'Tipo de Voo',
+                'Horário',
+                'Quantidade Voos',
+                'Total Passageiros',
+                'Nota Objetivo',
+                'Nota Pontualidade',
+                'Nota Serviços',
+                'Nota Pátio',
+                'Média'
+            ].join(';'));
+            
+            // Dados
+            visibleRows.forEach(row => {
+                const cells = row.cells;
+                
+                // ID do Voo e Data
+                const idCell = cells[0];
+                const idVoo = idCell.querySelector('.badge')?.textContent.trim() || '';
+                const dataVoo = idCell.querySelector('.small')?.textContent.trim() || '';
+                
+                // Aeroporto
+                const aeroporto = cells[1]?.textContent.trim() || '';
+                
+                // Companhia
+                const companhia = cells[2]?.textContent.trim() || '';
+                
+                // Aeronave
+                const aeronave = cells[3]?.textContent.trim() || '';
+                
+                // Tipo e Horário
+                const tipoHorarioCell = cells[4];
+                const tipo = tipoHorarioCell.querySelector('.badge:first-child')?.textContent.trim() || '';
+                const horario = tipoHorarioCell.querySelector('.badge:last-child')?.textContent.trim() || '';
+                
+                // Notas
+                const notaObj = cells[5]?.textContent.trim() || '';
+                const notaPont = cells[6]?.textContent.trim() || '';
+                const notaServ = cells[7]?.textContent.trim() || '';
+                const notaPatio = cells[8]?.textContent.trim() || '';
+                
+                // Média
+                const media = cells[9]?.textContent.trim() || '';
+                
+                // Quantidade de Voos e Total de Passageiros
+                const voosPaxCell = cells[10];
+                const qtdVoos = voosPaxCell?.querySelector('.fw-semibold')?.textContent.replace('x', '').trim() || '';
+                const totalPax = voosPaxCell?.querySelector('.fw-bold')?.textContent.replace(/[^\d]/g, '') || '';
+                
+                // Adicionar linha ao CSV
+                csv.push([
+                    idVoo,
+                    dataVoo,
+                    companhia,
+                    aeroporto,
+                    aeronave,
+                    tipo,
+                    horario,
+                    qtdVoos,
+                    totalPax,
+                    notaObj,
+                    notaPont,
+                    notaServ,
+                    notaPatio,
+                    media
+                ].join(';'));
+            });
+            
+            // Criar e baixar o arquivo
+            const csvString = '\uFEFF' + csv.join('\n'); // BOM para UTF-8
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            // Nome do arquivo com data e quantidade de registros
+            const dataAtual = new Date();
+            const dataFormatada = dataAtual.toISOString().slice(0, 19).replace(/:/g, '-');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `voos_filtrados_${visibleRows.length}_registros_${dataFormatada}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            // Restaurar botão e mostrar feedback
+            if (exportBtn) {
+                setTimeout(() => {
+                    exportBtn.innerHTML = originalText;
+                    exportBtn.disabled = false;
+                    showToast('success', `${visibleRows.length} voos exportados com sucesso!`, 'success');
+                }, 500);
+            }
+            
+        } catch (error) {
+            console.error('Erro ao exportar CSV:', error);
+            showToast('error', 'Erro ao exportar. Tente novamente.', 'danger');
+            
+            // Restaurar botão se necessário
+            const exportBtn = document.querySelector('[onclick="exportToCSVClientSide()"]');
+            if (exportBtn) {
+                exportBtn.innerHTML = '<i class="bi bi-download me-1"></i> Exportar CSV';
+                exportBtn.disabled = false;
+            }
+        }
+    };
+    
+    // ==========================================
+    // FUNÇÃO PARA EXPORTAR VIA SERVIDOR (USANDO A ROTA)
+    // Mantida como fallback, mas o botão principal já usa fetch
+    // ==========================================
+    window.exportToCSVServer = function() {
+        // Coletar filtros
+        const searchValue = document.getElementById('searchInput')?.value || '';
+        const tipoValue = document.getElementById('filterTipo')?.value || '';
+        const horarioValue = document.getElementById('filterHorario')?.value || '';
+        const dataValue = document.getElementById('filterData')?.value || '';
+        
+        // Construir URL
+        let url = '{{ route("voos.export.csv") }}?';
+        const params = [];
+        
+        if (searchValue) params.push(`search=${encodeURIComponent(searchValue)}`);
+        if (tipoValue) params.push(`tipo=${encodeURIComponent(tipoValue)}`);
+        if (horarioValue) params.push(`horario=${encodeURIComponent(horarioValue)}`);
+        if (dataValue) params.push(`dias=${encodeURIComponent(dataValue)}`);
+        
+        url += params.join('&');
+        
+        // Redirecionar para download
+        window.location.href = url;
+    };
+    
+    // ==========================================
+    // INICIALIZAÇÃO ADICIONAL
+    // ==========================================
+    
+    // Verificar se há tooltips dinâmicos
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                var newTooltips = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]:not([data-bs-original-title])'));
+                newTooltips.map(function(tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+        });
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    // Adicionar atalho de teclado para exportar (Ctrl + E)
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+            e.preventDefault();
+            const exportBtn = document.getElementById('btnExportarCSV');
+            if (exportBtn && !exportBtn.disabled) {
+                exportBtn.click();
+            }
+        }
+    });
+    
+    console.log('Sistema de exportação CSV inicializado com sucesso!');
+});
 </script>
 @endsection

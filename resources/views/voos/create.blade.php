@@ -16,6 +16,170 @@
         </div>
     </div>
 
+    <!-- Card do Último Voo Cadastrado -->
+    @php
+        $ultimoVoo = \App\Models\Voo::with(['aeroporto', 'companhiaAerea', 'aeronave'])
+                        ->orderBy('created_at', 'desc')
+                        ->first();
+    @endphp
+
+    @if($ultimoVoo)
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-success shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-clock-history me-2 fs-5"></i>
+                        <strong>Último Voo Cadastrado</strong>
+                        <span class="ms-auto small">{{ $ultimoVoo->created_at->format('d/m/Y H:i:s') }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="bg-light rounded-circle p-3 d-inline-block mb-2">
+                                    <i class="bi bi-airplane-fill text-primary fs-3"></i>
+                                </div>
+                                <h5 class="mb-0">{{ $ultimoVoo->id_voo }}</h5>
+                                <small class="text-muted">ID do Voo</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-building me-2 text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Companhia</small>
+                                    <strong>{{ $ultimoVoo->companhiaAerea->nome }}</strong>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-geo-alt me-2 text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Aeroporto</small>
+                                    <strong>{{ $ultimoVoo->aeroporto->nome_aeroporto }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-airplane me-2 text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Aeronave</small>
+                                    <strong>{{ $ultimoVoo->aeronave->modelo }}</strong>
+                                    <small class="text-muted">({{ $ultimoVoo->aeronave->capacidade }} pax)</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-diagram-3 me-2 text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Tipo</small>
+                                    <strong>
+                                        @if($ultimoVoo->tipo_aeronave == 'PC')
+                                            Pequeno Porte
+                                        @elseif($ultimoVoo->tipo_aeronave == 'MC')
+                                            Médio Porte
+                                        @elseif($ultimoVoo->tipo_aeronave == 'LC')
+                                            Grande Porte
+                                        @else
+                                            {{ $ultimoVoo->tipo_aeronave }}
+                                        @endif
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-sort-numeric-up me-2 text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Voos</small>
+                                    <strong>{{ $ultimoVoo->qtd_voos }}x</strong>
+                                    <small class="text-muted">({{ number_format($ultimoVoo->total_passageiros, 0, ',', '.') }} pax)</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-clock me-2 text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Horário</small>
+                                    <strong>{{ $ultimoVoo->horario_voo }}</strong>
+                                    <small class="text-muted">
+                                        @if($ultimoVoo->horario_voo == 'EAM')
+                                            (00h-06h)
+                                        @elseif($ultimoVoo->horario_voo == 'AM')
+                                            (06h-12h)
+                                        @elseif($ultimoVoo->horario_voo == 'AN')
+                                            (12h-18h)
+                                        @elseif($ultimoVoo->horario_voo == 'PM')
+                                            (18h-00h)
+                                        @else
+                                            (Diário)
+                                        @endif
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @if($ultimoVoo->media_notas)
+                    <div class="row mt-3 pt-2 border-top">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-star-fill text-warning me-1"></i>
+                                    <small class="text-muted">Avaliações:</small>
+                                    @if($ultimoVoo->nota_obj)
+                                        <span class="badge bg-info bg-opacity-10 text-info ms-2">Obj: {{ $ultimoVoo->nota_obj_letra }}</span>
+                                    @endif
+                                    @if($ultimoVoo->nota_pontualidade)
+                                        <span class="badge bg-info bg-opacity-10 text-info">Pont: {{ $ultimoVoo->nota_pontualidade_letra }}</span>
+                                    @endif
+                                    @if($ultimoVoo->nota_servicos)
+                                        <span class="badge bg-info bg-opacity-10 text-info">Serv: {{ $ultimoVoo->nota_servicos_letra }}</span>
+                                    @endif
+                                    @if($ultimoVoo->nota_patio)
+                                        <span class="badge bg-info bg-opacity-10 text-info">Pátio: {{ $ultimoVoo->nota_patio_letra }}</span>
+                                    @endif
+                                </div>
+                                <div>
+                                    <span class="badge bg-success rounded-pill fs-6 p-2">
+                                        <i class="bi bi-calculator me-1"></i>
+                                        Média: {{ number_format($ultimoVoo->media_notas, 1) }} ({{ $ultimoVoo->media_notas_letra }})
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Use os dados acima como referência para o novo cadastro
+                        </small>
+                        <a href="{{ route('voos.show', $ultimoVoo) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye me-1"></i>
+                            Ver Detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @else
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-secondary shadow-sm">
+                <div class="card-body text-center py-3">
+                    <i class="bi bi-info-circle me-2 text-secondary"></i>
+                    <span class="text-secondary">Nenhum voo cadastrado ainda. Este será o primeiro!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Resto do formulário igual ao anterior -->
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm border-0">
@@ -183,7 +347,7 @@
                                     @enderror
                                 </div>
 
-                                <!-- Modelo da Aeronave (apenas o modelo) -->
+                                <!-- Modelo da Aeronave -->
                                 <div class="col-md-4 mb-3">
                                     <label for="aeronave_id" class="form-label fw-semibold">
                                         Modelo da Aeronave <span class="text-danger">*</span>
@@ -204,7 +368,7 @@
                                     @enderror
                                 </div>
 
-                                <!-- Tipo de Aeronave (Porte - preenchido automaticamente) -->
+                                <!-- Tipo de Aeronave -->
                                 <div class="col-md-4 mb-3">
                                     <label for="tipo_aeronave" class="form-label fw-semibold">
                                         Tipo de Aeronave <span class="text-danger">*</span>
@@ -234,7 +398,6 @@
                                 Detalhes do Voo
                             </h5>
                             
-                            <!-- Primeira linha: Quantidade de Voos e Horário -->
                             <div class="row mt-3">
                                 <div class="col-md-6 mb-3">
                                     <label for="qtd_voos" class="form-label fw-semibold">
@@ -283,7 +446,6 @@
                                 </div>
                             </div>
 
-                            <!-- Segunda linha: Capacidade e Total de Passageiros -->
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="capacidade" class="form-label fw-semibold">
@@ -413,6 +575,7 @@
     </div>
 </div>
 
+<!-- CSS e Script permanecem iguais -->
 <style>
 .card {
     transition: all 0.3s ease;
@@ -450,23 +613,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const totalPassageirosInput = document.getElementById('total_passageiros');
     const idVooInput = document.getElementById('id_voo');
 
-    // Mapeamento de porte para descrição
     const porteTexto = {
         'PC': 'Pequeno Porte',
         'MC': 'Médio Porte',
         'LC': 'Grande Porte'
     };
 
-    // Mapeamento de horários
-    const horarioTexto = {
-        'EAM': 'Early Morning (00h-06h)',
-        'AM': 'Morning (06h-12h)',
-        'AN': 'Afternoon (12h-18h)',
-        'PM': 'Evening (18h-00h)',
-        'ALL': 'Diário'
-    };
-
-    // Função para carregar aeronaves por companhia
     function carregarAeronaves(companhiaId) {
         if (!companhiaId) {
             aeronaveSelect.innerHTML = '<option value="" disabled selected>Selecione uma aeronave</option>';
@@ -498,14 +650,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    // Função para limpar os campos de aeronave
     function limparCamposAeronave() {
         tipoAeronaveInput.value = '';
         capacidadeInput.value = '';
         totalPassageirosInput.value = '0';
     }
 
-    // Função para atualizar os campos conforme a aeronave selecionada
     function atualizarInfoAeronave() {
         const selectedOption = aeronaveSelect.options[aeronaveSelect.selectedIndex];
         
@@ -522,7 +672,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Função para calcular total de passageiros
     function calcularTotalPassageiros() {
         const capacidade = parseInt(capacidadeInput.value || 0);
         const qtdVoos = parseInt(qtdVoosInput.value || 0);
@@ -530,11 +679,7 @@ document.addEventListener('DOMContentLoaded', function() {
         totalPassageirosInput.value = total.toLocaleString('pt-BR');
     }
 
-    // ============================================
-    // VALIDAÇÃO DO ID DO VOO (COM CONVERSÃO PARA MAIÚSCULAS)
-    // ============================================
-    
-    // Criar elemento de feedback para o ID do voo
+    // Validação do ID
     const idVooGroup = idVooInput.closest('.mb-3');
     let idVooFeedback = document.getElementById('idVooFeedback');
     
@@ -547,21 +692,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let timeoutId = null;
 
-    // Função para validar o ID do voo
     function validarIdVoo(valor) {
-        // Limpar timeout anterior
-        if (timeoutId) {
-            clearTimeout(timeoutId);
-        }
+        if (timeoutId) clearTimeout(timeoutId);
         
-        // Se o campo estiver vazio, limpar feedback
         if (!valor || valor.trim() === '') {
             idVooFeedback.innerHTML = '';
             idVooInput.classList.remove('is-valid', 'is-invalid');
             return false;
         }
         
-        // Verificar formato básico (2-4 letras + hífen + 4 números)
         const formatoValido = /^[A-Z]{2,4}-\d{4}$/.test(valor);
         
         if (!formatoValido) {
@@ -573,7 +712,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
-        // Formato válido, fazer requisição para verificar se o código existe
         timeoutId = setTimeout(() => {
             fetch('{{ route("verificar.id.voo") }}', {
                 method: 'POST',
@@ -586,7 +724,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.valid) {
-                    const codigo = valor.split('-')[0];
                     idVooFeedback.innerHTML = '<i class="bi bi-check-circle-fill me-1 text-success"></i> ' + 
                         (data.companhia ? `✓ Código válido: ${data.companhia}` : '✓ Código válido!');
                     idVooFeedback.classList.remove('text-danger', 'text-warning', 'text-info');
@@ -603,27 +740,18 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Erro ao validar ID:', error);
-                idVooFeedback.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i> Erro ao validar. Tente novamente.';
-                idVooFeedback.classList.add('text-warning');
             });
         }, 500);
         
         return true;
     }
 
-    // Validação do ID do voo (converte para maiúsculas)
     idVooInput.addEventListener('input', function() {
-        // Converte para maiúsculas automaticamente
         let valor = this.value.toUpperCase();
-        
-        // Atualiza o campo com o valor em maiúsculas
         this.value = valor;
-        
-        // Validar o ID
         validarIdVoo(valor);
     });
 
-    // Validação ao perder o foco
     idVooInput.addEventListener('blur', function() {
         const valor = this.value;
         if (valor && !/^[A-Z]{2,4}-\d{4}$/.test(valor)) {
@@ -634,7 +762,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Event listeners para os outros campos
     companhiaSelect.addEventListener('change', function() {
         carregarAeronaves(this.value);
     });
@@ -642,7 +769,6 @@ document.addEventListener('DOMContentLoaded', function() {
     aeronaveSelect.addEventListener('change', atualizarInfoAeronave);
     qtdVoosInput.addEventListener('input', calcularTotalPassageiros);
 
-    // Botão limpar
     const btnLimpar = document.getElementById('btnLimpar');
     if (btnLimpar) {
         btnLimpar.addEventListener('click', function(e) {
@@ -656,28 +782,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Se já houver uma companhia selecionada (em caso de erro), carregar aeronaves
     if (companhiaSelect.value) {
         carregarAeronaves(companhiaSelect.value);
     }
 
-    // Adicionar tooltips para os horários
-    const horarioSelect = document.getElementById('horario_voo');
-    if (horarioSelect) {
-        horarioSelect.addEventListener('change', function() {
-            const horario = this.value;
-            const tooltipText = horarioTexto[horario] || '';
-            if (tooltipText) {
-                this.setAttribute('title', tooltipText);
-            }
-        });
-        // Trigger initial
-        if (horarioSelect.value) {
-            horarioSelect.setAttribute('title', horarioTexto[horarioSelect.value] || '');
-        }
-    }
-
-    // Adicionar validação no submit
     const form = document.getElementById('formVoo');
     form.addEventListener('submit', function(e) {
         const idVoo = idVooInput.value;
@@ -703,7 +811,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
-        // Verificar se o ID foi validado pelo servidor
         if (!idVooInput.classList.contains('is-valid')) {
             e.preventDefault();
             idVooFeedback.innerHTML = '<i class="bi bi-x-circle-fill me-1 text-danger"></i> Por favor, aguarde a validação do código ou verifique se o código é válido.';
