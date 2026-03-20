@@ -19,7 +19,7 @@
         <div class="space-y-4">
             <div>
                 <h3 class="text-sm font-medium text-gray-500">ID do Voo</h3>
-                <p class="mt-1 text-lg">{{ $voo->id_voo }}</p>
+                <p class="mt-1 text-lg font-mono">{{ $voo->id_voo }}</p>
             </div>
 
             <div>
@@ -35,7 +35,13 @@
             <div>
                 <h3 class="text-sm font-medium text-gray-500">Aeronave</h3>
                 <p class="mt-1 text-lg">{{ $voo->aeronave->modelo }} ({{ $voo->aeronave->fabricante->nome ?? 'N/A' }})</p>
-                <p class="text-sm text-gray-600">Capacidade: {{ $voo->aeronave->capacidade }} passageiros | Porte: {{ $voo->aeronave->porte }}</p>
+                <p class="text-sm text-gray-600">Capacidade: {{ number_format($voo->aeronave->capacidade, 0, ',', '.') }} passageiros</p>
+                <p class="text-sm text-gray-600">Porte: 
+                    @if($voo->aeronave->porte == 'PC') Pequeno Porte
+                    @elseif($voo->aeronave->porte == 'MC') Médio Porte
+                    @elseif($voo->aeronave->porte == 'LC') Grande Porte
+                    @else {{ $voo->aeronave->porte }} @endif
+                </p>
             </div>
 
             <div>
@@ -56,7 +62,18 @@
 
             <div>
                 <h3 class="text-sm font-medium text-gray-500">Horário do Voo</h3>
-                <p class="mt-1 text-lg">{{ $voo->horario_voo }}</p>
+                <p class="mt-1 text-lg">
+                    @php
+                        $horarioLabels = [
+                            'EAM' => 'Early Morning (00h-06h)',
+                            'AM' => 'Morning (06h-12h)',
+                            'AN' => 'Afternoon (12h-18h)',
+                            'PM' => 'Evening (18h-00h)',
+                            'ALL' => 'Diário'
+                        ];
+                    @endphp
+                    {{ $horarioLabels[$voo->horario_voo] ?? $voo->horario_voo }}
+                </p>
             </div>
 
             <div>
@@ -78,7 +95,7 @@
 
     @if($voo->nota_obj || $voo->nota_pontualidade || $voo->nota_servicos || $voo->nota_patio)
     <div class="mt-8">
-        <h2 class="text-xl font-bold mb-4">Notas</h2>
+        <h2 class="text-xl font-bold mb-4">Avaliações</h2>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             @if($voo->nota_obj)
             <div class="bg-gray-50 p-4 rounded-lg">
@@ -112,6 +129,21 @@
             </div>
             @endif
         </div>
+        
+        @if($voo->media_notas)
+        <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h4 class="font-semibold text-blue-800">Média Geral</h4>
+                    <p class="text-3xl font-bold text-blue-600">{{ number_format($voo->media_notas, 1) }}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-blue-600">Classificação: {{ $voo->media_notas_letra }}</p>
+                    <p class="text-xs text-blue-500">Média aritmética das notas</p>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
     @endif
 </div>
