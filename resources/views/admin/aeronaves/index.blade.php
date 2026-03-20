@@ -29,12 +29,72 @@
                 <table class="table table-hover">
                     <thead class="table-light">
                         <tr>
-                            <th>ID</th>
-                            <th>Modelo</th>
-                            <th>Fabricante</th>
-                            <th>Capacidade</th>
-                            <th>Porte</th>
-                            <th>Data de Cadastro</th>
+                            <th>
+                                <a href="{{ route('aeronaves.index', ['sort' => 'id', 'direction' => ($sortField == 'id' && $sortDirection == 'asc') ? 'desc' : 'asc']) }}" 
+                                   class="text-decoration-none text-dark d-flex align-items-center">
+                                    ID
+                                    @if($sortField == 'id')
+                                        <i class="bi bi-arrow-{{ $sortDirection == 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('aeronaves.index', ['sort' => 'modelo', 'direction' => ($sortField == 'modelo' && $sortDirection == 'asc') ? 'desc' : 'asc']) }}" 
+                                   class="text-decoration-none text-dark d-flex align-items-center">
+                                    Modelo
+                                    @if($sortField == 'modelo')
+                                        <i class="bi bi-arrow-{{ $sortDirection == 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('aeronaves.index', ['sort' => 'fabricante', 'direction' => ($sortField == 'fabricante' && $sortDirection == 'asc') ? 'desc' : 'asc']) }}" 
+                                   class="text-decoration-none text-dark d-flex align-items-center">
+                                    Fabricante
+                                    @if($sortField == 'fabricante')
+                                        <i class="bi bi-arrow-{{ $sortDirection == 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('aeronaves.index', ['sort' => 'capacidade', 'direction' => ($sortField == 'capacidade' && $sortDirection == 'asc') ? 'desc' : 'asc']) }}" 
+                                   class="text-decoration-none text-dark d-flex align-items-center">
+                                    Capacidade
+                                    @if($sortField == 'capacidade')
+                                        <i class="bi bi-arrow-{{ $sortDirection == 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('aeronaves.index', ['sort' => 'porte', 'direction' => ($sortField == 'porte' && $sortDirection == 'asc') ? 'desc' : 'asc']) }}" 
+                                   class="text-decoration-none text-dark d-flex align-items-center">
+                                    Porte
+                                    @if($sortField == 'porte')
+                                        <i class="bi bi-arrow-{{ $sortDirection == 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{{ route('aeronaves.index', ['sort' => 'companhias_count', 'direction' => ($sortField == 'companhias_count' && $sortDirection == 'asc') ? 'desc' : 'asc']) }}" 
+                                   class="text-decoration-none text-dark d-flex align-items-center">
+                                    Companhias
+                                    @if($sortField == 'companhias_count')
+                                        <i class="bi bi-arrow-{{ $sortDirection == 'asc' ? 'up' : 'down' }} ms-1"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up ms-1 text-muted"></i>
+                                    @endif
+                                </a>
+                            </th>
                             <th width="150">Ações</th>
                         </tr>
                     </thead>
@@ -57,7 +117,11 @@
                                         <span class="badge bg-secondary">Não informado</span>
                                     @endif
                                 </td>
-                                <td>{{ $aeronave->capacidade }} passageiros</td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        {{ $aeronave->capacidade }} passageiros
+                                    </span>
+                                </td>
                                 <td>
                                     @if($aeronave->porte == 'PC')
                                         <span class="badge bg-info">PC - Pequeno Porte</span>
@@ -69,7 +133,21 @@
                                         <span class="badge bg-secondary">Não classificado</span>
                                     @endif
                                 </td>
-                                <td>{{ $aeronave->created_at?->format('d/m/Y H:i') ?? 'Data não disponível' }}</td>
+                                <td>
+                                    @php
+                                        $totalCompanhias = $aeronave->companhias->count();
+                                    @endphp
+                                    @if($totalCompanhias > 0)
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-building"></i> {{ $totalCompanhias }} 
+                                            {{ $totalCompanhias == 1 ? 'companhia' : 'companhias' }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-secondary">
+                                            <i class="bi bi-building"></i> Nenhuma
+                                        </span>
+                                    @endif
+                                </td>
                                 <td>
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('aeronaves.edit', $aeronave->id) }}" 

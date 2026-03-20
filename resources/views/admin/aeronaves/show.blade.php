@@ -142,6 +142,93 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <hr class="my-3">
+
+                            <!-- Nova seção: Total de Companhias -->
+                            <div class="mt-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-info bg-opacity-10 p-2 rounded me-2">
+                                        <i class="bi bi-building text-info"></i>
+                                    </div>
+                                    <div>
+                                        <small class="text-muted d-block">Total de Companhias</small>
+                                        <span class="fw-bold fs-5">{{ $aeronave->companhias->count() }}</span>
+                                        <small class="text-muted">companhias utilizam este modelo</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nova Seção: Lista de Companhias que possuem este modelo -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card border-0 bg-light">
+                        <div class="card-header bg-transparent border-bottom">
+                            <h6 class="fw-semibold mb-0">
+                                <i class="bi bi-building me-2"></i>Companhias Aéreas que utilizam este modelo
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            @php
+                                $companhias = $aeronave->companhias;
+                            @endphp
+                            
+                            @if($companhias->count() > 0)
+                                <div class="row">
+                                    @foreach($companhias as $companhia)
+                                        <div class="col-md-6 col-lg-4 mb-3">
+                                            <div class="card h-100 border-0 shadow-sm">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex align-items-start">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="bg-primary bg-opacity-10 p-2 rounded">
+                                                                <i class="bi bi-building fs-4 text-primary"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1 ms-3">
+                                                            <h6 class="card-title mb-1 fw-semibold">
+                                                                <a href="{{ route('companhias.show', $companhia->id) }}" class="text-decoration-none text-dark">
+                                                                    {{ $companhia->nome }}
+                                                                </a>
+                                                            </h6>
+                                                            @if($companhia->codigo_iata)
+                                                                <small class="text-muted d-block">
+                                                                    <i class="bi bi-tag me-1"></i>Código IATA: {{ $companhia->codigo_iata }}
+                                                                </small>
+                                                            @endif
+                                                            @if($companhia->pais)
+                                                                <small class="text-muted d-block">
+                                                                    <i class="bi bi-geo-alt me-1"></i>{{ $companhia->pais }}
+                                                                </small>
+                                                            @endif
+                                                            @if($companhia->pivot && $companhia->pivot->created_at)
+                                                                <small class="text-muted d-block mt-1">
+                                                                    <i class="bi bi-calendar-plus me-1"></i>
+                                                                    Associada em: {{ $companhia->pivot->created_at->format('d/m/Y') }}
+                                                                </small>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-4">
+                                    <i class="bi bi-building text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-3 mb-0">
+                                        Nenhuma companhia aérea está utilizando este modelo de aeronave no momento.
+                                    </p>
+                                    <small class="text-muted">
+                                        Para associar esta aeronave a uma companhia, edite o cadastro da companhia desejada.
+                                    </small>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>

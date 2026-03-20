@@ -31,11 +31,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // NOVO: Rotas para voos (acessível para todos usuários autenticados)
+    // Rotas para voos (acessível para todos usuários autenticados)
     Route::resource('voos', VooController::class);
 
-    // NOVO: Rota AJAX para buscar aeronaves por companhia
+    // Rota AJAX para buscar aeronaves por companhia
     Route::get('/api/companhias/{companhia}/aeronaves', [VooController::class, 'getAeronavesByCompanhia']);
+
+    
 
     /*
     |--------------------------------------------------------------------------
@@ -59,5 +61,8 @@ Route::middleware('auth')->group(function () {
         
         Route::resource('companhias', CompanhiaAereaController::class);
         Route::resource('aeroportos', AeroportoController::class);;
+
+        // Verifica se o modelo de aeronave já existe (usado para validação AJAX no formulário de cadastrado)
+        Route::get('/api/verificar-modelo', [AeronaveController::class, 'verificarModelo'])->name('verificar.modelo');
     });
 });
