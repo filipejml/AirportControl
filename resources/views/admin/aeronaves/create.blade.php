@@ -80,9 +80,9 @@
                                 </option>
                             @endforeach
                         </select>
-                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalFabricante">
-                            <i class="bi bi-plus-circle"></i> Novo
-                        </button>
+                        <a href="{{ route('fabricantes.create') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-plus-circle"></i> Novo Fabricante
+                        </a>
                         @error('fabricante_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
