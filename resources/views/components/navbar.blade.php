@@ -29,14 +29,110 @@
                     </a>
                 </li>
 
-                <!-- Links de Admin (Companhias, Aeronaves, Aeroportos) - Apenas para tipo 0 -->
+                <!-- Links para Administrador -->
                 @if(auth()->user()->tipo == 0)
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('companhias.*') ? 'active' : '' }}" 
-                       href="{{ route('companhias.index') }}">
-                        <i class="bi bi-building me-1"></i>Companhias Aéreas
-                    </a>
-                </li>
+                    <!-- Companhias Aéreas com Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('companhias.*') ? 'active' : '' }}" 
+                           href="#" 
+                           id="companhiasDropdown" 
+                           role="button" 
+                           data-bs-toggle="dropdown" 
+                           aria-expanded="false">
+                            <i class="bi bi-building me-1"></i>Companhias Aéreas
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="companhiasDropdown">
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('companhias.informacoes') ? 'active' : '' }}" 
+                                   href="{{ route('companhias.informacoes') }}">
+                                    <i class="bi bi-info-circle me-2"></i>Informações Gerais
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('companhias.index') ? 'active' : '' }}" 
+                                   href="{{ route('companhias.index') }}">
+                                    <i class="bi bi-list-ul me-2"></i>Gerenciar Companhias
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Aeronaves com Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('aeronaves.*') ? 'active' : '' }}" 
+                           href="#" 
+                           id="aeronavesDropdown" 
+                           role="button" 
+                           data-bs-toggle="dropdown" 
+                           aria-expanded="false">
+                            <i class="bi bi-airplane me-1"></i>Aeronaves
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="aeronavesDropdown">
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeronaves.informacoes') ? 'active' : '' }}" 
+                                   href="{{ route('aeronaves.informacoes') }}">
+                                    <i class="bi bi-info-circle me-2"></i>Informações Gerais
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeronaves.index') ? 'active' : '' }}" 
+                                   href="{{ route('aeronaves.index') }}">
+                                    <i class="bi bi-list-ul me-2"></i>Gerenciar Aeronaves
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Aeroportos com Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('aeroportos.*') ? 'active' : '' }}" 
+                           href="#" 
+                           id="aeroportosDropdown" 
+                           role="button" 
+                           data-bs-toggle="dropdown" 
+                           aria-expanded="false">
+                            <i class="bi bi-geo-alt me-1"></i>Aeroportos
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="aeroportosDropdown">
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeroportos.informacoes') ? 'active' : '' }}" 
+                                   href="{{ route('aeroportos.informacoes') }}">
+                                    <i class="bi bi-info-circle me-2"></i>Informações Gerais
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeroportos.index') ? 'active' : '' }}" 
+                                   href="{{ route('aeroportos.index') }}">
+                                    <i class="bi bi-list-ul me-2"></i>Gerenciar Aeroportos
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                @else
+                    <!-- Links para Usuário Comum -->
+                    <!-- Companhias Aéreas (apenas informações gerais) -->
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('companhias.informacoes') ? 'active' : '' }}" 
+                           href="{{ route('companhias.informacoes') }}">
+                            <i class="bi bi-building me-1"></i>Companhias Aéreas
+                        </a>
+                    </li>
+                    
+                    <!-- Aeronaves (apenas informações gerais) -->
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('aeronaves.informacoes') ? 'active' : '' }}" 
+                           href="{{ route('aeronaves.informacoes') }}">
+                            <i class="bi bi-airplane me-1"></i>Aeronaves
+                        </a>
+                    </li>
+                    
+                    <!-- Aeroportos (apenas informações gerais) -->
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('aeroportos.informacoes') ? 'active' : '' }}" 
+                           href="{{ route('aeroportos.informacoes') }}">
+                            <i class="bi bi-geo-alt me-1"></i>Aeroportos
+                        </a>
+                    </li>
                 @endif
 
                 <!-- 📊 DASHBOARD -->

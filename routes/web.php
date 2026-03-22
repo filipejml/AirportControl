@@ -33,6 +33,25 @@ Route::middleware('auth')->group(function () {
 
     // Rotas para voos - CRUD completo
     Route::resource('voos', VooController::class);
+    
+    // Rotas para companhias aéreas - CRUD completo
+    Route::resource('companhias', CompanhiaAereaController::class);
+    // Rota para exibir informações detalhadas de uma companhia aérea (incluindo aeronaves associadas)
+    Route::get('/companhias/informacoes', [CompanhiaAereaController::class, 'informacoes'])->name('companhias.informacoes');
+    
+    // Rotas para aeronaves - CRUD completo
+    Route::resource('aeronaves', AeronaveController::class, [
+        'parameters' => [
+            'aeronaves' => 'aeronave' // Corrige o nome do parâmetro
+        ]
+    ]);
+    // Rota para exibir informações detalhadas de uma aeronave (incluindo fabricante e companhias associadas)
+    Route::get('/aeronaves/informacoes', [AeronaveController::class, 'informacoes'])->name('aeronaves.informacoes');
+    
+    // Rotas para aeroportos - CRUD completo
+    Route::resource('aeroportos', AeroportoController::class);
+    // Rota para exibir informações detalhadas de um aeroporto (incluindo companhias associadas)
+    Route::get('/aeroportos/informacoes', [AeroportoController::class, 'informacoes'])->name('aeroportos.informacoes');
 
     // Rota AJAX para buscar aeronaves por companhia - página de cadastro de voo
     Route::get('/api/companhias/{companhia}/aeronaves', [VooController::class, 'getAeronavesByCompanhia']);
@@ -63,14 +82,6 @@ Route::middleware('auth')->group(function () {
             ->except(['index', 'show']);
 
         Route::resource('fabricantes', FabricanteController::class);
-        Route::resource('aeronaves', AeronaveController::class, [
-            'parameters' => [
-                'aeronaves' => 'aeronave' // Força o nome correto
-            ]
-        ]);
-        
-        Route::resource('companhias', CompanhiaAereaController::class);
-        Route::resource('aeroportos', AeroportoController::class);;
 
         // Verifica se o modelo de aeronave já existe (usado para validação AJAX no formulário de cadastrado)
         Route::get('/api/verificar-modelo', [AeronaveController::class, 'verificarModelo'])->name('verificar.modelo');

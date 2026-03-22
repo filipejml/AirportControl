@@ -1,4 +1,4 @@
-{{-- resources/views/home.blade.php --}}
+{{-- resources/views/dashboard/home.blade.php --}}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -88,21 +88,47 @@
                 </div>
             </div>
 
-            <!-- Card Companhias Aéreas (apenas admin) -->
-            @if(auth()->user()->tipo == 0)
+            <!-- Card Companhias Aéreas (visível para todos) -->
             <div class="col-md-4">
                 <div class="card card-dashboard shadow-sm p-3">
                     <div class="d-flex align-items-center mb-3">
                         <i class="bi bi-building fs-1 text-primary me-3"></i>
                         <h5 class="mb-0">Companhias Aéreas</h5>
                     </div>
-                    <p class="text-muted flex-grow-1">Gerenciar companhias aéreas</p>
-                    <a href="{{ route('companhias.index') }}" class="btn btn-primary btn-sm w-100">
+                    <p class="text-muted flex-grow-1">Visualizar informações gerais das companhias</p>
+                    <a href="{{ route('companhias.informacoes') }}" class="btn btn-primary btn-sm w-100">
                         <i class="bi bi-arrow-right me-1"></i>Acessar
                     </a>
                 </div>
             </div>
-            @endif
+
+            <!-- Card Aeronaves (visível para todos) -->
+            <div class="col-md-4">
+                <div class="card card-dashboard shadow-sm p-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-airplane fs-1 text-primary me-3"></i>
+                        <h5 class="mb-0">Aeronaves</h5>
+                    </div>
+                    <p class="text-muted flex-grow-1">Visualizar informações gerais das aeronaves</p>
+                    <a href="{{ route('aeronaves.informacoes') }}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>Acessar
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card Aeroportos (visível para todos) -->
+            <div class="col-md-4">
+                <div class="card card-dashboard shadow-sm p-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-geo-alt fs-1 text-primary me-3"></i>
+                        <h5 class="mb-0">Aeroportos</h5>
+                    </div>
+                    <p class="text-muted flex-grow-1">Visualizar informações gerais dos aeroportos</p>
+                    <a href="{{ route('aeroportos.informacoes') }}" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>Acessar
+                    </a>
+                </div>
+            </div>
 
             <!-- Card Dashboard -->
             <div class="col-md-4">
