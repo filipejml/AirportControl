@@ -191,4 +191,48 @@ class CompanhiaAereaController extends Controller
         // Se todos os IDs até o máximo estão ocupados, retorna o próximo
         return $maxId + 1;
     }
+
+    /**
+     * Display general information about airlines
+     */
+    public function informacoes()
+    {
+        $companhias = CompanhiaAerea::with(['aeronaves', 'aeroportos', 'voos'])
+            ->withCount('aeronaves', 'voos')
+            ->get();
+        
+        // Calculate total passengers for each company
+        foreach ($companhias as $companhia) {
+            $companhia->total_passageiros = $companhia->voos()->sum('total_passageiros');
+        }
+        
+        $aeroportos = Aeroporto::with('companhias')->get();
+        
+        // Totals
+        $totalCompanhias = $companhias->count();
+        $totalVoos = $companhias->sum('voos_count');
+        $totalPassageiros = $companhias->sum('total_passageiros');
+        
+        // Global average ratings
+        $mediaGeralNotas = 0;
+        $totalNotas = 0;
+        
+        foreach ($companhias as $companhia) {
+            if ($companhia->media_notas) {
+                $mediaGeralNotas += $companhia->media_notas;
+                $totalNotas++;
+            }
+        }
+        
+        $mediaGeralNotas = $totalNotas > 0 ? $mediaGeralNotas / $totalNotas : 0;
+        
+        return view('companhias.informacoes', compact(
+            'companhias',
+            'aeroportos',
+            'totalCompanhias',
+            'totalVoos',
+            'totalPassageiros',
+            'mediaGeralNotas'
+        ));
+    }
 }

@@ -150,4 +150,62 @@ class AeroportoController extends Controller
             'message' => $exists ? 'Este nome de aeroporto já está em uso.' : 'Nome disponível'
         ]);
     }
+
+    /**
+     * Display general information about airports
+     */
+    public function informacoes()
+    {
+        $aeroportos = Aeroporto::with(['companhias', 'voos.companhia'])
+            ->withCount('companhias')
+            ->get();
+        
+        // Calculate totals for each airport
+        foreach ($aeroportos as $aeroporto) {
+            $aeroporto->total_voos = $aeroporto->voos()->count();
+            $aeroporto->total_passageiros = $aeroporto->voos()->sum('total_passageiros');
+            $aeroporto->media_passageiros_por_voo = $aeroporto->total_voos > 0 
+                ? $aeroporto->total_passageiros / $aeroporto->total_voos 
+                : 0;
+        }
+        
+        $companhias = CompanhiaAerea::orderBy('nome')->get();
+        
+        // Totals
+        $totalAeroportos = $aeroportos->count();
+        $totalVoos = $aeroportos->sum('total_voos');
+        $totalPassageiros = $aeroportos->sum('total_passageiros');
+        $mediaPassageirosPorVoo = $totalVoos > 0 ? $totalPassageiros / $totalVoos : 0;
+        
+        // Statistics by time of day
+        $horarioStats = [
+            'EAM' => 0, // 00-06
+            'AM' => 0,  // 06-12
+            'AN' => 0,  // 12-18
+            'PM' => 0   // 18-00
+        ];
+        
+        foreach ($aeroportos as $aeroporto) {
+            $stats = $aeroporto->voos()
+                ->selectRaw('horario_voo, COUNT(*) as total')
+                ->groupBy('horario_voo')
+                ->pluck('total', 'horario_voo')
+                ->toArray();
+            
+            foreach ($horarioStats as $key => $value) {
+                $horarioStats[$key] += $stats[$key] ?? 0;
+            }
+        }
+        
+        return view('aeroportos.informacoes', compact(
+            'aeroportos',
+            'companhias',
+            'totalAeroportos',
+            'totalVoos',
+            'totalPassageiros',
+            'mediaPassageirosPorVoo',
+            'horarioStats'
+        ));
+    }
+
 }

@@ -156,4 +156,50 @@ class AeronaveController extends Controller
             'message' => $existe ? 'Este modelo de aeronave já está cadastrado!' : null
         ]);
     }
+
+    /**
+     * Display general information about aircrafts
+     */
+    public function informacoes()
+    {
+        $aeronaves = Aeronave::with(['fabricante', 'companhias', 'voos.companhia'])
+            ->withCount('companhias')
+            ->get();
+        
+        $fabricantes = Fabricante::orderBy('nome')->get();
+        
+        // Totals
+        $totalAeronaves = $aeronaves->count();
+        $totalFabricantes = $fabricantes->count();
+        $capacidadeTotal = $aeronaves->sum('capacidade');
+        $capacidadeMedia = $totalAeronaves > 0 ? $capacidadeTotal / $totalAeronaves : 0;
+        
+        // Statistics by porte
+        $porteStats = [
+            'PC' => ['quantidade' => 0, 'capacidade' => 0, 'percentual' => 0],
+            'MC' => ['quantidade' => 0, 'capacidade' => 0, 'percentual' => 0],
+            'LC' => ['quantidade' => 0, 'capacidade' => 0, 'percentual' => 0],
+        ];
+        
+        foreach ($aeronaves as $aeronave) {
+            $porteStats[$aeronave->porte]['quantidade']++;
+            $porteStats[$aeronave->porte]['capacidade'] += $aeronave->capacidade;
+        }
+        
+        foreach ($porteStats as $porte => $stats) {
+            $porteStats[$porte]['percentual'] = $totalAeronaves > 0 
+                ? ($stats['quantidade'] / $totalAeronaves) * 100 
+                : 0;
+        }
+        
+        return view('aeronaves.informacoes', compact(
+            'aeronaves',
+            'fabricantes',
+            'totalAeronaves',
+            'totalFabricantes',
+            'capacidadeTotal',
+            'capacidadeMedia',
+            'porteStats'
+        ));
+    }
 }
