@@ -13,20 +13,31 @@
 
     <div class="card shadow-sm">
         <div class="card-body p-4">
-            <form method="POST" action="{{ route('companhias.store') }}" id="form-companhia">
+            <form method="POST" action="{{ route('companhias.store') }}" id="companhiaForm">
                 @csrf
 
                 <div class="mb-4">
                     <label for="nome" class="form-label fw-semibold">Nome da Companhia</label>
-                    <input type="text" 
-                           class="form-control @error('nome') is-invalid @enderror" 
-                           id="nome" 
-                           name="nome" 
-                           value="{{ old('nome') }}"
-                           placeholder="Ex: Latam, Gol, Azul, American Airlines..."
-                           required>
+                    <div class="position-relative">
+                        <input type="text" 
+                               class="form-control @error('nome') is-invalid @enderror" 
+                               id="nome" 
+                               name="nome" 
+                               value="{{ old('nome') }}"
+                               placeholder="Ex: Latam, Gol, Azul, American Airlines..."
+                               required
+                               autocomplete="off">
+                        <div class="position-absolute end-0 top-50 translate-middle-y me-3">
+                            <div class="spinner-border spinner-border-sm text-primary d-none" id="nomeSpinner" role="status">
+                                <span class="visually-hidden">Verificando...</span>
+                            </div>
+                            <i class="bi bi-check-circle-fill text-success d-none" id="nomeCheckIcon"></i>
+                            <i class="bi bi-x-circle-fill text-danger d-none" id="nomeXIcon"></i>
+                        </div>
+                    </div>
+                    <div id="nomeFeedback" class="form-text"></div>
                     @error('nome')
-                        <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
 
@@ -34,69 +45,73 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
                             <label class="form-label fw-semibold mb-0">Aeronaves da Companhia</label>
-                            <p class="text-muted small mb-0">Selecione as aeronaves que pertencem a esta companhia</p>
+                            <p class="text-muted small mb-0 mt-1">Clique nos cards abaixo para selecionar as aeronaves</p>
                         </div>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="selecionarTodas">
-                                <i class="bi bi-check2-all"></i> Selecionar Todas
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllBtn">
+                                <i class="bi bi-check-all"></i> Selecionar Todas
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="desmarcarTodas">
-                                <i class="bi bi-x-lg"></i> Limpar Tudo
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllBtn">
+                                <i class="bi bi-x-circle"></i> Desmarcar Todas
                             </button>
                         </div>
                     </div>
                     
                     @if($aeronaves->count() > 0)
-                        <div class="border rounded-3 bg-light p-3" style="max-height: 450px; overflow-y: auto;">
-                            <div class="row g-3">
-                                @foreach($aeronaves as $aeronave)
-                                    <div class="col-md-6 col-lg-4">
-                                        <div class="card aeronave-card h-100 border-0 shadow-sm {{ in_array($aeronave->id, old('aeronaves', [])) ? 'selected' : '' }}" 
-                                             data-aeronave-id="{{ $aeronave->id }}">
-                                            <div class="card-body p-3">
-                                                <div class="d-flex align-items-start justify-content-between mb-2">
-                                                    <h6 class="card-title fw-bold mb-0">{{ $aeronave->modelo }}</h6>
-                                                    <div class="selected-icon {{ in_array($aeronave->id, old('aeronaves', [])) ? 'opacity-100' : 'opacity-0' }}">
-                                                        <i class="bi bi-check-circle-fill text-primary fs-5"></i>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="mt-2">
-                                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                                        <i class="bi bi-building text-muted small"></i>
-                                                        <span class="small text-muted">{{ $aeronave->fabricante->nome ?? 'Fabricante não informado' }}</span>
-                                                    </div>
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <i class="bi bi-people text-muted small"></i>
-                                                        <span class="small text-muted">{{ $aeronave->capacidade }} passageiros</span>
-                                                    </div>
-                                                </div>
+                        <div class="row g-4" id="aeronavesContainer">
+                            @foreach($aeronaves as $aeronave)
+                                <div class="col-md-4 col-lg-3">
+                                    <div class="aeronave-card {{ in_array($aeronave->id, old('aeronaves', [])) ? 'selected' : '' }}" 
+                                         data-id="{{ $aeronave->id }}"
+                                         onclick="toggleCard(this)">
+                                        
+                                        <div class="card-header">
+                                            <h5 class="card-title">{{ $aeronave->modelo }}</h5>
+                                            <div class="selection-badge">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                </svg>
                                             </div>
                                         </div>
+                                        
+                                        <div class="card-stats">
+                                            <div class="stat-item">
+                                                <div class="stat-label">Fabricante</div>
+                                                <div class="stat-value">{{ $aeronave->fabricante->nome ?? 'Não informado' }}</div>
+                                            </div>
+                                            <div class="stat-item">
+                                                <div class="stat-label">Capacidade</div>
+                                                <div class="stat-value">{{ $aeronave->capacidade }} passageiros</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <input type="checkbox" 
+                                               name="aeronaves[]" 
+                                               class="aeronave-checkbox" 
+                                               value="{{ $aeronave->id }}"
+                                               style="display: none;"
+                                               {{ in_array($aeronave->id, old('aeronaves', [])) ? 'checked' : '' }}>
                                     </div>
-                                @endforeach
-                            </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        
+                        <div class="mt-3">
+                            <span class="text-muted" id="selectedCount">
+                                <i class="bi bi-info-circle"></i> <span id="countNumber">0</span> aeronave(s) selecionada(s)
+                            </span>
                         </div>
                     @else
-                        <div class="alert alert-info text-center py-4">
-                            <i class="bi bi-info-circle fs-3"></i>
-                            <p class="mb-0 mt-2">Nenhuma aeronave cadastrada ainda.</p>
-                            <a href="{{ route('aeronaves.create') }}" class="btn btn-sm btn-primary mt-2">
-                                <i class="bi bi-plus-circle"></i> Cadastrar Aeronave
-                            </a>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            Nenhuma aeronave cadastrada ainda. 
+                            <a href="{{ route('aeronaves.create') }}" class="alert-link">Cadastrar aeronave</a>
                         </div>
                     @endif
-                    
-                    @error('aeronaves')
-                        <div class="text-danger small mt-2">{{ $message }}</div>
-                    @enderror
-                    <div class="form-text mt-3">
-                        <i class="bi bi-hand-index-thumb"></i> Clique no card para selecionar a aeronave
-                    </div>
                 </div>
 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
                         <i class="bi bi-save"></i> Salvar Companhia
                     </button>
                     <a href="{{ route('companhias.index') }}" class="btn btn-outline-secondary">
@@ -108,173 +123,422 @@
     </div>
 </div>
 
-@push('styles')
 <style>
+/* Cards inspirados no design da imagem */
 .aeronave-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    overflow: hidden;
-}
-
-.aeronave-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1) 0%, rgba(13, 110, 253, 0.05) 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .aeronave-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.12) !important;
-}
-
-.aeronave-card:hover::before {
-    opacity: 1;
+    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.15);
+    border-color: #cbd5e1;
 }
 
 .aeronave-card.selected {
-    background: linear-gradient(135deg, #e7f1ff 0%, #d4e4ff 100%);
-    border: 1px solid #0d6efd !important;
-    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-color: #1e40af;
+    box-shadow: 0 8px 20px -6px rgba(59, 130, 246, 0.4);
 }
 
-.aeronave-card.selected .card-title {
-    color: #0d6efd;
+.aeronave-card.selected .card-header .card-title {
+    color: white;
 }
 
-.aeronave-card.selected .selected-icon {
-    opacity: 1 !important;
+.aeronave-card.selected .selection-badge {
+    opacity: 1;
+    transform: scale(1);
+    color: white;
 }
 
-.selected-icon {
-    transition: opacity 0.2s ease;
+.aeronave-card.selected .card-stats .stat-label {
+    color: rgba(255, 255, 255, 0.8);
 }
 
-.selected-icon i {
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+.aeronave-card.selected .card-stats .stat-value {
+    color: white;
 }
 
-/* Efeito de clique */
-.aeronave-card:active {
-    transform: translateY(-2px);
-    transition: transform 0.1s ease;
+.card-header {
+    padding: 20px 20px 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.aeronave-card.selected .card-header {
+    border-bottom-color: rgba(255, 255, 255, 0.2);
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0;
+    color: #111827;
+    letter-spacing: -0.3px;
+}
+
+.selection-badge {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s ease;
+    color: #3b82f6;
+}
+
+.selection-badge svg {
+    width: 18px;
+    height: 18px;
+}
+
+.card-stats {
+    padding: 16px 20px 20px 20px;
+}
+
+.stat-item {
+    margin-bottom: 12px;
+}
+
+.stat-item:last-child {
+    margin-bottom: 0;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+/* Botões */
+.btn-group .btn {
+    font-size: 0.85rem;
+    padding: 6px 14px;
+}
+
+.btn-outline-primary {
+    border: 1px solid #3b82f6;
+    color: #3b82f6;
+    background: white;
+}
+
+.btn-outline-primary:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-outline-secondary {
+    border: 1px solid #d1d5db;
+    color: #6b7280;
+    background: white;
+}
+
+.btn-outline-secondary:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    color: #374151;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    border: none;
+    padding: 10px 24px;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-primary:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Formulário */
+.form-control {
+    border: 1px solid #e5e7eb;
+    padding: 10px 16px;
+    border-radius: 12px;
+}
+
+.form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-control.is-valid {
+    border-color: #10b981;
+    background-image: none;
+}
+
+.form-control.is-invalid {
+    border-color: #ef4444;
+    background-image: none;
+}
+
+/* Contador */
+#selectedCount {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+#countNumber {
+    font-weight: 700;
+    color: #3b82f6;
 }
 </style>
-@endpush
 
-@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const cards = document.querySelectorAll('.aeronave-card');
-    const selecionarTodasBtn = document.getElementById('selecionarTodas');
-    const desmarcarTodasBtn = document.getElementById('desmarcarTodas');
-    const form = document.getElementById('form-companhia');
+let checkNameTimeout = null;
+let isNameValid = false;
+let isChecking = false;
+
+function toggleCard(card) {
+    card.classList.toggle('selected');
     
-    // Função para atualizar os inputs hidden antes do submit
-    function updateHiddenInputs() {
-        // Remover todos os inputs hidden existentes
-        const existingInputs = form.querySelectorAll('input[name="aeronaves[]"]');
-        existingInputs.forEach(input => input.remove());
+    const parentDiv = card.parentElement;
+    const checkbox = parentDiv.querySelector('.aeronave-checkbox');
+    
+    if (card.classList.contains('selected')) {
+        checkbox.checked = true;
+    } else {
+        checkbox.checked = false;
+    }
+    
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const selectedCards = document.querySelectorAll('.aeronave-card.selected');
+    const count = selectedCards.length;
+    const countSpan = document.getElementById('countNumber');
+    if (countSpan) {
+        countSpan.textContent = count;
+    }
+}
+
+function selectAll() {
+    const cards = document.querySelectorAll('.aeronave-card');
+    cards.forEach(card => {
+        if (!card.classList.contains('selected')) {
+            card.classList.add('selected');
+            const parentDiv = card.parentElement;
+            const checkbox = parentDiv.querySelector('.aeronave-checkbox');
+            checkbox.checked = true;
+        }
+    });
+    updateSelectedCount();
+}
+
+function deselectAll() {
+    const cards = document.querySelectorAll('.aeronave-card');
+    cards.forEach(card => {
+        if (card.classList.contains('selected')) {
+            card.classList.remove('selected');
+            const parentDiv = card.parentElement;
+            const checkbox = parentDiv.querySelector('.aeronave-checkbox');
+            checkbox.checked = false;
+        }
+    });
+    updateSelectedCount();
+}
+
+function checkCompanyName(nome, companyId = null) {
+    if (!nome || nome.trim() === '') {
+        resetNameValidation();
+        return;
+    }
+    
+    // Limpar timeout anterior
+    if (checkNameTimeout) {
+        clearTimeout(checkNameTimeout);
+    }
+    
+    // Mostrar spinner
+    const spinner = document.getElementById('nomeSpinner');
+    const checkIcon = document.getElementById('nomeCheckIcon');
+    const xIcon = document.getElementById('nomeXIcon');
+    const nomeInput = document.getElementById('nome');
+    const feedbackDiv = document.getElementById('nomeFeedback');
+    
+    spinner.classList.remove('d-none');
+    checkIcon.classList.add('d-none');
+    xIcon.classList.add('d-none');
+    feedbackDiv.innerHTML = '<span class="text-muted">Verificando disponibilidade...</span>';
+    nomeInput.classList.remove('is-valid', 'is-invalid');
+    isChecking = true;
+    
+    // Preparar dados para enviar
+    const formData = new FormData();
+    formData.append('nome', nome);
+    if (companyId) {
+        formData.append('id', companyId);
+    }
+    
+    checkNameTimeout = setTimeout(() => {
+        fetch('{{ route("companhias.check-name") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            spinner.classList.add('d-none');
+            isChecking = false;
+            
+            if (data.exists) {
+                // Nome já existe
+                nomeInput.classList.add('is-invalid');
+                nomeInput.classList.remove('is-valid');
+                checkIcon.classList.add('d-none');
+                xIcon.classList.remove('d-none');
+                feedbackDiv.innerHTML = `<span class="text-danger">⚠️ ${data.message}</span>`;
+                isNameValid = false;
+            } else {
+                // Nome disponível
+                nomeInput.classList.add('is-valid');
+                nomeInput.classList.remove('is-invalid');
+                checkIcon.classList.remove('d-none');
+                xIcon.classList.add('d-none');
+                feedbackDiv.innerHTML = '<span class="text-success">✓ Nome disponível</span>';
+                isNameValid = true;
+            }
+            
+            // Atualizar estado do botão de submit
+            updateSubmitButton();
+        })
+        .catch(error => {
+            console.error('Erro ao verificar nome:', error);
+            spinner.classList.add('d-none');
+            isChecking = false;
+            feedbackDiv.innerHTML = '<span class="text-warning">⚠️ Não foi possível verificar disponibilidade</span>';
+            // Em caso de erro, permitir submit (a validação do backend vai pegar)
+            isNameValid = true;
+            updateSubmitButton();
+        });
+    }, 500); // Delay de 500ms para não fazer muitas requisições
+}
+
+function resetNameValidation() {
+    const nomeInput = document.getElementById('nome');
+    const spinner = document.getElementById('nomeSpinner');
+    const checkIcon = document.getElementById('nomeCheckIcon');
+    const xIcon = document.getElementById('nomeXIcon');
+    const feedbackDiv = document.getElementById('nomeFeedback');
+    
+    spinner.classList.add('d-none');
+    checkIcon.classList.add('d-none');
+    xIcon.classList.add('d-none');
+    nomeInput.classList.remove('is-valid', 'is-invalid');
+    feedbackDiv.innerHTML = '';
+    isNameValid = false;
+    isChecking = false;
+    updateSubmitButton();
+}
+
+function updateSubmitButton() {
+    const submitBtn = document.getElementById('submitBtn');
+    const nomeInput = document.getElementById('nome');
+    const nomeValue = nomeInput.value.trim();
+    
+    if (nomeValue === '') {
+        submitBtn.disabled = true;
+        submitBtn.title = 'Digite o nome da companhia';
+    } else if (isChecking) {
+        submitBtn.disabled = true;
+        submitBtn.title = 'Verificando disponibilidade do nome...';
+    } else if (!isNameValid) {
+        submitBtn.disabled = true;
+        submitBtn.title = 'Este nome não está disponível';
+    } else {
+        submitBtn.disabled = false;
+        submitBtn.title = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const deselectAllBtn = document.getElementById('deselectAllBtn');
+    const nomeInput = document.getElementById('nome');
+    
+    if (selectAllBtn) {
+        selectAllBtn.onclick = selectAll;
+    }
+    
+    if (deselectAllBtn) {
+        deselectAllBtn.onclick = deselectAll;
+    }
+    
+    // Adicionar evento de input para verificar nome em tempo real
+    if (nomeInput) {
+        nomeInput.addEventListener('input', function(e) {
+            const nome = e.target.value.trim();
+            if (nome === '') {
+                resetNameValidation();
+            } else {
+                checkCompanyName(nome);
+            }
+        });
         
-        // Adicionar inputs hidden para cada card selecionado
-        cards.forEach(card => {
-            if (card.classList.contains('selected')) {
-                const aeronaveId = card.dataset.aeronaveId;
-                const hiddenInput = document.createElement('input');
-                hiddenInput.type = 'hidden';
-                hiddenInput.name = 'aeronaves[]';
-                hiddenInput.value = aeronaveId;
-                form.appendChild(hiddenInput);
+        // Prevenir submit se o nome for inválido
+        const form = document.getElementById('companhiaForm');
+        form.addEventListener('submit', function(e) {
+            if (!isNameValid && nomeInput.value.trim() !== '') {
+                e.preventDefault();
+                alert('Por favor, aguarde a verificação do nome ou corrija o nome da companhia.');
+                return false;
             }
         });
     }
     
-    // Função para atualizar o estado visual do card
-    function updateCardState(card, isSelected) {
-        if (isSelected) {
-            card.classList.add('selected');
-        } else {
-            card.classList.remove('selected');
-        }
-    }
-    
-    // Inicializar estado dos cards
+    // Garantir que os cards estejam sincronizados com os checkboxes (para old values)
+    const cards = document.querySelectorAll('.aeronave-card');
     cards.forEach(card => {
-        // Evento de clique no card
-        card.addEventListener('click', function(e) {
-            e.preventDefault();
-            const currentlySelected = this.classList.contains('selected');
-            updateCardState(this, !currentlySelected);
-            
-            // Adicionar efeito de ripple
-            const ripple = document.createElement('div');
-            ripple.style.position = 'absolute';
-            ripple.style.borderRadius = '50%';
-            ripple.style.backgroundColor = 'rgba(13, 110, 253, 0.3)';
-            ripple.style.width = '100px';
-            ripple.style.height = '100px';
-            ripple.style.marginLeft = '-50px';
-            ripple.style.marginTop = '-50px';
-            ripple.style.pointerEvents = 'none';
-            
-            const rect = this.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            ripple.style.left = x + 'px';
-            ripple.style.top = y + 'px';
-            ripple.style.transform = 'scale(0)';
-            ripple.style.transition = 'transform 0.4s ease-out, opacity 0.4s ease-out';
-            
-            this.style.position = 'relative';
-            this.style.overflow = 'hidden';
-            this.appendChild(ripple);
-            
-            setTimeout(() => {
-                ripple.style.transform = 'scale(2)';
-                ripple.style.opacity = '0';
-            }, 10);
-            
-            setTimeout(() => {
-                ripple.remove();
-            }, 400);
-        });
+        const parentDiv = card.parentElement;
+        const checkbox = parentDiv.querySelector('.aeronave-checkbox');
+        if (checkbox.checked) {
+            card.classList.add('selected');
+        }
     });
     
-    // Selecionar todas as aeronaves
-    if (selecionarTodasBtn) {
-        selecionarTodasBtn.addEventListener('click', function() {
-            cards.forEach(card => {
-                if (!card.classList.contains('selected')) {
-                    updateCardState(card, true);
-                }
+    updateSelectedCount();
+    
+    // Inicializar botão de submit desabilitado
+    updateSubmitButton();
+    
+    // Debug: verificar envio
+    const form = document.getElementById('companhiaForm');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const selectedValues = [];
+            document.querySelectorAll('.aeronave-checkbox:checked').forEach(cb => {
+                selectedValues.push(cb.value);
             });
+            console.log('Enviando aeronaves selecionadas:', selectedValues);
         });
     }
-    
-    // Desmarcar todas as aeronaves
-    if (desmarcarTodasBtn) {
-        desmarcarTodasBtn.addEventListener('click', function() {
-            cards.forEach(card => {
-                if (card.classList.contains('selected')) {
-                    updateCardState(card, false);
-                }
-            });
-        });
-    }
-    
-    // Antes de enviar o formulário, atualizar os inputs hidden
-    form.addEventListener('submit', function() {
-        updateHiddenInputs();
-    });
 });
 </script>
-@endpush
 @endsection
