@@ -126,4 +126,28 @@ class AeroportoController extends Controller
                 ->with('error', 'Erro ao excluir aeroporto: ' . $e->getMessage());
         }
     }
+
+    public function checkName(Request $request)
+    {
+        $request->validate([
+            'nome' => 'required|string|max:255'
+        ]);
+
+        $nome = $request->nome;
+        $airportId = $request->id;
+
+        // Check if name exists excluding current airport when editing
+        $query = Aeroporto::where('nome_aeroporto', $nome);
+        
+        if ($airportId) {
+            $query->where('id', '!=', $airportId);
+        }
+        
+        $exists = $query->exists();
+
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists ? 'Este nome de aeroporto já está em uso.' : 'Nome disponível'
+        ]);
+    }
 }

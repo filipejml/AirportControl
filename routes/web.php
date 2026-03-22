@@ -46,6 +46,9 @@ Route::middleware('auth')->group(function () {
     // Rota AJAX para verificar nome da companhia aérea - página de cadastro de companhia (para evitar duplicidade)
     Route::post('/companhias/check-name', [CompanhiaAereaController::class, 'checkName'])->name('companhias.check-name');
 
+    // Rota AJAX para verificar nome do aeroporto - página de cadastro de aeroporto (para evitar duplicidade)
+    Route::post('/aeroportos/check-name', [AeroportoController::class, 'checkName'])->name('aeroportos.check-name');
+
     /*
     |--------------------------------------------------------------------------
     | ROTAS ADMIN
