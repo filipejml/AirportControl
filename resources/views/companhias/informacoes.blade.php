@@ -244,7 +244,7 @@
                                             @endif
                                             <div class="mt-1">
                                                 <small class="text-muted">
-                                                    <i class="bi bi-geo-alt me-1"></i>{{ $companhia->aeroportos_count ?? 0 }} aeroportos
+                                                    <i class="bi bi-geo-alt me-1"></i>{{ $companhia->aeroportos->count() }} aeroportos
                                                 </small>
                                             </div>
                                         </div>
@@ -344,28 +344,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Dados das companhias
-        const companiesData = @json($companhias->map(function($c) {
-            return [
-                'id' => $c->id,
-                'nome' => $c->nome,
-                'aeronaves_count' => $c->aeronaves_count,
-                'voos_count' => $c->voos_count,
-                'total_passageiros' => $c->total_passageiros,
-                'media_notas' => $c->media_notas,
-                'nota_obj' => $c->voos->avg('nota_obj') ?? 0,
-                'nota_pontualidade' => $c->voos->avg('nota_pontualidade') ?? 0,
-                'nota_servicos' => $c->voos->avg('nota_servicos') ?? 0,
-                'nota_patio' => $c->voos->avg('nota_patio') ?? 0,
-                'aeroportos' => $c->aeroportos->map(function($a) {
-                    return [
-                        'id' => $a->id,
-                        'nome' => $a->nome_aeroporto,
-                        'voos_count' => $a->voos()->where('companhia_aerea_id', $c->id)->count()
-                    ];
-                })
-            ];
-        }));
+        // Dados das companhias (já preparados no controller)
+        const companiesData = @json($companiesData);
 
         // Gráfico de voos
         const ctx = document.getElementById('voosChart').getContext('2d');
@@ -475,7 +455,7 @@
             });
         });
 
-        // Filtros
+        // Filtros por companhia
         document.querySelectorAll('.filter-company').forEach(btn => {
             btn.addEventListener('click', function() {
                 const companyId = this.dataset.company;
@@ -489,6 +469,33 @@
                         if (card.dataset.companyId === companyId) {
                             card.style.display = '';
                             card.click();
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        });
+
+        // Filtros por aeroporto (implementação básica)
+        document.querySelectorAll('.filter-airport').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const airportId = this.dataset.airport;
+                
+                if (airportId === 'all') {
+                    document.querySelectorAll('.company-card').forEach(card => {
+                        card.style.display = '';
+                    });
+                } else {
+                    // Filtrar companhias que operam no aeroporto selecionado
+                    document.querySelectorAll('.company-card').forEach(card => {
+                        const companyId = card.dataset.companyId;
+                        const company = companiesData.find(c => c.id == companyId);
+                        
+                        const operatesAtAirport = company && company.aeroportos.some(a => a.id == airportId);
+                        
+                        if (operatesAtAirport) {
+                            card.style.display = '';
                         } else {
                             card.style.display = 'none';
                         }

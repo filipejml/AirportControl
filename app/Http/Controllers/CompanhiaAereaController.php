@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Aeronave;
 use App\Models\CompanhiaAerea;
+use App\Models\Aeroporto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -201,12 +202,56 @@ class CompanhiaAereaController extends Controller
             ->withCount('aeronaves', 'voos')
             ->get();
         
-        // Calculate total passengers for each company
+        // Calculate total passengers and ratings for each company
         foreach ($companhias as $companhia) {
             $companhia->total_passageiros = $companhia->voos()->sum('total_passageiros');
+            
+            // Calculate average ratings for each category
+            $companhia->nota_obj = $companhia->voos()->avg('nota_obj') ?? 0;
+            $companhia->nota_pontualidade = $companhia->voos()->avg('nota_pontualidade') ?? 0;
+            $companhia->nota_servicos = $companhia->voos()->avg('nota_servicos') ?? 0;
+            $companhia->nota_patio = $companhia->voos()->avg('nota_patio') ?? 0;
+            
+            // Calculate overall average rating (média das quatro notas)
+            $medias = $companhia->voos()
+                ->select(
+                    DB::raw('AVG(nota_obj) as obj'),
+                    DB::raw('AVG(nota_pontualidade) as pontualidade'),
+                    DB::raw('AVG(nota_servicos) as servicos'),
+                    DB::raw('AVG(nota_patio) as patio')
+                )
+                ->first();
+            
+            $companhia->media_notas = ($medias->obj + $medias->pontualidade + $medias->servicos + $medias->patio) / 4;
+            
+            // Calculate aeroportos count with voos count for each
+            $companhia->aeroportos_com_voos = $companhia->aeroportos->map(function($aeroporto) use ($companhia) {
+                return [
+                    'id' => $aeroporto->id,
+                    'nome' => $aeroporto->nome_aeroporto,
+                    'voos_count' => $aeroporto->voos()->where('companhia_aerea_id', $companhia->id)->count()
+                ];
+            });
         }
         
         $aeroportos = Aeroporto::with('companhias')->get();
+        
+        // Prepare companies data for JavaScript
+        $companiesData = $companhias->map(function($c) {
+            return [
+                'id' => $c->id,
+                'nome' => $c->nome,
+                'aeronaves_count' => $c->aeronaves_count,
+                'voos_count' => $c->voos_count,
+                'total_passageiros' => $c->total_passageiros,
+                'media_notas' => $c->media_notas,
+                'nota_obj' => $c->nota_obj,
+                'nota_pontualidade' => $c->nota_pontualidade,
+                'nota_servicos' => $c->nota_servicos,
+                'nota_patio' => $c->nota_patio,
+                'aeroportos' => $c->aeroportos_com_voos
+            ];
+        });
         
         // Totals
         $totalCompanhias = $companhias->count();
@@ -229,6 +274,7 @@ class CompanhiaAereaController extends Controller
         return view('companhias.informacoes', compact(
             'companhias',
             'aeroportos',
+            'companiesData',
             'totalCompanhias',
             'totalVoos',
             'totalPassageiros',

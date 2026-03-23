@@ -34,11 +34,13 @@ Route::middleware('auth')->group(function () {
 
     // Rotas para voos - CRUD completo
     Route::resource('voos', VooController::class);
-    
-    // Rotas para companhias aéreas - CRUD completo
-    Route::resource('companhias', CompanhiaAereaController::class);
+
+
     // Rota para exibir informações detalhadas de uma companhia aérea (incluindo aeronaves associadas)
     Route::get('/companhias/informacoes', [CompanhiaAereaController::class, 'informacoes'])->name('companhias.informacoes');
+    // Rotas para companhias aéreas - CRUD completo
+    Route::resource('companhias', CompanhiaAereaController::class);
+    
     
     // Rotas para aeronaves - CRUD completo
     Route::resource('aeronaves', AeronaveController::class, [
@@ -49,11 +51,11 @@ Route::middleware('auth')->group(function () {
     // Rota para exibir informações detalhadas de uma aeronave (incluindo fabricante e companhias associadas)
     Route::get('/aeronaves/informacoes', [AeronaveController::class, 'informacoes'])->name('aeronaves.informacoes');
     
-    // Rotas para aeroportos - CRUD completo
-    Route::resource('aeroportos', AeroportoController::class);
     // Rota para exibir informações detalhadas de um aeroporto (incluindo companhias associadas)
     Route::get('/aeroportos/informacoes', [AeroportoController::class, 'informacoes'])->name('aeroportos.informacoes');
-
+    // Rotas para aeroportos - CRUD completo
+    Route::resource('aeroportos', AeroportoController::class);
+    
     // Rota AJAX para buscar aeronaves por companhia - página de cadastro de voo
     Route::get('/api/companhias/{companhia}/aeronaves', [VooController::class, 'getAeronavesByCompanhia']);
 
