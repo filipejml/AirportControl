@@ -1,3 +1,4 @@
+{{-- resources/views/admin/registros/index.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Registros')
@@ -71,6 +72,22 @@
 
             <a href="{{ route('aeroportos.create') }}" class="btn btn-primary btn-sm">
                 + Novo Aeroporto
+            </a>
+        </div>
+    </div>
+
+    <!-- Relatórios (apenas para admin) -->
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 h-100">
+            <h5>📊 Relatórios</h5>
+            <p class="text-muted">Gerenciar relatórios e controle de visibilidade</p>
+
+            <a href="{{ route('admin.relatorios.index') }}" class="btn btn-outline-primary btn-sm mb-2">
+                Ver lista
+            </a>
+
+            <a href="{{ route('admin.relatorios.create') }}" class="btn btn-primary btn-sm">
+                + Novo Relatório
             </a>
         </div>
     </div>

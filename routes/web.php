@@ -1,4 +1,5 @@
 <?php
+// routes/web.php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -78,8 +79,24 @@ Route::middleware('auth')->group(function () {
             return view('admin.registros.index');
         })->name('registros');
 
-        Route::resource('relatorios.admin', RelatorioController::class)
-            ->except(['index', 'show']);
+        // Rotas de relatórios para admin (controle)
+        Route::prefix('admin')->name('admin.')->group(function () {
+            // Rota para listagem de controle
+            Route::get('/relatorios', [RelatorioController::class, 'adminIndex'])
+                ->name('relatorios.index');
+            
+            // Rotas de CRUD para relatórios (exceto index)
+            Route::get('/relatorios/create', [RelatorioController::class, 'create'])
+                ->name('relatorios.create');
+            Route::post('/relatorios', [RelatorioController::class, 'store'])
+                ->name('relatorios.store');
+            Route::get('/relatorios/{relatorio}/edit', [RelatorioController::class, 'edit'])
+                ->name('relatorios.edit');
+            Route::put('/relatorios/{relatorio}', [RelatorioController::class, 'update'])
+                ->name('relatorios.update');
+            Route::delete('/relatorios/{relatorio}', [RelatorioController::class, 'destroy'])
+                ->name('relatorios.destroy');
+        });
 
         Route::resource('fabricantes', FabricanteController::class);
 

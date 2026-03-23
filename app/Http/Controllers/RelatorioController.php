@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/RelatorioController.php
 
 namespace App\Http\Controllers;
 
@@ -19,6 +20,15 @@ class RelatorioController extends Controller
         }
 
         return view('relatorios.index', compact('relatorios'));
+    }
+
+    /**
+     * LISTAGEM PARA ADMIN (CONTROLE)
+     */
+    public function adminIndex()
+    {
+        $relatorios = Relatorio::all();
+        return view('admin.relatorios.index', compact('relatorios'));
     }
 
     /**
@@ -44,7 +54,7 @@ class RelatorioController extends Controller
 
         Relatorio::create($data);
 
-        return redirect()->route('relatorios')
+        return redirect()->route('admin.relatorios.index')
             ->with('success', 'Relatório criado com sucesso!');
     }
 
@@ -70,7 +80,7 @@ class RelatorioController extends Controller
 
         $relatorio->update($data);
 
-        return redirect()->route('relatorios')
+        return redirect()->route('admin.relatorios.index')
             ->with('success', 'Relatório atualizado!');
     }
 
@@ -81,7 +91,7 @@ class RelatorioController extends Controller
     {
         $relatorio->delete();
 
-        return redirect()->route('relatorios')
+        return redirect()->route('admin.relatorios.index')
             ->with('success', 'Relatório removido!');
     }
 }
