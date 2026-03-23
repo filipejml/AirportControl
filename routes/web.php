@@ -63,6 +63,9 @@ Route::middleware('auth')->group(function () {
     // Rota para exportar CSV - página de listagem de voos
     Route::get('/voos/export/csv', [VooController::class, 'exportCSV'])->name('voos.export.csv');
 
+    // Rota para exportar PDF - página de listagem de voos
+    Route::get('/voos/export/pdf', [VooController::class, 'exportPDF'])->name('voos.export.pdf');
+
     // Rota AJAX para verificar nome da companhia aérea - página de cadastro de companhia (para evitar duplicidade)
     Route::post('/companhias/check-name', [CompanhiaAereaController::class, 'checkName'])->name('companhias.check-name');
 

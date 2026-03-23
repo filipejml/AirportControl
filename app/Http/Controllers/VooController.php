@@ -13,6 +13,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class VooController extends Controller
 {
@@ -432,5 +433,124 @@ class VooController extends Controller
             $media >= 5 => 'Regular',
             default => 'Ruim'
         };
+    }
+
+    /**
+     * Exporta a lista de voos para PDF
+     */
+    public function exportPDF(Request $request)
+    {
+        try {
+            // Buscar voos com relacionamentos, aplicando os mesmos filtros da listagem
+            $query = Voo::with(['aeroporto', 'companhiaAerea', 'aeronave'])
+                ->orderBy('created_at', 'desc');
+            
+            // Aplicar filtros
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('id_voo', 'like', "%{$search}%")
+                    ->orWhereHas('aeroporto', function($sq) use ($search) {
+                        $sq->where('nome_aeroporto', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('companhiaAerea', function($sq) use ($search) {
+                        $sq->where('nome', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('aeronave', function($sq) use ($search) {
+                        $sq->where('modelo', 'like', "%{$search}%");
+                    });
+                });
+            }
+            
+            if ($request->filled('tipo')) {
+                $query->where('tipo_voo', $request->tipo);
+            }
+            
+            if ($request->filled('horario')) {
+                $query->where('horario_voo', $request->horario);
+            }
+            
+            if ($request->filled('dias')) {
+                $dataLimite = now()->subDays((int)$request->dias);
+                $query->where('created_at', '>=', $dataLimite);
+            }
+            
+            $voos = $query->get();
+            
+            // Se não houver dados
+            if ($voos->isEmpty()) {
+                if ($request->ajax()) {
+                    return response()->json(['error' => 'Não há voos para exportar com os filtros selecionados.'], 404);
+                }
+                return redirect()->back()->with('error', 'Não há voos para exportar com os filtros selecionados.');
+            }
+            
+            // Calcular estatísticas para o relatório
+            $estatisticas = [
+                'total_voos' => $voos->count(),
+                'total_passageiros' => $voos->sum('total_passageiros'),
+                'media_pax_voo' => $voos->count() > 0 ? round($voos->sum('total_passageiros') / $voos->count(), 0) : 0,
+                'voos_com_notas' => $voos->filter(function($voo) { return $voo->media_notas !== null; })->count(),
+                'media_geral_notas' => $voos->filter(function($voo) { return $voo->media_notas !== null; })->avg('media_notas'),
+                'data_exportacao' => now()->format('d/m/Y H:i:s'),
+                'filtros_aplicados' => $this->getFiltrosTexto($request)
+            ];
+            
+            // Preparar dados para a view
+            $data = [
+                'voos' => $voos,
+                'estatisticas' => $estatisticas,
+                'titulo' => 'Relatório de Voos',
+                'empresa' => 'Airport Manager',
+                'data_geracao' => now()->format('d/m/Y H:i:s')
+            ];
+            
+            // Gerar PDF
+            $pdf = Pdf::loadView('pdf.voos-relatorio', $data);
+            
+            // Configurar opções do PDF
+            $pdf->setPaper('A4', 'landscape');
+            $pdf->setOptions([
+                'defaultFont' => 'sans-serif',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true
+            ]);
+            
+            // Nome do arquivo
+            $filename = 'relatorio_voos_' . date('Y-m-d_His') . '.pdf';
+            
+            // Download do PDF
+            return $pdf->download($filename);
+            
+        } catch (\Exception $e) {
+            \Log::error('Erro ao exportar PDF: ' . $e->getMessage());
+            if ($request->ajax()) {
+                return response()->json(['error' => 'Erro ao exportar PDF: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Erro ao exportar PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Retorna texto dos filtros aplicados
+     */
+    private function getFiltrosTexto($request)
+    {
+        $filtros = [];
+        
+        if ($request->filled('search')) {
+            $filtros[] = "Busca: {$request->search}";
+        }
+        if ($request->filled('tipo')) {
+            $filtros[] = "Tipo: {$request->tipo}";
+        }
+        if ($request->filled('horario')) {
+            $filtros[] = "Horário: {$request->horario}";
+        }
+        if ($request->filled('dias')) {
+            $filtros[] = "Últimos {$request->dias} dias";
+        }
+        
+        return empty($filtros) ? 'Todos os registros' : implode(' | ', $filtros);
     }
 }
