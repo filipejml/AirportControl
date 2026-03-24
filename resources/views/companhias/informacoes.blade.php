@@ -12,89 +12,22 @@
     <!-- Ícones -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
-    <!-- Chart.js para gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
         body {
-            background-color: #f5f7fa;
+            background-color: #ffffff;
         }
-
-        .card-stats {
-            border-radius: 12px;
-            transition: 0.3s;
-            height: 100%;
+        
+        .hover-shadow {
+            transition: transform 0.3s, box-shadow 0.3s;
         }
-
-        .card-stats:hover {
+        
+        .hover-shadow:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
         }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #0d5c8b;
-        }
-
-        .stat-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        .company-card {
-            cursor: pointer;
-            transition: all 0.3s;
-            border-left: 4px solid #0d5c8b;
-        }
-
-        .company-card:hover {
-            background-color: #f8f9fa;
-            transform: translateX(5px);
-        }
-
-        .company-card.active {
-            background-color: #e3f2fd;
-            border-left-color: #0d5c8b;
-        }
-
-        .rating-bar {
-            height: 8px;
+        
+        .progress {
             background-color: #e9ecef;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .rating-fill {
-            height: 100%;
-            background-color: #0d5c8b;
-            border-radius: 4px;
-        }
-
-        .rating-fill.excellent {
-            background-color: #28a745;
-        }
-
-        .rating-fill.good {
-            background-color: #ffc107;
-        }
-
-        .rating-fill.poor {
-            background-color: #dc3545;
-        }
-
-        .performance-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .performance-card .card-title {
-            color: rgba(255,255,255,0.9);
-        }
-
-        .stat-icon {
-            font-size: 2.5rem;
-            opacity: 0.7;
         }
     </style>
 </head>
@@ -106,403 +39,309 @@
     <!-- Conteúdo -->
     <div class="container mt-4">
         
-        <!-- Cabeçalho -->
-        <div class="mb-4">
-            <h3 class="fw-bold">
-                <i class="bi bi-building me-2"></i>Catálogo de Companhias Aéreas
-            </h3>
-            <p class="text-muted">
-                Visão geral das companhias aéreas, estatísticas e desempenho
-            </p>
-        </div>
-
-        <!-- Filtros -->
+        {{-- Título --}}
         <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h6 class="card-title fw-bold mb-3">
-                            <i class="bi bi-funnel me-2"></i>Filtrar por Companhia
-                        </h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button class="btn btn-outline-primary btn-sm filter-company" data-company="all">
-                                Todas as Companhias
-                            </button>
-                            @foreach($companhias as $companhia)
-                                <button class="btn btn-outline-secondary btn-sm filter-company" data-company="{{ $companhia->id }}">
-                                    {{ $companhia->nome }}
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>Catálogo de Companhias Aéreas</h1>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card shadow-sm">
+        </div>
+
+        {{-- Filtros --}}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
                     <div class="card-body">
-                        <h6 class="card-title fw-bold mb-3">
-                            <i class="bi bi-geo-alt me-2"></i>Filtrar por Aeroporto
-                        </h6>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button class="btn btn-outline-primary btn-sm filter-airport" data-airport="all">
-                                Todos os Aeroportos
-                            </button>
-                            @foreach($aeroportos as $aeroporto)
-                                <button class="btn btn-outline-secondary btn-sm filter-airport" data-airport="{{ $aeroporto->id }}">
-                                    {{ $aeroporto->nome_aeroporto }}
-                                </button>
-                            @endforeach
-                        </div>
+                        <form method="GET" action="{{ route('companhias.informacoes') }}" class="row g-2 align-items-end">
+                            {{-- Filtro por Companhia --}}
+                            <div class="col-md-4">
+                                <label for="filtro_companhia" class="form-label fw-bold">
+                                    <i class="bi bi-building"></i> Filtrar por Companhia:
+                                </label>
+                                <select name="companhia" id="filtro_companhia" class="form-select" onchange="this.form.submit()">
+                                    <option value="">Todas as Companhias</option>
+                                    @foreach($companhias as $companhia)
+                                        <option value="{{ $companhia->id }}" {{ request('companhia') == $companhia->id ? 'selected' : '' }}>
+                                            {{ $companhia->nome }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Filtro por Aeroporto --}}
+                            <div class="col-md-3">
+                                <label for="filtro_aeroporto" class="form-label fw-bold">
+                                    <i class="bi bi-geo-alt"></i> Filtrar por Aeroporto:
+                                </label>
+                                <select name="aeroporto" id="filtro_aeroporto" class="form-select" onchange="this.form.submit()">
+                                    <option value="">Todos os Aeroportos</option>
+                                    @foreach($aeroportos as $aeroporto)
+                                        <option value="{{ $aeroporto->id }}" {{ request('aeroporto') == $aeroporto->id ? 'selected' : '' }}>
+                                            {{ $aeroporto->nome_aeroporto }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Filtro de Ordenação --}}
+                            <div class="col-md-3">
+                                <label for="filtro_ordenacao" class="form-label fw-bold">
+                                    <i class="bi bi-sort-down"></i> Ordenar por:
+                                </label>
+                                <select name="ordenacao" id="filtro_ordenacao" class="form-select" onchange="this.form.submit()">
+                                    <option value="nome_az" {{ request('ordenacao') == 'nome_az' ? 'selected' : '' }}>Ordenar por Nome (A-Z)</option>
+                                    <option value="nome_za" {{ request('ordenacao') == 'nome_za' ? 'selected' : '' }}>Ordenar por Nome (Z-A)</option>
+                                    <option value="mais_voos" {{ request('ordenacao') == 'mais_voos' ? 'selected' : '' }}>Mais Voos</option>
+                                    <option value="mais_passageiros" {{ request('ordenacao') == 'mais_passageiros' ? 'selected' : '' }}>Mais Passageiros</option>
+                                    <option value="melhor_objetivo" {{ request('ordenacao') == 'melhor_objetivo' ? 'selected' : '' }}>Melhor Nota Objetivo</option>
+                                    <option value="melhor_pontualidade" {{ request('ordenacao') == 'melhor_pontualidade' ? 'selected' : '' }}>Melhor Nota Pontualidade</option>
+                                    <option value="melhor_servicos" {{ request('ordenacao') == 'melhor_servicos' ? 'selected' : '' }}>Melhor Nota Serviços</option>
+                                    <option value="melhor_patio" {{ request('ordenacao') == 'melhor_patio' ? 'selected' : '' }}>Melhor Nota Patio</option>
+                                </select>
+                            </div>
+
+                            {{-- Botão Limpar Filtros --}}
+                            <div class="col-md-2">
+                                <label class="form-label d-md-block d-none">&nbsp;</label>
+                                @if(request('companhia') || request('aeroporto') || request('ordenacao'))
+                                    <a href="{{ route('companhias.informacoes') }}" class="btn btn-outline-secondary w-100">
+                                        <i class="bi bi-x-circle"></i> Limpar
+                                    </a>
+                                @else
+                                    <div class="d-md-block d-none">&nbsp;</div>
+                                @endif
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Cards de Estatísticas Gerais -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="card card-stats shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="stat-number">{{ $totalCompanhias }}</div>
-                                <div class="stat-label">Companhias Aéreas</div>
-                            </div>
-                            <i class="bi bi-building stat-icon text-primary"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stats shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="stat-number">{{ number_format($totalVoos) }}</div>
-                                <div class="stat-label">Total de Voos</div>
-                            </div>
-                            <i class="bi bi-airplane stat-icon text-primary"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stats shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="stat-number">{{ number_format($totalPassageiros) }}</div>
-                                <div class="stat-label">Total de Passageiros</div>
-                            </div>
-                            <i class="bi bi-people stat-icon text-primary"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-stats shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="stat-number">{{ number_format($mediaGeralNotas, 1) }}</div>
-                                <div class="stat-label">Média Geral de Notas</div>
-                            </div>
-                            <i class="bi bi-star-fill stat-icon text-warning"></i>
-                        </div>
+        {{-- Indicador de Filtros Ativos --}}
+        @if(request('companhia') || request('aeroporto') || request('ordenacao'))
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="alert alert-info d-flex align-items-center">
+                    <i class="bi bi-funnel me-2"></i>
+                    <div>
+                        <strong>Filtros ativos:</strong>
+                        @if(request('companhia'))
+                            @php
+                                $companhiaSelecionada = $companhias->firstWhere('id', request('companhia'));
+                            @endphp
+                            <span class="badge bg-primary ms-1">Companhia: {{ $companhiaSelecionada->nome ?? request('companhia') }}</span>
+                        @endif
+                        @if(request('aeroporto'))
+                            @php
+                                $aeroportoSelecionado = $aeroportos->firstWhere('id', request('aeroporto'));
+                            @endphp
+                            <span class="badge bg-info ms-1">Aeroporto: {{ $aeroportoSelecionado->nome_aeroporto ?? request('aeroporto') }}</span>
+                        @endif
+                        @if(request('ordenacao'))
+                            @php
+                                $opcoesOrdenacao = [
+                                    'nome_az' => 'Ordenar por Nome (A-Z)',
+                                    'nome_za' => 'Ordenar por Nome (Z-A)',
+                                    'mais_voos' => 'Mais Voos',
+                                    'mais_passageiros' => 'Mais Passageiros',
+                                    'melhor_objetivo' => 'Melhor Nota Objetivo',
+                                    'melhor_pontualidade' => 'Melhor Nota Pontualidade',
+                                    'melhor_servicos' => 'Melhor Nota Serviços',
+                                    'melhor_patio' => 'Melhor Nota Patio'
+                                ];
+                            @endphp
+                            <span class="badge bg-success ms-1">Ordenação: {{ $opcoesOrdenacao[request('ordenacao')] ?? request('ordenacao') }}</span>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
+        @endif
 
-        <!-- Lista de Companhias e Desempenho -->
+        {{-- Cards das Companhias --}}
         <div class="row">
-            <div class="col-md-5">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0 fw-bold">
-                            <i class="bi bi-building me-2"></i>Companhias Aéreas
-                        </h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="list-group list-group-flush" id="companiesList">
-                            @foreach($companhias as $companhia)
-                                <div class="list-group-item company-card" data-company-id="{{ $companhia->id }}">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1 fw-bold">{{ $companhia->nome }}</h6>
-                                            <small class="text-muted">
-                                                <i class="bi bi-airplane me-1"></i>{{ $companhia->aeronaves_count }} aeronaves
-                                                <span class="mx-1">•</span>
-                                                <i class="bi bi-calendar me-1"></i>{{ number_format($companhia->voos_count) }} voos
-                                                <span class="mx-1">•</span>
-                                                <i class="bi bi-people me-1"></i>{{ number_format($companhia->total_passageiros) }} passageiros
-                                            </small>
+            @foreach($companhias as $companhia)
+                @php
+                    $temRegistros = $companhia->voos_count > 0;
+                    $notaMedia = $companhia->media_notas ?? 0;
+                    $borderColor = $temRegistros 
+                        ? ($notaMedia >= 7 ? '#198754' : ($notaMedia >= 5 ? '#fd7e14' : '#dc3545'))
+                        : '#6c757d';
+                @endphp
+
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm hover-shadow" 
+                        style="border-left: 5px solid {{ $borderColor }}; transition: transform 0.3s; {{ !$temRegistros ? 'opacity: 0.7;' : '' }}">
+                        
+                        {{-- Cabeçalho com nome da companhia --}}
+                        <div class="card-header bg-white border-bottom-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title mb-1 fw-bold">{{ $companhia->nome }}</h5>
+                                    @if(!$temRegistros)
+                                        <span class="badge bg-secondary">Sem registros</span>
+                                    @endif
+                                    @if($companhia->codigo)
+                                        <small class="text-muted d-block">{{ $companhia->codigo }}</small>
+                                    @endif
+                                </div>
+                                <span class="badge {{ $temRegistros ? 'bg-primary' : 'bg-light text-dark' }}">
+                                    {{ $companhia->aeronaves_count }} aeronaves
+                                </span>
+                            </div>
+                            @if(request('aeroporto'))
+                                <small class="text-muted">
+                                    <i class="bi bi-geo-alt me-1"></i>Aeroporto: {{ request('aeroporto') }}
+                                </small>
+                            @endif
+                        </div>
+
+                        {{-- Corpo do card --}}
+                        <div class="card-body pt-0">
+                            {{-- Descrição/Metadados --}}
+                            <div class="mb-3">
+                                <p class="text-muted small mb-2">
+                                    <i class="bi bi-geo-alt me-1"></i>
+                                    {{ $companhia->aeroportos->count() }} aeroportos operados
+                                </p>
+                            </div>
+
+                            {{-- Estatísticas principais --}}
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="p-2 border rounded text-center {{ !$temRegistros ? 'bg-light' : '' }}">
+                                        <i class="bi bi-airplane-fill text-primary fs-5"></i>
+                                        <h6 class="mb-0 mt-1 fw-bold">{{ number_format($companhia->voos_count, 0, ',', '.') }}</h6>
+                                        <small class="text-muted">Voos</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 border rounded text-center {{ !$temRegistros ? 'bg-light' : '' }}">
+                                        <i class="bi bi-people-fill text-success fs-5"></i>
+                                        <h6 class="mb-0 mt-1 fw-bold">{{ number_format($companhia->total_passageiros, 0, ',', '.') }}</h6>
+                                        <small class="text-muted">Passageiros</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Médias das notas (só mostra se tiver registros) --}}
+                            @if($temRegistros)
+                            <div class="border-top pt-3">
+                                <h6 class="mb-2 fw-semibold">
+                                    <i class="bi bi-star-fill me-1 text-warning"></i>Desempenho
+                                </h6>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-2">
+                                                <i class="bi bi-flag-fill text-primary"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">Objetivo</small>
+                                                <div class="progress" style="height: 6px;">
+                                                    <div class="progress-bar bg-primary" 
+                                                        style="width: {{ ($companhia->nota_obj / 10) * 100 }}%"></div>
+                                                </div>
+                                                <small class="text-muted">{{ number_format($companhia->nota_obj, 1) }}/10</small>
+                                            </div>
                                         </div>
-                                        <div class="text-end">
-                                            @if($companhia->media_notas)
-                                                <span class="badge bg-primary">{{ number_format($companhia->media_notas, 1) }}/10</span>
-                                            @endif
-                                            <div class="mt-1">
-                                                <small class="text-muted">
-                                                    <i class="bi bi-geo-alt me-1"></i>{{ $companhia->aeroportos->count() }} aeroportos
-                                                </small>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-2">
+                                                <i class="bi bi-clock-fill text-success"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">Pontualidade</small>
+                                                <div class="progress" style="height: 6px;">
+                                                    <div class="progress-bar bg-success" 
+                                                        style="width: {{ ($companhia->nota_pontualidade / 10) * 100 }}%"></div>
+                                                </div>
+                                                <small class="text-muted">{{ number_format($companhia->nota_pontualidade, 1) }}/10</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-2">
+                                                <i class="bi bi-gear-fill text-info"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">Serviços</small>
+                                                <div class="progress" style="height: 6px;">
+                                                    <div class="progress-bar bg-info" 
+                                                        style="width: {{ ($companhia->nota_servicos / 10) * 100 }}%"></div>
+                                                </div>
+                                                <small class="text-muted">{{ number_format($companhia->nota_servicos, 1) }}/10</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-2">
+                                                <i class="bi bi-pin-fill text-warning"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <small class="text-muted d-block">Pátio</small>
+                                                <div class="progress" style="height: 6px;">
+                                                    <div class="progress-bar bg-warning" 
+                                                        style="width: {{ ($companhia->nota_patio / 10) * 100 }}%"></div>
+                                                </div>
+                                                <small class="text-muted">{{ number_format($companhia->nota_patio, 1) }}/10</small>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-7">
-                <!-- Card de Desempenho da Companhia Selecionada -->
-                <div class="card shadow-sm mb-4" id="performanceCard">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0 fw-bold">
-                            <i class="bi bi-graph-up me-2"></i>Desempenho
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="defaultPerformance">
-                            <p class="text-muted text-center my-5">
-                                Selecione uma companhia aérea para visualizar o desempenho detalhado
-                            </p>
-                        </div>
-                        <div id="companyPerformance" style="display: none;">
-                            <h4 id="companyName" class="mb-3"></h4>
-                            
-                            <!-- Notas por Categoria -->
-                            <div class="mb-4">
-                                <h6 class="fw-bold mb-3">Notas por Categoria</h6>
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span>Objetivo</span>
-                                        <span id="notaObj" class="fw-bold"></span>
-                                    </div>
-                                    <div class="rating-bar">
-                                        <div id="objBar" class="rating-fill" style="width: 0%"></div>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span>Pontualidade</span>
-                                        <span id="notaPontualidade" class="fw-bold"></span>
-                                    </div>
-                                    <div class="rating-bar">
-                                        <div id="pontualidadeBar" class="rating-fill" style="width: 0%"></div>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span>Serviços</span>
-                                        <span id="notaServicos" class="fw-bold"></span>
-                                    </div>
-                                    <div class="rating-bar">
-                                        <div id="servicosBar" class="rating-fill" style="width: 0%"></div>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <div class="d-flex justify-content-between mb-1">
-                                        <span>Pátio</span>
-                                        <span id="notaPatio" class="fw-bold"></span>
-                                    </div>
-                                    <div class="rating-bar">
-                                        <div id="patioBar" class="rating-fill" style="width: 0%"></div>
-                                    </div>
+                                
+                                {{-- Nota média geral --}}
+                                <div class="mt-2 text-center">
+                                    <span class="badge" style="background-color: {{ $borderColor }}; color: white;">
+                                        <i class="bi bi-star-fill me-1"></i>Média Geral: {{ number_format($notaMedia, 1) }}/10
+                                    </span>
                                 </div>
                             </div>
-
-                            <!-- Aeroportos Operados -->
-                            <div>
-                                <h6 class="fw-bold mb-3">
-                                    <i class="bi bi-geo-alt me-2"></i>Aeroportos Operados
-                                </h6>
-                                <div id="aeroportosList" class="list-group list-group-flush"></div>
+                            @else
+                            <div class="border-top pt-3 text-center">
+                                <div class="p-3">
+                                    <i class="bi bi-database-slash text-muted fs-1 mb-2"></i>
+                                    <p class="text-muted mb-0">Nenhum registro encontrado</p>
+                                    <small class="text-muted">Esta companhia não possui voos cadastrados</small>
+                                </div>
                             </div>
+                            @endif
+                        </div>
+
+                        {{-- Rodapé com botões de ação --}}
+                        <div class="card-footer bg-white border-top-0 pt-0">
+                            @if($temRegistros)
+                                <a href="{{ route('companhias.show', $companhia->id) }}" class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="bi bi-graph-up me-1"></i> Ver Detalhes
+                                </a>
+                            @else
+                                <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                    <i class="bi bi-eye-slash me-1"></i> Sem dados disponíveis
+                                </button>
+                            @endif
                         </div>
                     </div>
                 </div>
+            @endforeach
 
-                <!-- Gráfico de Voos por Companhia -->
-                <div class="card shadow-sm">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0 fw-bold">
-                            <i class="bi bi-bar-chart me-2"></i>Voos por Companhia
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="voosChart" height="200"></canvas>
-                    </div>
+            {{-- Mensagem quando não há resultados --}}
+            @if(count($companhias) === 0)
+            <div class="col-12">
+                <div class="alert alert-warning text-center">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Nenhuma companhia encontrada com os filtros selecionados.
                 </div>
             </div>
+            @endif
         </div>
     </div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <script>
-        // Dados das companhias (já preparados no controller)
-        const companiesData = @json($companiesData);
-
-        // Gráfico de voos
-        const ctx = document.getElementById('voosChart').getContext('2d');
-        const voosChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: companiesData.map(c => c.nome),
-                datasets: [{
-                    label: 'Número de Voos',
-                    data: companiesData.map(c => c.voos_count),
-                    backgroundColor: 'rgba(13, 92, 139, 0.8)',
-                    borderColor: 'rgba(13, 92, 139, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Quantidade de Voos'
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            rotation: -45,
-                            autoSkip: true,
-                            maxRotation: 45,
-                            minRotation: 45
-                        }
-                    }
-                }
-            }
-        });
-
-        // Função para atualizar o card de desempenho
-        function updatePerformance(companyId) {
-            const company = companiesData.find(c => c.id == companyId);
-            
-            if (!company) {
-                document.getElementById('defaultPerformance').style.display = 'block';
-                document.getElementById('companyPerformance').style.display = 'none';
-                return;
-            }
-
-            document.getElementById('defaultPerformance').style.display = 'none';
-            document.getElementById('companyPerformance').style.display = 'block';
-            
-            // Atualizar nome
-            document.getElementById('companyName').innerHTML = company.nome;
-            
-            // Atualizar notas
-            const notaObj = parseFloat(company.nota_obj) || 0;
-            const notaPontualidade = parseFloat(company.nota_pontualidade) || 0;
-            const notaServicos = parseFloat(company.nota_servicos) || 0;
-            const notaPatio = parseFloat(company.nota_patio) || 0;
-            
-            document.getElementById('notaObj').innerHTML = notaObj.toFixed(1) + '/10';
-            document.getElementById('notaPontualidade').innerHTML = notaPontualidade.toFixed(1) + '/10';
-            document.getElementById('notaServicos').innerHTML = notaServicos.toFixed(1) + '/10';
-            document.getElementById('notaPatio').innerHTML = notaPatio.toFixed(1) + '/10';
-            
-            document.getElementById('objBar').style.width = (notaObj * 10) + '%';
-            document.getElementById('pontualidadeBar').style.width = (notaPontualidade * 10) + '%';
-            document.getElementById('servicosBar').style.width = (notaServicos * 10) + '%';
-            document.getElementById('patioBar').style.width = (notaPatio * 10) + '%';
-            
-            // Atualizar aeroportos
-            const aeroportosList = document.getElementById('aeroportosList');
-            aeroportosList.innerHTML = '';
-            
-            if (company.aeroportos.length === 0) {
-                aeroportosList.innerHTML = '<div class="list-group-item text-muted">Nenhum aeroporto operado</div>';
-            } else {
-                company.aeroportos.forEach(aeroporto => {
-                    const div = document.createElement('div');
-                    div.className = 'list-group-item';
-                    div.innerHTML = `
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <i class="bi bi-geo-alt-fill me-2 text-primary"></i>
-                                <strong>${aeroporto.nome}</strong>
-                            </div>
-                            <span class="badge bg-secondary">${aeroporto.voos_count} voos</span>
-                        </div>
-                    `;
-                    aeroportosList.appendChild(div);
-                });
-            }
-        }
-
-        // Eventos para seleção de companhia
-        document.querySelectorAll('.company-card').forEach(card => {
-            card.addEventListener('click', function() {
-                // Remove active class de todos
-                document.querySelectorAll('.company-card').forEach(c => {
-                    c.classList.remove('active');
-                });
-                // Adiciona active class ao clicado
-                this.classList.add('active');
-                
-                const companyId = this.dataset.companyId;
-                updatePerformance(companyId);
-            });
-        });
-
-        // Filtros por companhia
-        document.querySelectorAll('.filter-company').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const companyId = this.dataset.company;
-                
-                if (companyId === 'all') {
-                    document.querySelectorAll('.company-card').forEach(card => {
-                        card.style.display = '';
-                    });
-                } else {
-                    document.querySelectorAll('.company-card').forEach(card => {
-                        if (card.dataset.companyId === companyId) {
-                            card.style.display = '';
-                            card.click();
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                }
-            });
-        });
-
-        // Filtros por aeroporto (implementação básica)
-        document.querySelectorAll('.filter-airport').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const airportId = this.dataset.airport;
-                
-                if (airportId === 'all') {
-                    document.querySelectorAll('.company-card').forEach(card => {
-                        card.style.display = '';
-                    });
-                } else {
-                    // Filtrar companhias que operam no aeroporto selecionado
-                    document.querySelectorAll('.company-card').forEach(card => {
-                        const companyId = card.dataset.companyId;
-                        const company = companiesData.find(c => c.id == companyId);
-                        
-                        const operatesAtAirport = company && company.aeroportos.some(a => a.id == airportId);
-                        
-                        if (operatesAtAirport) {
-                            card.style.display = '';
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-                }
-            });
-        });
-    </script>
 </body>
 </html>

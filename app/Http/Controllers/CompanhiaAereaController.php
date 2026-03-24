@@ -213,35 +213,85 @@ class CompanhiaAereaController extends Controller
     /**
      * Display general information about airlines
      */
-    public function informacoes()
+    public function informacoes(Request $request)
     {
-        $companhias = CompanhiaAerea::with(['aeronaves', 'aeroportos', 'voos'])
-            ->withCount('aeronaves', 'voos')
-            ->get();
+        $query = CompanhiaAerea::with(['aeronaves', 'aeroportos', 'voos'])
+            ->withCount('aeronaves', 'voos');
         
-        // Calculate total passengers and ratings for each company
+        // Aplicar filtro por companhia (selecionar uma companhia específica)
+        if ($request->filled('companhia')) {
+            $query->where('id', $request->companhia);
+        }
+        
+        // Aplicar filtro por aeroporto
+        if ($request->filled('aeroporto')) {
+            $query->whereHas('aeroportos', function ($q) use ($request) {
+                $q->where('aeroportos.id', $request->aeroporto);
+            });
+        }
+        
+        // Aplicar ordenação
+        switch ($request->get('ordenacao')) {
+            case 'nome_az':
+                $query->orderBy('nome', 'asc');
+                break;
+            case 'nome_za':
+                $query->orderBy('nome', 'desc');
+                break;
+            case 'mais_voos':
+                $query->orderBy('voos_count', 'desc');
+                break;
+            case 'mais_passageiros':
+                $query->withSum('voos', 'total_passageiros')
+                    ->orderBy('voos_sum_total_passageiros', 'desc');
+                break;
+            case 'melhor_objetivo':
+                $query->withAvg('voos', 'nota_obj')
+                    ->orderBy('voos_avg_nota_obj', 'desc');
+                break;
+            case 'melhor_pontualidade':
+                $query->withAvg('voos', 'nota_pontualidade')
+                    ->orderBy('voos_avg_nota_pontualidade', 'desc');
+                break;
+            case 'melhor_servicos':
+                $query->withAvg('voos', 'nota_servicos')
+                    ->orderBy('voos_avg_nota_servicos', 'desc');
+                break;
+            case 'melhor_patio':
+                $query->withAvg('voos', 'nota_patio')
+                    ->orderBy('voos_avg_nota_patio', 'desc');
+                break;
+            default:
+                $query->orderBy('nome', 'asc');
+                break;
+        }
+        
+        $companhias = $query->get();
+        
+        // Calcular estatísticas para cada companhia
         foreach ($companhias as $companhia) {
+            // Total de passageiros
             $companhia->total_passageiros = $companhia->voos()->sum('total_passageiros');
             
-            // Calculate average ratings for each category
+            // Médias das notas por categoria
             $companhia->nota_obj = $companhia->voos()->avg('nota_obj') ?? 0;
             $companhia->nota_pontualidade = $companhia->voos()->avg('nota_pontualidade') ?? 0;
             $companhia->nota_servicos = $companhia->voos()->avg('nota_servicos') ?? 0;
             $companhia->nota_patio = $companhia->voos()->avg('nota_patio') ?? 0;
             
-            // Calculate overall average rating (média das quatro notas)
+            // Média geral (média das quatro notas)
             $medias = $companhia->voos()
                 ->select(
-                    DB::raw('AVG(nota_obj) as obj'),
-                    DB::raw('AVG(nota_pontualidade) as pontualidade'),
-                    DB::raw('AVG(nota_servicos) as servicos'),
-                    DB::raw('AVG(nota_patio) as patio')
+                    DB::raw('COALESCE(AVG(nota_obj), 0) as obj'),
+                    DB::raw('COALESCE(AVG(nota_pontualidade), 0) as pontualidade'),
+                    DB::raw('COALESCE(AVG(nota_servicos), 0) as servicos'),
+                    DB::raw('COALESCE(AVG(nota_patio), 0) as patio')
                 )
                 ->first();
             
             $companhia->media_notas = ($medias->obj + $medias->pontualidade + $medias->servicos + $medias->patio) / 4;
             
-            // Calculate aeroportos count with voos count for each
+            // Aeroportos operados com contagem de voos
             $companhia->aeroportos_com_voos = $companhia->aeroportos->map(function($aeroporto) use ($companhia) {
                 return [
                     'id' => $aeroporto->id,
@@ -251,9 +301,10 @@ class CompanhiaAereaController extends Controller
             });
         }
         
-        $aeroportos = Aeroporto::with('companhias')->get();
+        // Buscar todos os aeroportos para os filtros
+        $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
         
-        // Prepare companies data for JavaScript
+        // Preparar dados das companhias para JavaScript (se necessário)
         $companiesData = $companhias->map(function($c) {
             return [
                 'id' => $c->id,
@@ -271,23 +322,13 @@ class CompanhiaAereaController extends Controller
             ];
         });
         
-        // Totals
+        // Totais (considerando os filtros aplicados)
         $totalCompanhias = $companhias->count();
         $totalVoos = $companhias->sum('voos_count');
         $totalPassageiros = $companhias->sum('total_passageiros');
         
-        // Global average ratings
-        $mediaGeralNotas = 0;
-        $totalNotas = 0;
-        
-        foreach ($companhias as $companhia) {
-            if ($companhia->media_notas) {
-                $mediaGeralNotas += $companhia->media_notas;
-                $totalNotas++;
-            }
-        }
-        
-        $mediaGeralNotas = $totalNotas > 0 ? $mediaGeralNotas / $totalNotas : 0;
+        // Média geral de notas (considerando os filtros aplicados)
+        $mediaGeralNotas = $companhias->avg('media_notas') ?? 0;
         
         return view('companhias.informacoes', compact(
             'companhias',
