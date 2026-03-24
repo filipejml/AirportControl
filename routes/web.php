@@ -41,15 +41,14 @@ Route::middleware('auth')->group(function () {
     // Rotas para companhias aéreas - CRUD completo
     Route::resource('companhias', CompanhiaAereaController::class);
     
-    
+    // Rota para exibir informações detalhadas de uma aeronave (incluindo fabricante e companhias associadas)
+    Route::get('/aeronaves/informacoes', [AeronaveController::class, 'informacoes'])->name('aeronaves.informacoes');
     // Rotas para aeronaves - CRUD completo
     Route::resource('aeronaves', AeronaveController::class, [
         'parameters' => [
             'aeronaves' => 'aeronave' // Corrige o nome do parâmetro
         ]
     ]);
-    // Rota para exibir informações detalhadas de uma aeronave (incluindo fabricante e companhias associadas)
-    Route::get('/aeronaves/informacoes', [AeronaveController::class, 'informacoes'])->name('aeronaves.informacoes');
     
     // Rota para exibir informações detalhadas de um aeroporto (incluindo companhias associadas)
     Route::get('/aeroportos/informacoes', [AeroportoController::class, 'informacoes'])->name('aeroportos.informacoes');

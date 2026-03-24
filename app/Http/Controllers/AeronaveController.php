@@ -162,44 +162,39 @@ class AeronaveController extends Controller
      */
     public function informacoes()
     {
-        $aeronaves = Aeronave::with(['fabricante', 'companhias', 'voos.companhia'])
-            ->withCount('companhias')
+        // Buscar todas as aeronaves com seus relacionamentos
+        $aeronaves = Aeronave::with(['fabricante', 'voos.companhiaAerea'])
+            ->withCount('voos')
             ->get();
         
-        $fabricantes = Fabricante::orderBy('nome')->get();
-        
-        // Totals
-        $totalAeronaves = $aeronaves->count();
-        $totalFabricantes = $fabricantes->count();
-        $capacidadeTotal = $aeronaves->sum('capacidade');
-        $capacidadeMedia = $totalAeronaves > 0 ? $capacidadeTotal / $totalAeronaves : 0;
-        
-        // Statistics by porte
-        $porteStats = [
-            'PC' => ['quantidade' => 0, 'capacidade' => 0, 'percentual' => 0],
-            'MC' => ['quantidade' => 0, 'capacidade' => 0, 'percentual' => 0],
-            'LC' => ['quantidade' => 0, 'capacidade' => 0, 'percentual' => 0],
-        ];
+        // Organizar dados por modelo
+        $modelosComDados = [];
         
         foreach ($aeronaves as $aeronave) {
-            $porteStats[$aeronave->porte]['quantidade']++;
-            $porteStats[$aeronave->porte]['capacidade'] += $aeronave->capacidade;
+            $modelo = $aeronave->modelo;
+            
+            // Calcular médias das notas dos voos
+            $totalVoos = $aeronave->voos->count();
+            $totalPassageiros = $aeronave->voos->sum('qtd_passageiros');
+            $mediaObjetivo = $aeronave->voos->avg('nota_obj');
+            $mediaPontualidade = $aeronave->voos->avg('nota_pontualidade');
+            $mediaServicos = $aeronave->voos->avg('nota_servicos');
+            $mediaPatio = $aeronave->voos->avg('nota_patio');
+            
+            $modelosComDados[$modelo] = [
+                'fabricante' => $aeronave->fabricante->nome ?? 'N/A',
+                'capacidade' => $aeronave->capacidade,
+                'porte' => $aeronave->porte_descricao,
+                'total_voos' => $totalVoos,
+                'total_passageiros' => $totalPassageiros,
+                'media_objetivo' => $mediaObjetivo ? round($mediaObjetivo, 1) : 0,
+                'media_pontualidade' => $mediaPontualidade ? round($mediaPontualidade, 1) : 0,
+                'media_servicos' => $mediaServicos ? round($mediaServicos, 1) : 0,
+                'media_patio' => $mediaPatio ? round($mediaPatio, 1) : 0,
+                'tem_dados' => $totalVoos > 0 // Campo corrigido para 'tem_dados'
+            ];
         }
         
-        foreach ($porteStats as $porte => $stats) {
-            $porteStats[$porte]['percentual'] = $totalAeronaves > 0 
-                ? ($stats['quantidade'] / $totalAeronaves) * 100 
-                : 0;
-        }
-        
-        return view('aeronaves.informacoes', compact(
-            'aeronaves',
-            'fabricantes',
-            'totalAeronaves',
-            'totalFabricantes',
-            'capacidadeTotal',
-            'capacidadeMedia',
-            'porteStats'
-        ));
+        return view('aeronaves.informacoes', compact('modelosComDados'));
     }
 }
