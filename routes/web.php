@@ -62,6 +62,9 @@ Route::middleware('auth')->group(function () {
     // Rota AJAX para verificar ID do voo - página de cadastro de voo (para evitar duplicidade)
     Route::post('/api/verificar-id-voo', [VooController::class, 'verificarIdVoo'])->name('verificar.id.voo');
 
+    // Rota AJAX para buscar companhia pelo código do voo
+    Route::get('/api/buscar-companhia/{codigo}', [VooController::class, 'buscarCompanhiaPorCodigo'])->name('buscar.companhia');
+
     // Rota para exportar CSV - página de listagem de voos
     Route::get('/voos/export/csv', [VooController::class, 'exportCSV'])->name('voos.export.csv');
 

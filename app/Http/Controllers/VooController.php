@@ -245,6 +245,11 @@ class VooController extends Controller
             ]);
         }
         
+        // Buscar a companhia pelo código
+        $companhia = CompanhiaAerea::where('codigo', $codigo)
+            ->orWhere('nome', 'like', '%' . CompanhiaHelper::getNomeCompanhia($codigo) . '%')
+            ->first();
+        
         $exists = Voo::where('id_voo', $idVoo)
             ->when($excludeId, function($query) use ($excludeId) {
                 $query->where('id', '!=', $excludeId);
@@ -261,7 +266,11 @@ class VooController extends Controller
         return response()->json([
             'valid' => true,
             'message' => 'Código válido!',
-            'companhia' => CompanhiaHelper::getNomeCompanhia($codigo)
+            'codigo' => $codigo,
+            'companhia_nome' => CompanhiaHelper::getNomeCompanhia($codigo),
+            'companhia_encontrada' => $companhia ? true : false,
+            'companhia_id' => $companhia ? $companhia->id : null,
+            'companhia_nome_completo' => $companhia ? $companhia->nome : null
         ]);
     }
 
@@ -552,5 +561,41 @@ class VooController extends Controller
         }
         
         return empty($filtros) ? 'Todos os registros' : implode(' | ', $filtros);
+    }
+
+    /**
+     * Busca a companhia aérea pelo código do ID do voo
+     */
+    public function buscarCompanhiaPorCodigo($codigo)
+    {
+        // Validar se o código é válido
+        if (!CompanhiaHelper::isCodigoValido($codigo)) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Código de companhia inválido!'
+            ]);
+        }
+        
+        // Buscar a companhia pelo código
+        $companhia = CompanhiaAerea::where('codigo', $codigo)
+            ->orWhere('nome', 'like', '%' . CompanhiaHelper::getNomeCompanhia($codigo) . '%')
+            ->first();
+        
+        if ($companhia) {
+            return response()->json([
+                'valid' => true,
+                'companhia_id' => $companhia->id,
+                'companhia_nome' => $companhia->nome,
+                'message' => 'Companhia identificada: ' . $companhia->nome
+            ]);
+        }
+        
+        // Se não encontrar a companhia no banco, mas o código é válido
+        return response()->json([
+            'valid' => true,
+            'companhia_id' => null,
+            'companhia_nome' => CompanhiaHelper::getNomeCompanhia($codigo),
+            'message' => 'Código válido: ' . CompanhiaHelper::getNomeCompanhia($codigo) . ' (Companhia não cadastrada no sistema)'
+        ]);
     }
 }

@@ -17,18 +17,49 @@
                 @csrf
                 @method('PUT')
 
-                <div class="mb-4">
-                    <label for="nome" class="form-label fw-semibold">Nome da Companhia</label>
-                    <input type="text" 
-                           class="form-control @error('nome') is-invalid @enderror" 
-                           id="nome" 
-                           name="nome" 
-                           value="{{ old('nome', $companhia->nome) }}"
-                           placeholder="Ex: Latam, Gol, Azul, American Airlines..."
-                           required>
-                    @error('nome')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <label for="nome" class="form-label fw-semibold">Nome da Companhia</label>
+                        <div class="position-relative">
+                            <input type="text" 
+                                   class="form-control @error('nome') is-invalid @enderror" 
+                                   id="nome" 
+                                   name="nome" 
+                                   value="{{ old('nome', $companhia->nome) }}"
+                                   placeholder="Ex: Latam, Gol, Azul, American Airlines..."
+                                   required
+                                   autocomplete="off">
+                            <div class="position-absolute end-0 top-50 translate-middle-y me-3">
+                                <div class="spinner-border spinner-border-sm text-primary d-none" id="nomeSpinner" role="status">
+                                    <span class="visually-hidden">Verificando...</span>
+                                </div>
+                                <i class="bi bi-check-circle-fill text-success d-none" id="nomeCheckIcon"></i>
+                                <i class="bi bi-x-circle-fill text-danger d-none" id="nomeXIcon"></i>
+                            </div>
+                        </div>
+                        <div id="nomeFeedback" class="form-text"></div>
+                        @error('nome')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="codigo" class="form-label fw-semibold">Código da Companhia</label>
+                        <input type="text" 
+                               class="form-control @error('codigo') is-invalid @enderror" 
+                               id="codigo" 
+                               name="codigo" 
+                               value="{{ old('codigo', $companhia->codigo) }}"
+                               placeholder="Ex: LA, G3, AD, AA..."
+                               maxlength="10"
+                               autocomplete="off">
+                        <div class="form-text text-muted">
+                            <i class="bi bi-info-circle"></i> Código identificador (máx. 10 caracteres). Ex: LA, G3, AD
+                        </div>
+                        @error('codigo')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -336,9 +367,124 @@ function deselectAll() {
     updateSelectedCount();
 }
 
+let checkNameTimeout = null;
+let isNameValid = true;
+let isChecking = false;
+
+function checkCompanyName(nome, companyId) {
+    if (!nome || nome.trim() === '') {
+        resetNameValidation();
+        return;
+    }
+    
+    if (checkNameTimeout) {
+        clearTimeout(checkNameTimeout);
+    }
+    
+    const spinner = document.getElementById('nomeSpinner');
+    const checkIcon = document.getElementById('nomeCheckIcon');
+    const xIcon = document.getElementById('nomeXIcon');
+    const nomeInput = document.getElementById('nome');
+    const feedbackDiv = document.getElementById('nomeFeedback');
+    
+    spinner.classList.remove('d-none');
+    checkIcon.classList.add('d-none');
+    xIcon.classList.add('d-none');
+    feedbackDiv.innerHTML = '<span class="text-muted">Verificando disponibilidade...</span>';
+    nomeInput.classList.remove('is-valid', 'is-invalid');
+    isChecking = true;
+    
+    const formData = new FormData();
+    formData.append('nome', nome);
+    if (companyId) {
+        formData.append('id', companyId);
+    }
+    
+    checkNameTimeout = setTimeout(() => {
+        fetch('{{ route("companhias.check-name") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            spinner.classList.add('d-none');
+            isChecking = false;
+            
+            if (data.exists) {
+                nomeInput.classList.add('is-invalid');
+                nomeInput.classList.remove('is-valid');
+                checkIcon.classList.add('d-none');
+                xIcon.classList.remove('d-none');
+                feedbackDiv.innerHTML = `<span class="text-danger">⚠️ ${data.message}</span>`;
+                isNameValid = false;
+            } else {
+                nomeInput.classList.add('is-valid');
+                nomeInput.classList.remove('is-invalid');
+                checkIcon.classList.remove('d-none');
+                xIcon.classList.add('d-none');
+                feedbackDiv.innerHTML = '<span class="text-success">✓ Nome disponível</span>';
+                isNameValid = true;
+            }
+            
+            updateSubmitButton();
+        })
+        .catch(error => {
+            console.error('Erro ao verificar nome:', error);
+            spinner.classList.add('d-none');
+            isChecking = false;
+            feedbackDiv.innerHTML = '<span class="text-warning">⚠️ Não foi possível verificar disponibilidade</span>';
+            isNameValid = true;
+            updateSubmitButton();
+        });
+    }, 500);
+}
+
+function resetNameValidation() {
+    const nomeInput = document.getElementById('nome');
+    const spinner = document.getElementById('nomeSpinner');
+    const checkIcon = document.getElementById('nomeCheckIcon');
+    const xIcon = document.getElementById('nomeXIcon');
+    const feedbackDiv = document.getElementById('nomeFeedback');
+    
+    spinner.classList.add('d-none');
+    checkIcon.classList.add('d-none');
+    xIcon.classList.add('d-none');
+    nomeInput.classList.remove('is-valid', 'is-invalid');
+    feedbackDiv.innerHTML = '';
+    isNameValid = false;
+    isChecking = false;
+    updateSubmitButton();
+}
+
+function updateSubmitButton() {
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const nomeInput = document.getElementById('nome');
+    const nomeValue = nomeInput.value.trim();
+    
+    if (nomeValue === '') {
+        submitBtn.disabled = true;
+        submitBtn.title = 'Digite o nome da companhia';
+    } else if (isChecking) {
+        submitBtn.disabled = true;
+        submitBtn.title = 'Verificando disponibilidade do nome...';
+    } else if (!isNameValid) {
+        submitBtn.disabled = true;
+        submitBtn.title = 'Este nome não está disponível';
+    } else {
+        submitBtn.disabled = false;
+        submitBtn.title = '';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const selectAllBtn = document.getElementById('selectAllBtn');
     const deselectAllBtn = document.getElementById('deselectAllBtn');
+    const nomeInput = document.getElementById('nome');
+    const companyId = {{ $companhia->id }};
     
     if (selectAllBtn) {
         selectAllBtn.onclick = selectAll;
@@ -348,7 +494,32 @@ document.addEventListener('DOMContentLoaded', function() {
         deselectAllBtn.onclick = deselectAll;
     }
     
-    // Garantir que os cards estejam sincronizados com os checkboxes
+    if (nomeInput) {
+        // Inicializar com validação se o nome já existir
+        const currentName = nomeInput.value.trim();
+        if (currentName !== '') {
+            checkCompanyName(currentName, companyId);
+        }
+        
+        nomeInput.addEventListener('input', function(e) {
+            const nome = e.target.value.trim();
+            if (nome === '') {
+                resetNameValidation();
+            } else {
+                checkCompanyName(nome, companyId);
+            }
+        });
+        
+        const form = document.getElementById('companhiaForm');
+        form.addEventListener('submit', function(e) {
+            if (!isNameValid && nomeInput.value.trim() !== '') {
+                e.preventDefault();
+                alert('Por favor, aguarde a verificação do nome ou corrija o nome da companhia.');
+                return false;
+            }
+        });
+    }
+    
     const cards = document.querySelectorAll('.aeronave-card');
     cards.forEach(card => {
         const parentDiv = card.parentElement;
@@ -359,6 +530,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     updateSelectedCount();
+    updateSubmitButton();
 });
 </script>
 @endsection

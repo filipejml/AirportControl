@@ -16,29 +16,49 @@
             <form method="POST" action="{{ route('companhias.store') }}" id="companhiaForm">
                 @csrf
 
-                <div class="mb-4">
-                    <label for="nome" class="form-label fw-semibold">Nome da Companhia</label>
-                    <div class="position-relative">
-                        <input type="text" 
-                               class="form-control @error('nome') is-invalid @enderror" 
-                               id="nome" 
-                               name="nome" 
-                               value="{{ old('nome') }}"
-                               placeholder="Ex: Latam, Gol, Azul, American Airlines..."
-                               required
-                               autocomplete="off">
-                        <div class="position-absolute end-0 top-50 translate-middle-y me-3">
-                            <div class="spinner-border spinner-border-sm text-primary d-none" id="nomeSpinner" role="status">
-                                <span class="visually-hidden">Verificando...</span>
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <label for="nome" class="form-label fw-semibold">Nome da Companhia</label>
+                        <div class="position-relative">
+                            <input type="text" 
+                                   class="form-control @error('nome') is-invalid @enderror" 
+                                   id="nome" 
+                                   name="nome" 
+                                   value="{{ old('nome') }}"
+                                   placeholder="Ex: Latam, Gol, Azul, American Airlines..."
+                                   required
+                                   autocomplete="off">
+                            <div class="position-absolute end-0 top-50 translate-middle-y me-3">
+                                <div class="spinner-border spinner-border-sm text-primary d-none" id="nomeSpinner" role="status">
+                                    <span class="visually-hidden">Verificando...</span>
+                                </div>
+                                <i class="bi bi-check-circle-fill text-success d-none" id="nomeCheckIcon"></i>
+                                <i class="bi bi-x-circle-fill text-danger d-none" id="nomeXIcon"></i>
                             </div>
-                            <i class="bi bi-check-circle-fill text-success d-none" id="nomeCheckIcon"></i>
-                            <i class="bi bi-x-circle-fill text-danger d-none" id="nomeXIcon"></i>
                         </div>
+                        <div id="nomeFeedback" class="form-text"></div>
+                        @error('nome')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
-                    <div id="nomeFeedback" class="form-text"></div>
-                    @error('nome')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                    @enderror
+
+                    <div class="col-md-4">
+                        <label for="codigo" class="form-label fw-semibold">Código da Companhia</label>
+                        <input type="text" 
+                               class="form-control @error('codigo') is-invalid @enderror" 
+                               id="codigo" 
+                               name="codigo" 
+                               value="{{ old('codigo') }}"
+                               placeholder="Ex: LA, G3, AD, AA..."
+                               maxlength="10"
+                               autocomplete="off">
+                        <div class="form-text text-muted">
+                            <i class="bi bi-info-circle"></i> Código identificador (máx. 10 caracteres). Ex: LA, G3, AD
+                        </div>
+                        @error('codigo')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 <div class="mb-4">

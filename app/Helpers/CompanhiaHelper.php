@@ -6,6 +6,7 @@ namespace App\Helpers;
 class CompanhiaHelper
 {
     private static $codigos = [
+        // Códigos existentes
         'PL' => 'Prosperity Lines',
         'PP' => 'Pop! Airline',
         'FT' => 'Fast Travel',
@@ -36,7 +37,17 @@ class CompanhiaHelper
         'EX' => 'Evish Xmas',
         'SCA' => 'Santa Claus',
         'RBA' => 'Ryukyu by AJA',
-        'CN' => 'CloudNine'
+        'CN' => 'CloudNine',
+        
+        // NOVOS CÓDIGOS ADICIONADOS
+        'SG' => 'Singapura Airlines',      // Código para Singapura Airlines
+        'AM' => 'American Airways',        // Código para American Airways
+        'CZ' => 'China Southern',          // Código para China Southern
+        'PF' => 'PayrionFestival',         // Código para PayrionFestival
+        'RS' => 'Royal Skyways',           // Código para Royal Skyways
+        'RX' => 'Riyadh Air',              // Código para Riyadh Air
+        'AS' => 'Asfar',                   // Código para Asfar
+        'RE' => 'Reis',                    // Código para Reis
     ];
 
     /**
@@ -71,6 +82,27 @@ class CompanhiaHelper
         if (preg_match('/^([A-Z]{2,4})-/', $idVoo, $matches)) {
             return $matches[1];
         }
+        return null;
+    }
+    
+    /**
+     * Busca companhia por código (incluindo correspondência aproximada)
+     */
+    public static function buscarCompanhiaPorCodigo($codigo)
+    {
+        // Busca exata
+        if (isset(self::$codigos[$codigo])) {
+            return self::$codigos[$codigo];
+        }
+        
+        // Busca case-insensitive
+        $codigoUpper = strtoupper($codigo);
+        foreach (self::$codigos as $key => $nome) {
+            if (strtoupper($key) === $codigoUpper) {
+                return $nome;
+            }
+        }
+        
         return null;
     }
 }

@@ -43,9 +43,16 @@ class CompanhiaAereaController extends Controller
                     return $query->whereNotNull('id');
                 })
             ],
+            'codigo' => [
+                'nullable',
+                'string',
+                'max:10',
+                Rule::unique('companhias_aereas', 'codigo')
+            ],
             'aeronaves' => 'nullable|array'
         ], [
-            'nome.unique' => 'Esta companhia aérea já está cadastrada no sistema.'
+            'nome.unique' => 'Esta companhia aérea já está cadastrada no sistema.',
+            'codigo.unique' => 'Este código já está sendo utilizado por outra companhia aérea.'
         ]);
 
         // Verificar se existem IDs disponíveis
@@ -54,14 +61,16 @@ class CompanhiaAereaController extends Controller
         if ($availableId) {
             // Se houver ID disponível, criar com ID específico
             $companhia = new CompanhiaAerea([
-                'nome' => $request->nome
+                'nome' => $request->nome,
+                'codigo' => $request->codigo
             ]);
             $companhia->id = $availableId;
             $companhia->save();
         } else {
             // Se não houver IDs disponíveis, criar normalmente
             $companhia = CompanhiaAerea::create([
-                'nome' => $request->nome
+                'nome' => $request->nome,
+                'codigo' => $request->codigo
             ]);
         }
 
@@ -104,13 +113,21 @@ class CompanhiaAereaController extends Controller
                 'max:255',
                 Rule::unique('companhias_aereas', 'nome')->ignore($companhia->id)
             ],
+            'codigo' => [
+                'nullable',
+                'string',
+                'max:10',
+                Rule::unique('companhias_aereas', 'codigo')->ignore($companhia->id)
+            ],
             'aeronaves' => 'nullable|array'
         ], [
-            'nome.unique' => 'Esta companhia aérea já está cadastrada no sistema.'
+            'nome.unique' => 'Esta companhia aérea já está cadastrada no sistema.',
+            'codigo.unique' => 'Este código já está sendo utilizado por outra companhia aérea.'
         ]);
 
         $companhia->update([
-            'nome' => $request->nome
+            'nome' => $request->nome,
+            'codigo' => $request->codigo
         ]);
 
         if ($request->has('aeronaves')) {
@@ -241,6 +258,7 @@ class CompanhiaAereaController extends Controller
             return [
                 'id' => $c->id,
                 'nome' => $c->nome,
+                'codigo' => $c->codigo,
                 'aeronaves_count' => $c->aeronaves_count,
                 'voos_count' => $c->voos_count,
                 'total_passageiros' => $c->total_passageiros,

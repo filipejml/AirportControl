@@ -18,10 +18,26 @@
 
     <!-- Card do Último Voo Cadastrado -->
     @php
-        $ultimoVoo = \App\Models\Voo::with(['aeroporto', 'companhiaAerea', 'aeronave'])
-                        ->orderBy('created_at', 'desc')
-                        ->first();
-    @endphp
+    $ultimoVoo = \App\Models\Voo::with([
+        'aeroporto' => function($query) {
+            $query->select('id', 'nome_aeroporto'); // apenas campos necessários
+        },
+        'companhiaAerea' => function($query) {
+            $query->select('id', 'nome');
+        },
+        'aeronave' => function($query) {
+            $query->select('id', 'modelo', 'capacidade');
+        }
+    ])
+    ->select([
+        'id', 'id_voo', 'aeroporto_id', 'companhia_aerea_id', 
+        'aeronave_id', 'tipo_aeronave', 'qtd_voos', 'total_passageiros',
+        'horario_voo', 'nota_obj', 'nota_pontualidade', 'nota_servicos',
+        'nota_patio', 'media_notas', 'created_at'
+    ])
+    ->orderBy('created_at', 'desc')
+    ->first();
+@endphp
 
     @if($ultimoVoo)
     <div class="row mb-4">
@@ -619,6 +635,11 @@ document.addEventListener('DOMContentLoaded', function() {
         'LC': 'Grande Porte'
     };
 
+    // Variáveis para controle do preenchimento automático
+    let preenchimentoAutomaticoAtivo = true;
+    let ultimoCodigoProcessado = '';
+    let timeoutId = null;
+
     function carregarAeronaves(companhiaId) {
         if (!companhiaId) {
             aeronaveSelect.innerHTML = '<option value="" disabled selected>Selecione uma aeronave</option>';
@@ -638,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         options += `<option value="${aeronave.id}" 
                                          data-capacidade="${aeronave.capacidade}"
                                          data-porte="${aeronave.porte}">
-                                    ${aeronave.modelo}
+                                    ${aeronave.modelo} - ${aeronave.fabricante?.nome || 'N/A'} (Cap: ${aeronave.capacidade} pax)
                                 </option>`;
                     });
                     aeronaveSelect.innerHTML = options;
@@ -679,7 +700,44 @@ document.addEventListener('DOMContentLoaded', function() {
         totalPassageirosInput.value = total.toLocaleString('pt-BR');
     }
 
-    // Validação do ID
+    // Função para mostrar feedback visual
+    function mostrarFeedback(mensagem, tipo, container, autoRemover = true) {
+        const tipos = {
+            success: { class: 'alert-success', icon: 'check-circle-fill' },
+            danger: { class: 'alert-danger', icon: 'exclamation-triangle-fill' },
+            warning: { class: 'alert-warning', icon: 'exclamation-triangle-fill' },
+            info: { class: 'alert-info', icon: 'info-circle-fill' }
+        };
+        
+        const config = tipos[tipo] || tipos.info;
+        
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = `alert ${config.class} alert-dismissible fade show mt-2 py-2`;
+        feedbackDiv.style.fontSize = '0.875rem';
+        feedbackDiv.innerHTML = `
+            <i class="bi bi-${config.icon} me-1"></i>
+            ${mensagem}
+            <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Remover feedbacks antigos do mesmo container
+        const existingAlerts = container.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        container.appendChild(feedbackDiv);
+        
+        if (autoRemover) {
+            setTimeout(() => {
+                if (feedbackDiv.parentNode) {
+                    feedbackDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        return feedbackDiv;
+    }
+
+    // Validação e preenchimento automático do ID do voo
     const idVooGroup = idVooInput.closest('.mb-3');
     let idVooFeedback = document.getElementById('idVooFeedback');
     
@@ -689,8 +747,6 @@ document.addEventListener('DOMContentLoaded', function() {
         idVooFeedback.className = 'form-text mt-1';
         idVooGroup.appendChild(idVooFeedback);
     }
-    
-    let timeoutId = null;
 
     function validarIdVoo(valor) {
         if (timeoutId) clearTimeout(timeoutId);
@@ -724,15 +780,58 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.valid) {
-                    idVooFeedback.innerHTML = '<i class="bi bi-check-circle-fill me-1 text-success"></i> ' + 
-                        (data.companhia ? `✓ Código válido: ${data.companhia}` : '✓ Código válido!');
-                    idVooFeedback.classList.remove('text-danger', 'text-warning', 'text-info');
+                    let mensagem = '<i class="bi bi-check-circle-fill me-1 text-success"></i> ' + 
+                        (data.companhia_nome ? `✓ Código válido: ${data.companhia_nome}` : '✓ Código válido!');
+                    
+                    if (data.companhia_encontrada && data.companhia_id) {
+                        mensagem += `<br><small class="text-info"><i class="bi bi-building me-1"></i> Companhia identificada: ${data.companhia_nome_completo}</small>`;
+                        
+                        // Preencher automaticamente a companhia se ainda não estiver selecionada ou se for uma nova identificação
+                        const codigoAtual = data.codigo;
+                        
+                        if (preenchimentoAutomaticoAtivo && codigoAtual !== ultimoCodigoProcessado) {
+                            ultimoCodigoProcessado = codigoAtual;
+                            
+                            // Verificar se a companhia já está selecionada
+                            if (companhiaSelect.value != data.companhia_id) {
+                                // Selecionar a companhia no select
+                                companhiaSelect.value = data.companhia_id;
+                                
+                                // Disparar o evento change para carregar as aeronaves
+                                const changeEvent = new Event('change', { bubbles: true });
+                                companhiaSelect.dispatchEvent(changeEvent);
+                                
+                                // Mostrar feedback visual
+                                mostrarFeedback(
+                                    `Companhia "${data.companhia_nome_completo}" selecionada automaticamente!`,
+                                    'success',
+                                    companhiaSelect.closest('.mb-3'),
+                                    true
+                                );
+                            }
+                        }
+                    } else if (data.companhia_nome) {
+                        mensagem += `<br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i> Código: ${data.companhia_nome} (Companhia não cadastrada no sistema)</small>`;
+                        
+                        if (preenchimentoAutomaticoAtivo) {
+                            // Mostrar aviso que a companhia não está cadastrada
+                            mostrarFeedback(
+                                `A companhia "${data.companhia_nome}" não está cadastrada no sistema. Por favor, cadastre-a primeiro.`,
+                                'warning',
+                                companhiaSelect.closest('.mb-3'),
+                                true
+                            );
+                        }
+                    }
+                    
+                    idVooFeedback.innerHTML = mensagem;
+                    idVooFeedback.classList.remove('text-danger', 'text-warning');
                     idVooFeedback.classList.add('text-success');
                     idVooInput.classList.remove('is-invalid');
                     idVooInput.classList.add('is-valid');
                 } else {
                     idVooFeedback.innerHTML = '<i class="bi bi-x-circle-fill me-1 text-danger"></i> ' + data.message;
-                    idVooFeedback.classList.remove('text-success', 'text-warning', 'text-info');
+                    idVooFeedback.classList.remove('text-success', 'text-warning');
                     idVooFeedback.classList.add('text-danger');
                     idVooInput.classList.remove('is-valid');
                     idVooInput.classList.add('is-invalid');
@@ -740,14 +839,34 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Erro ao validar ID:', error);
+                idVooFeedback.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i> Erro ao validar código';
+                idVooFeedback.classList.add('text-danger');
             });
         }, 500);
         
         return true;
     }
 
+    // Eventos do ID do voo
     idVooInput.addEventListener('input', function() {
         let valor = this.value.toUpperCase();
+        // Remover caracteres especiais
+        valor = valor.replace(/[^A-Z0-9]/g, '');
+        
+        // Adicionar hífen automaticamente após 2-4 letras
+        if (valor.length > 2 && !valor.includes('-')) {
+            // Verificar se os primeiros 2-4 caracteres são letras
+            let match = valor.match(/^([A-Z]{2,4})(\d+)$/);
+            if (match) {
+                valor = match[1] + '-' + match[2];
+            }
+        }
+        
+        // Limitar tamanho máximo
+        if (valor.length > 9) {
+            valor = valor.slice(0, 9);
+        }
+        
         this.value = valor;
         validarIdVoo(valor);
     });
@@ -762,6 +881,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Adicionar checkbox para controlar o preenchimento automático
+    const toggleAutoFill = document.createElement('div');
+    toggleAutoFill.className = 'form-check mt-1';
+    toggleAutoFill.innerHTML = `
+        <input class="form-check-input" type="checkbox" id="toggleAutoFill" checked>
+        <label class="form-check-label small text-muted" for="toggleAutoFill">
+            <i class="bi bi-magic"></i> Preencher companhia automaticamente ao digitar o ID
+        </label>
+    `;
+    idVooGroup.appendChild(toggleAutoFill);
+
+    document.getElementById('toggleAutoFill').addEventListener('change', function(e) {
+        preenchimentoAutomaticoAtivo = e.target.checked;
+        const status = e.target.checked ? 'ativado' : 'desativado';
+        mostrarFeedback(
+            `Preenchimento automático ${status}.`,
+            e.target.checked ? 'info' : 'warning',
+            idVooGroup,
+            true
+        );
+    });
+
+    // Eventos dos selects
     companhiaSelect.addEventListener('change', function() {
         carregarAeronaves(this.value);
     });
@@ -769,23 +911,51 @@ document.addEventListener('DOMContentLoaded', function() {
     aeronaveSelect.addEventListener('change', atualizarInfoAeronave);
     qtdVoosInput.addEventListener('input', calcularTotalPassageiros);
 
+    // Botão limpar
     const btnLimpar = document.getElementById('btnLimpar');
     if (btnLimpar) {
         btnLimpar.addEventListener('click', function(e) {
             e.preventDefault();
+            
+            // Resetar o formulário
             document.getElementById('formVoo').reset();
+            
+            // Limpar campos específicos
             limparCamposAeronave();
             aeronaveSelect.innerHTML = '<option value="" disabled selected>Selecione uma aeronave</option>';
             totalPassageirosInput.value = '0';
+            
+            // Limpar feedback do ID
             idVooFeedback.innerHTML = '';
             idVooInput.classList.remove('is-valid', 'is-invalid');
+            
+            // Resetar variáveis de controle
+            ultimoCodigoProcessado = '';
+            preenchimentoAutomaticoAtivo = true;
+            
+            // Resetar checkbox
+            const toggleCheckbox = document.getElementById('toggleAutoFill');
+            if (toggleCheckbox) toggleCheckbox.checked = true;
+            
+            // Remover todos os alertas
+            document.querySelectorAll('.alert').forEach(alert => alert.remove());
+            
+            // Mostrar feedback
+            mostrarFeedback(
+                'Formulário limpo com sucesso!',
+                'info',
+                document.querySelector('.card-body'),
+                true
+            );
         });
     }
 
+    // Carregar aeronaves iniciais se houver companhia selecionada
     if (companhiaSelect.value) {
         carregarAeronaves(companhiaSelect.value);
     }
 
+    // Validação do formulário antes do envio
     const form = document.getElementById('formVoo');
     form.addEventListener('submit', function(e) {
         const idVoo = idVooInput.value;
@@ -796,6 +966,13 @@ document.addEventListener('DOMContentLoaded', function() {
             idVooFeedback.classList.add('text-danger');
             idVooInput.classList.add('is-invalid');
             idVooInput.focus();
+            
+            mostrarFeedback(
+                'Por favor, preencha o ID do voo.',
+                'danger',
+                idVooGroup,
+                true
+            );
             return false;
         }
         
@@ -808,18 +985,109 @@ document.addEventListener('DOMContentLoaded', function() {
             idVooFeedback.classList.add('text-danger');
             idVooInput.classList.add('is-invalid');
             idVooInput.focus();
+            
+            mostrarFeedback(
+                'Formato de ID inválido. Use o formato correto (ex: AA-1234)',
+                'danger',
+                idVooGroup,
+                true
+            );
             return false;
         }
         
         if (!idVooInput.classList.contains('is-valid')) {
             e.preventDefault();
-            idVooFeedback.innerHTML = '<i class="bi bi-x-circle-fill me-1 text-danger"></i> Por favor, aguarde a validação do código ou verifique se o código é válido.';
-            idVooFeedback.classList.add('text-danger');
+            
+            if (!idVooFeedback.innerHTML.includes('Código de companhia inválido')) {
+                idVooFeedback.innerHTML = '<i class="bi bi-x-circle-fill me-1 text-danger"></i> Por favor, aguarde a validação do código ou verifique se o código é válido.';
+                idVooFeedback.classList.add('text-danger');
+            }
+            
+            mostrarFeedback(
+                'Aguardando validação do código do voo. Por favor, aguarde.',
+                'warning',
+                idVooGroup,
+                true
+            );
+            return false;
+        }
+        
+        // Verificar se a companhia foi selecionada
+        if (!companhiaSelect.value) {
+            e.preventDefault();
+            mostrarFeedback(
+                'Por favor, selecione uma companhia aérea.',
+                'danger',
+                companhiaSelect.closest('.mb-3'),
+                true
+            );
+            companhiaSelect.focus();
+            return false;
+        }
+        
+        // Verificar se a aeronave foi selecionada
+        if (!aeronaveSelect.value) {
+            e.preventDefault();
+            mostrarFeedback(
+                'Por favor, selecione uma aeronave.',
+                'danger',
+                aeronaveSelect.closest('.mb-3'),
+                true
+            );
+            aeronaveSelect.focus();
             return false;
         }
         
         return true;
     });
+
+    // Adicionar tooltips para os campos
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Função para mostrar feedback de sucesso quando o cadastro for bem sucedido
+    if (sessionStorage.getItem('voo_cadastrado')) {
+        mostrarFeedback(
+            sessionStorage.getItem('voo_mensagem') || 'Voo cadastrado com sucesso!',
+            'success',
+            document.querySelector('.card-body'),
+            true
+        );
+        sessionStorage.removeItem('voo_cadastrado');
+        sessionStorage.removeItem('voo_mensagem');
+    }
+    
+    // Atualizar o total de passageiros quando a quantidade de voos mudar
+    qtdVoosInput.addEventListener('change', function() {
+        if (this.value < 1) this.value = 1;
+        calcularTotalPassageiros();
+    });
+    
+    // Dica para o usuário sobre os códigos válidos
+    const exibirDicaCodigos = () => {
+        const dicaDiv = document.createElement('div');
+        dicaDiv.className = 'alert alert-info alert-dismissible fade show mt-2 py-2';
+        dicaDiv.style.fontSize = '0.875rem';
+        dicaDiv.innerHTML = `
+            <i class="bi bi-info-circle-fill me-1"></i>
+            <strong>Dica:</strong> Os códigos de companhia válidos são: 
+            PL, PP, FT, GK, AO, WW, AA, SK, RA, ASY, OB, JP, VI, PN, BV, OT, SPY, AW, AK, VAII, CA, WAT, TAL, HW, KW, FA, MAA, EX, SCA, RBA, CN
+            <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+        `;
+        idVooGroup.appendChild(dicaDiv);
+        
+        setTimeout(() => {
+            if (dicaDiv.parentNode) dicaDiv.remove();
+        }, 8000);
+    };
+    
+    // Exibir dica apenas uma vez por sessão
+    if (!sessionStorage.getItem('dica_codigos_mostrada')) {
+        setTimeout(exibirDicaCodigos, 1000);
+        sessionStorage.setItem('dica_codigos_mostrada', 'true');
+    }
 });
 </script>
 @endsection
