@@ -9,7 +9,7 @@ use App\Http\Controllers\AeroportoController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\FabricanteController;
 use App\Http\Controllers\VooController;
-
+use App\Http\Controllers\HomeController;
 /*
 |--------------------------------------------------------------------------
 | ROTAS PÚBLICAS
@@ -28,7 +28,7 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 */
 
 Route::middleware('auth')->group(function () {
-    Route::get('/home', [AuthController::class, 'home'])->name('home');
+    Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

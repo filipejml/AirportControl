@@ -65,16 +65,6 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success', 'Cadastro realizado!');
     }
 
-    // Home protegida
-    public function home()
-    {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-
-        return view('dashboard.home');
-    }
-
     // Logout
     public function logout(Request $request)
     {
