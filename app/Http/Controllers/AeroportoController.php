@@ -127,6 +127,9 @@ class AeroportoController extends Controller
         }
     }
 
+    /**
+     * Check if airport name already exists
+     */
     public function checkName(Request $request)
     {
         $request->validate([
@@ -156,11 +159,12 @@ class AeroportoController extends Controller
      */
     public function informacoes()
     {
-        $aeroportos = Aeroporto::with(['companhias', 'voos.companhia'])
+        // Carrega os aeroportos com relacionamentos
+        $aeroportos = Aeroporto::with(['companhias', 'voos.companhiaAerea'])
             ->withCount('companhias')
             ->get();
         
-        // Calculate totals for each airport
+        // Calcula totais para cada aeroporto
         foreach ($aeroportos as $aeroporto) {
             $aeroporto->total_voos = $aeroporto->voos()->count();
             $aeroporto->total_passageiros = $aeroporto->voos()->sum('total_passageiros');
@@ -169,43 +173,74 @@ class AeroportoController extends Controller
                 : 0;
         }
         
+        // Prepara dados para o JavaScript
+        $aeroportosData = $aeroportos->map(function($a) {
+            // Calcular melhores companhias por categoria para este aeroporto
+            $melhoresCompanhias = [];
+            $categorias = [
+                'Objetivo' => 'nota_obj',
+                'Pontualidade' => 'nota_pontualidade',
+                'Servicos' => 'nota_servicos',
+                'Patio' => 'nota_patio'
+            ];
+            
+            foreach ($categorias as $categoria => $campoNota) {
+                $melhorCompanhia = $a->voos()
+                    ->with('companhiaAerea')
+                    ->select('companhia_aerea_id')
+                    ->selectRaw('AVG(' . $campoNota . ') as media_nota')
+                    ->groupBy('companhia_aerea_id')
+                    ->orderByRaw('AVG(' . $campoNota . ') DESC')
+                    ->first();
+                
+                if ($melhorCompanhia && $melhorCompanhia->companhiaAerea) {
+                    $melhoresCompanhias[$categoria] = [
+                        'id' => $melhorCompanhia->companhia_aerea_id,
+                        'nome' => $melhorCompanhia->companhiaAerea->nome,
+                        'media' => $melhorCompanhia->media_nota ?? 0
+                    ];
+                } else {
+                    $melhoresCompanhias[$categoria] = null;
+                }
+            }
+            
+            return [
+                'id' => $a->id,
+                'nome' => $a->nome_aeroporto,
+                'companhias_count' => $a->companhias_count ?? 0,
+                'total_voos' => $a->total_voos ?? 0,
+                'total_passageiros' => $a->total_passageiros ?? 0,
+                'media_passageiros_por_voo' => $a->media_passageiros_por_voo ?? 0,
+                'media_notas' => $a->voos->avg('media_notas') ?? 0,
+                'nota_obj' => $a->voos->avg('nota_obj') ?? 0,
+                'nota_pontualidade' => $a->voos->avg('nota_pontualidade') ?? 0,
+                'nota_servicos' => $a->voos->avg('nota_servicos') ?? 0,
+                'nota_patio' => $a->voos->avg('nota_patio') ?? 0,
+                'melhores_companhias' => $melhoresCompanhias,
+                'companhias' => $a->companhias->map(function($c) use ($a) {
+                    return [
+                        'id' => $c->id,
+                        'nome' => $c->nome,
+                        'voos_count' => $a->voos()->where('companhia_aerea_id', $c->id)->count()
+                    ];
+                })
+            ];
+        });
+        
         $companhias = CompanhiaAerea::orderBy('nome')->get();
         
-        // Totals
         $totalAeroportos = $aeroportos->count();
         $totalVoos = $aeroportos->sum('total_voos');
         $totalPassageiros = $aeroportos->sum('total_passageiros');
         $mediaPassageirosPorVoo = $totalVoos > 0 ? $totalPassageiros / $totalVoos : 0;
         
-        // Statistics by time of day
-        $horarioStats = [
-            'EAM' => 0, // 00-06
-            'AM' => 0,  // 06-12
-            'AN' => 0,  // 12-18
-            'PM' => 0   // 18-00
-        ];
-        
-        foreach ($aeroportos as $aeroporto) {
-            $stats = $aeroporto->voos()
-                ->selectRaw('horario_voo, COUNT(*) as total')
-                ->groupBy('horario_voo')
-                ->pluck('total', 'horario_voo')
-                ->toArray();
-            
-            foreach ($horarioStats as $key => $value) {
-                $horarioStats[$key] += $stats[$key] ?? 0;
-            }
-        }
-        
         return view('aeroportos.informacoes', compact(
-            'aeroportos',
+            'aeroportosData',
             'companhias',
             'totalAeroportos',
             'totalVoos',
             'totalPassageiros',
-            'mediaPassageirosPorVoo',
-            'horarioStats'
+            'mediaPassageirosPorVoo'
         ));
     }
-
 }
