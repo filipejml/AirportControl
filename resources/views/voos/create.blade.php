@@ -37,20 +37,23 @@
     ])
     ->orderBy('created_at', 'desc')
     ->first();
-@endphp
+    @endphp
 
     @if($ultimoVoo)
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card border-success shadow-sm">
-                <div class="card-header bg-success text-white">
+            <div class="card border-success shadow-sm" id="ultimoVooCard">
+                <div class="card-header bg-success text-white" style="cursor: pointer;" id="toggleCardHeader">
                     <div class="d-flex align-items-center">
                         <i class="bi bi-clock-history me-2 fs-5"></i>
                         <strong>Último Voo Cadastrado</strong>
-                        <span class="ms-auto small">{{ $ultimoVoo->created_at->format('d/m/Y H:i:s') }}</span>
+                        <span class="ms-auto small">
+                            <span class="me-2">{{ $ultimoVoo->created_at->format('d/m/Y H:i:s') }}</span>
+                            <i class="bi bi-chevron-up" id="toggleIcon"></i>
+                        </span>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body" id="cardBodyContent">
                     <div class="row">
                         <div class="col-md-3">
                             <div class="text-center">
@@ -167,7 +170,7 @@
                     </div>
                     @endif
                 </div>
-                <div class="card-footer bg-light">
+                <div class="card-footer bg-light" id="cardFooterContent">
                     <div class="d-flex justify-content-between align-items-center">
                         <small class="text-muted">
                             <i class="bi bi-info-circle me-1"></i>
@@ -195,7 +198,7 @@
     </div>
     @endif
 
-    <!-- Resto do formulário igual ao anterior -->
+    <!-- Formulário de Criação -->
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm border-0">
@@ -568,21 +571,11 @@
                         </div>
 
                         <!-- Botões -->
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a href="{{ route('voos.index') }}" class="btn btn-outline-secondary">
-                                <i class="bi bi-arrow-left me-2"></i>
-                                Cancelar
-                            </a>
-                            <div>
-                                <button type="reset" class="btn btn-outline-warning me-2" id="btnLimpar">
-                                    <i class="bi bi-eraser me-2"></i>
-                                    Limpar
-                                </button>
-                                <button type="submit" class="btn btn-primary px-4">
-                                    <i class="bi bi-check-circle me-2"></i>
-                                    Cadastrar Voo
-                                </button>
-                            </div>
+                        <div class="d-flex justify-content-center align-items-center">
+                            <button type="submit" class="btn btn-primary px-5 py-2">
+                                <i class="bi bi-check-circle me-2"></i>
+                                Cadastrar Voo
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -639,6 +632,99 @@ document.addEventListener('DOMContentLoaded', function() {
     let preenchimentoAutomaticoAtivo = true;
     let ultimoCodigoProcessado = '';
     let timeoutId = null;
+
+    // ============================================
+    // FUNCIONALIDADE DE EXPANDIR/RECOLHER DO CARD
+    // ============================================
+    const cardHeader = document.getElementById('toggleCardHeader');
+    const cardBody = document.getElementById('cardBodyContent');
+    const cardFooter = document.getElementById('cardFooterContent');
+    const toggleIcon = document.getElementById('toggleIcon');
+
+    // Verificar se há estado salvo no localStorage
+    const isCardExpanded = localStorage.getItem('ultimoVooCardExpanded');
+
+    // Inicializar estado do card
+    if (cardBody && cardFooter && toggleIcon) {
+        if (isCardExpanded === 'false') {
+            // Card recolhido
+            cardBody.style.display = 'none';
+            cardFooter.style.display = 'none';
+            toggleIcon.classList.remove('bi-chevron-up');
+            toggleIcon.classList.add('bi-chevron-down');
+        } else {
+            // Card expandido (padrão)
+            cardBody.style.display = 'block';
+            cardFooter.style.display = 'block';
+            toggleIcon.classList.remove('bi-chevron-down');
+            toggleIcon.classList.add('bi-chevron-up');
+        }
+
+        // Função para alternar o card
+        function toggleCard() {
+            if (cardBody.style.display === 'none') {
+                // Expandir card
+                cardBody.style.display = 'block';
+                cardFooter.style.display = 'block';
+                toggleIcon.classList.remove('bi-chevron-down');
+                toggleIcon.classList.add('bi-chevron-up');
+                localStorage.setItem('ultimoVooCardExpanded', 'true');
+                
+                // Adicionar animação suave
+                cardBody.style.animation = 'slideDown 0.3s ease';
+                cardFooter.style.animation = 'slideDown 0.3s ease';
+                setTimeout(() => {
+                    cardBody.style.animation = '';
+                    cardFooter.style.animation = '';
+                }, 300);
+            } else {
+                // Recolher card
+                cardBody.style.display = 'none';
+                cardFooter.style.display = 'none';
+                toggleIcon.classList.remove('bi-chevron-up');
+                toggleIcon.classList.add('bi-chevron-down');
+                localStorage.setItem('ultimoVooCardExpanded', 'false');
+            }
+        }
+
+        // Adicionar evento de clique ao header
+        if (cardHeader) {
+            cardHeader.addEventListener('click', toggleCard);
+            cardHeader.style.cursor = 'pointer';
+            
+            // Adicionar efeito hover
+            cardHeader.addEventListener('mouseenter', () => {
+                cardHeader.style.backgroundColor = '#0d5c8b';
+            });
+            cardHeader.addEventListener('mouseleave', () => {
+                cardHeader.style.backgroundColor = '';
+            });
+        }
+    }
+
+    // Adicionar CSS para animação suave
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #cardBodyContent, #cardFooterContent {
+            transition: all 0.3s ease;
+        }
+        
+        #toggleCardHeader {
+            transition: background-color 0.2s ease;
+        }
+    `;
+    document.head.appendChild(style);
 
     function carregarAeronaves(companhiaId) {
         if (!companhiaId) {
