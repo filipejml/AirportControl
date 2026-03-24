@@ -17,18 +17,50 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class VooController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $voos = Voo::with(['aeroporto', 'companhiaAerea', 'aeronave.fabricante'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = Voo::with(['aeroporto', 'companhiaAerea', 'aeronave.fabricante'])
+            ->orderBy('created_at', 'desc'); // Ordem decrescente (mais recentes primeiro)
+        
+        // Aplicar filtros se existirem
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('id_voo', 'like', "%{$search}%")
+                ->orWhereHas('aeroporto', function($sq) use ($search) {
+                    $sq->where('nome_aeroporto', 'like', "%{$search}%");
+                })
+                ->orWhereHas('companhiaAerea', function($sq) use ($search) {
+                    $sq->where('nome', 'like', "%{$search}%");
+                })
+                ->orWhereHas('aeronave', function($sq) use ($search) {
+                    $sq->where('modelo', 'like', "%{$search}%");
+                });
+            });
+        }
+        
+        if ($request->has('tipo') && $request->tipo) {
+            $query->where('tipo_voo', $request->tipo);
+        }
+        
+        if ($request->has('horario') && $request->horario) {
+            $query->where('horario_voo', $request->horario);
+        }
+        
+        if ($request->has('dias') && $request->dias) {
+            $dataLimite = now()->subDays((int)$request->dias);
+            $query->where('created_at', '>=', $dataLimite);
+        }
+        
+        // Paginar com 10 itens por página
+        $voos = $query->paginate(10)->withQueryString(); // withQueryString() mantém os filtros na URL
         
         $estatisticas = [
-            'total_voos' => $voos->count(),
-            'total_passageiros' => $voos->sum('total_passageiros'),
-            'media_pax_voo' => $voos->count() > 0 ? round($voos->sum('total_passageiros') / $voos->count(), 0) : 0,
-            'voos_com_notas' => $voos->filter(function($voo) { return $voo->media_notas !== null; })->count(),
-            'media_geral_notas' => $voos->filter(function($voo) { return $voo->media_notas !== null; })->avg('media_notas')
+            'total_voos' => Voo::count(), // Total sem filtros
+            'total_passageiros' => Voo::sum('total_passageiros'),
+            'media_pax_voo' => Voo::count() > 0 ? round(Voo::sum('total_passageiros') / Voo::count(), 0) : 0,
+            'voos_com_notas' => Voo::whereNotNull('media_notas')->count(),
+            'media_geral_notas' => Voo::whereNotNull('media_notas')->avg('media_notas')
         ];
         
         return view('voos.index', compact('voos', 'estatisticas'));

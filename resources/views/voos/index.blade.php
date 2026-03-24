@@ -86,51 +86,55 @@
     <!-- Filtros e Busca -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body py-2">
-            <div class="row g-2">
-                <div class="col-md-3">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light border-end-0">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input type="text" 
-                               class="form-control form-control-sm border-start-0 ps-0" 
-                               id="searchInput" 
-                               placeholder="Buscar...">
+            <form id="filterForm" method="GET" action="{{ route('voos.index') }}">
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" 
+                                   class="form-control form-control-sm border-start-0 ps-0" 
+                                   name="search"
+                                   id="searchInput" 
+                                   placeholder="Buscar..."
+                                   value="{{ request('search') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select form-select-sm" name="tipo" id="filterTipo">
+                            <option value="">Todos os tipos</option>
+                            <option value="Regular" {{ request('tipo') == 'Regular' ? 'selected' : '' }}>Regular</option>
+                            <option value="Charter" {{ request('tipo') == 'Charter' ? 'selected' : '' }}>Charter</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select form-select-sm" name="horario" id="filterHorario">
+                            <option value="">Todos horários</option>
+                            <option value="EAM" {{ request('horario') == 'EAM' ? 'selected' : '' }}>EAM</option>
+                            <option value="AM" {{ request('horario') == 'AM' ? 'selected' : '' }}>AM</option>
+                            <option value="AN" {{ request('horario') == 'AN' ? 'selected' : '' }}>AN</option>
+                            <option value="PM" {{ request('horario') == 'PM' ? 'selected' : '' }}>PM</option>
+                            <option value="ALL" {{ request('horario') == 'ALL' ? 'selected' : '' }}>ALL</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select form-select-sm" name="dias" id="filterData">
+                            <option value="">Últimos</option>
+                            <option value="7" {{ request('dias') == '7' ? 'selected' : '' }}>7 dias</option>
+                            <option value="15" {{ request('dias') == '15' ? 'selected' : '' }}>15 dias</option>
+                            <option value="30" {{ request('dias') == '30' ? 'selected' : '' }}>30 dias</option>
+                            <option value="90" {{ request('dias') == '90' ? 'selected' : '' }}>90 dias</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-funnel me-1"></i>
+                            Filtrar
+                        </button>
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <select class="form-select form-select-sm" id="filterTipo">
-                        <option value="">Todos os tipos</option>
-                        <option value="Regular">Regular</option>
-                        <option value="Charter">Charter</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select class="form-select form-select-sm" id="filterHorario">
-                        <option value="">Todos horários</option>
-                        <option value="EAM">EAM</option>
-                        <option value="AM">AM</option>
-                        <option value="AN">AN</option>
-                        <option value="PM">PM</option>
-                        <option value="ALL">ALL</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select form-select-sm" id="filterData">
-                        <option value="">Últimos</option>
-                        <option value="7">7 dias</option>
-                        <option value="15">15 dias</option>
-                        <option value="30">30 dias</option>
-                        <option value="90">90 dias</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-outline-secondary btn-sm w-100" id="clearFilters">
-                        <i class="bi bi-x-circle me-1"></i>
-                        Limpar
-                    </button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -178,8 +182,8 @@
                 <div class="table-responsive">
                     <table class="table table-sm table-hover align-middle mb-0" id="voosTable">
                         <thead class="bg-light">
-                            <tr>
-                                <th class="px-2 py-2 text-center" style="width: 30px;">ID</th>
+                             <tr>
+                                <th class="px-2 py-2 text-center" style="width: 30px;">#</th>
                                 <th class="px-2 py-2">Aeroporto</th>
                                 <th class="px-2 py-2 text-center">Nº Voo</th>
                                 <th class="px-2 py-2">Companhia</th>
@@ -195,7 +199,7 @@
                                 <th class="px-2 py-2 text-center">Pátio</th>
                                 <th class="px-2 py-2 text-center">Média</th>
                                 <th class="px-2 py-2 text-center">Ações</th>
-                            </tr>
+                             </tr>
                         </thead>
                         <tbody>
                             @foreach($voos as $index => $voo)
@@ -205,7 +209,7 @@
                                 data-data="{{ $voo->created_at->format('Y-m-d') }}"
                                 data-media="{{ $voo->media_notas ?? '' }}">
                                 <td class="px-2 py-1 text-center">
-                                    <span class="fw-semibold">{{ $index + 1 }}</span>
+                                    <span class="fw-semibold">{{ $voo->id }}</span>
                                 </td>
                                 <td class="px-2 py-1">
                                     <span class="small">{{ $voo->aeroporto->codigo_icao ?? $voo->aeroporto->codigo_iata ?? $voo->aeroporto->nome_aeroporto }}</span>
@@ -322,8 +326,8 @@
                                 <td class="px-2 py-1 text-center">
                                     <div class="btn-group btn-group-sm" role="group">
                                         <a href="{{ route('voos.edit', $voo) }}" 
-                                           class="btn btn-sm btn-outline-warning py-0 px-2" 
-                                           title="Editar">
+                                        class="btn btn-sm btn-outline-warning py-0 px-2" 
+                                        title="Editar">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button type="button" 
@@ -335,9 +339,9 @@
                                     </div>
                                     
                                     <form id="delete-form-{{ $voo->id }}" 
-                                          action="{{ route('voos.destroy', $voo) }}" 
-                                          method="POST" 
-                                          class="d-none">
+                                        action="{{ route('voos.destroy', $voo) }}" 
+                                        method="POST" 
+                                        class="d-none">
                                         @csrf
                                         @method('DELETE')
                                     </form>
@@ -348,12 +352,15 @@
                     </table>
                 </div>
                 
-                <!-- Rodapé da tabela -->
-                <div class="card-footer bg-light border-0 py-2">
-                    <div class="d-flex justify-content-between align-items-center">
+                <!-- Paginação -->
+                <div class="card-footer bg-light border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div class="small text-muted">
                             <i class="bi bi-info-circle me-1"></i>
-                            Total: {{ $voos->count() }} voos cadastrados
+                            Mostrando {{ $voos->firstItem() }} a {{ $voos->lastItem() }} de {{ $voos->total() }} voos
+                        </div>
+                        <div>
+                            {{ $voos->appends(request()->query())->links() }}
                         </div>
                         <div>
                             <button class="btn btn-sm btn-outline-danger" id="btnExportarPDF">
@@ -459,6 +466,21 @@
 .table-responsive {
     overflow-x: auto;
 }
+
+/* Estilização da paginação */
+.pagination {
+    margin-bottom: 0;
+}
+
+.pagination .page-link {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #0d5c8b;
+    border-color: #0d5c8b;
+}
 </style>
 
 <script>
@@ -469,72 +491,45 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // ==========================================
-    // FILTROS E BUSCA
-    // ==========================================
-    const searchInput = document.getElementById('searchInput');
+    // Auto-submit do formulário ao mudar os selects
+    const filterForm = document.getElementById('filterForm');
     const filterTipo = document.getElementById('filterTipo');
     const filterHorario = document.getElementById('filterHorario');
     const filterData = document.getElementById('filterData');
-    const clearFilters = document.getElementById('clearFilters');
-    const rows = document.querySelectorAll('.voo-row');
 
-    function filterRows() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const tipoFilter = filterTipo.value;
-        const horarioFilter = filterHorario.value;
-        const dataFilter = parseInt(filterData.value);
-        
-        let dataLimite = null;
-        if (dataFilter) {
-            dataLimite = new Date();
-            dataLimite.setDate(dataLimite.getDate() - dataFilter);
-        }
-
-        rows.forEach(row => {
-            let show = true;
-            
-            if (searchTerm) {
-                const text = row.textContent.toLowerCase();
-                if (!text.includes(searchTerm)) {
-                    show = false;
-                }
-            }
-            
-            if (show && tipoFilter && row.dataset.tipo !== tipoFilter) {
-                show = false;
-            }
-            
-            if (show && horarioFilter && row.dataset.horario !== horarioFilter) {
-                show = false;
-            }
-            
-            if (show && dataLimite) {
-                const rowDate = new Date(row.dataset.data);
-                if (rowDate < dataLimite) {
-                    show = false;
-                }
-            }
-            
-            row.style.display = show ? '' : 'none';
+    if (filterTipo) {
+        filterTipo.addEventListener('change', function() {
+            filterForm.submit();
         });
     }
 
-    searchInput.addEventListener('keyup', filterRows);
-    filterTipo.addEventListener('change', filterRows);
-    filterHorario.addEventListener('change', filterRows);
-    filterData.addEventListener('change', filterRows);
+    if (filterHorario) {
+        filterHorario.addEventListener('change', function() {
+            filterForm.submit();
+        });
+    }
 
-    clearFilters.addEventListener('click', function() {
-        searchInput.value = '';
-        filterTipo.value = '';
-        filterHorario.value = '';
-        filterData.value = '';
-        filterRows();
-    });
+    if (filterData) {
+        filterData.addEventListener('change', function() {
+            filterForm.submit();
+        });
+    }
+
+    // Busca com debounce
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filterForm.submit();
+            }, 500);
+        });
+    }
 
     // ==========================================
-    // EXPORTAÇÃO CSV - VERSÃO SIMPLES E FUNCIONAL
+    // EXPORTAÇÃO CSV
     // ==========================================
     const btnExportarCSV = document.getElementById('btnExportarCSV');
 
@@ -557,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const url = `{{ route('voos.export.csv') }}?${params.toString()}`;
             
-            // Método mais simples: criar um link temporário e clicar
+            // Criar link para download
             const link = document.createElement('a');
             link.href = url;
             link.style.display = 'none';
@@ -565,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
             link.click();
             document.body.removeChild(link);
             
-            // Feedback visual (opcional)
+            // Feedback visual
             const originalText = btnExportarCSV.innerHTML;
             btnExportarCSV.innerHTML = '<i class="bi bi-check-circle me-1"></i> Exportando...';
             btnExportarCSV.disabled = true;
