@@ -137,7 +137,8 @@
 
                 <!-- 📊 DASHBOARD -->
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" 
+                    href="{{ route('dashboard') }}">
                         <i class="bi bi-bar-chart me-1"></i>Dashboard
                     </a>
                 </li>

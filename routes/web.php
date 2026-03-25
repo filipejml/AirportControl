@@ -10,6 +10,8 @@ use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\FabricanteController;
 use App\Http\Controllers\VooController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\DashboardController;
+
 /*
 |--------------------------------------------------------------------------
 | ROTAS PÚBLICAS
@@ -49,6 +51,9 @@ Route::middleware('auth')->group(function () {
             'aeronaves' => 'aeronave' // Corrige o nome do parâmetro
         ]
     ]);
+
+    // Página Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
     
     // Rota para exibir informações detalhadas de um aeroporto (incluindo companhias associadas)
     Route::get('/aeroportos/informacoes', [AeroportoController::class, 'informacoes'])->name('aeroportos.informacoes');
