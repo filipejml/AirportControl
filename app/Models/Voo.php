@@ -107,23 +107,15 @@ class Voo extends Model
             return null;
         }
 
-        $mediaArredondada = round($this->media_notas);
-        
-        $mapaLetras = [
-            10 => 'A',
-            9 => 'B',
-            8 => 'C',
-            7 => 'C',
-            6 => 'D',
-            5 => 'D',
-            4 => 'E',
-            3 => 'E',
-            2 => 'F',
-            1 => 'F',
-            0 => 'F'
-        ];
-
-        return $mapaLetras[$mediaArredondada] ?? 'F';
+        // Usa a mesma lógica de classificação do controller
+        return match(true) {
+            $this->media_notas >= 9 => 'A',
+            $this->media_notas >= 8 => 'B',
+            $this->media_notas >= 7 => 'C',
+            $this->media_notas >= 5 => 'D',
+            $this->media_notas >= 3 => 'E',
+            default => 'F'
+        };
     }
 
     private function convertNumberToLetter($nota)
@@ -142,5 +134,56 @@ class Voo extends Model
         ];
 
         return $mapa[$nota] ?? null;
+    }
+
+    /**
+     * Retorna o total de passageiros (capacidade * quantidade de voos)
+     */
+    public function getTotalPassageirosAttribute()
+    {
+        return $this->qtd_passageiros * $this->qtd_voos;
+    }
+
+    /**
+     * Retorna a classificação textual da média
+     */
+    public function getClassificacaoMediaAttribute()
+    {
+        if (!$this->media_notas) return '';
+        
+        return match(true) {
+            $this->media_notas >= 9 => 'Excelente',
+            $this->media_notas >= 7 => 'Bom',
+            $this->media_notas >= 5 => 'Regular',
+            default => 'Ruim'
+        };
+    }
+
+    /**
+     * Retorna o texto do horário
+     */
+    public function getHorarioTextoAttribute()
+    {
+        return match($this->horario_voo) {
+            'EAM' => 'Early Morning (00h-06h)',
+            'AM' => 'Morning (06h-12h)',
+            'AN' => 'Afternoon (12h-18h)',
+            'PM' => 'Evening (18h-00h)',
+            'ALL' => 'Diário',
+            default => $this->horario_voo ?? ''
+        };
+    }
+
+    /**
+     * Retorna o texto do tipo de aeronave
+     */
+    public function getTipoAeronaveTextoAttribute()
+    {
+        return match($this->tipo_aeronave) {
+            'PC' => 'Pequeno Porte',
+            'MC' => 'Médio Porte',
+            'LC' => 'Grande Porte',
+            default => $this->tipo_aeronave ?? ''
+        };
     }
 }

@@ -56,10 +56,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('aeroportos', AeroportoController::class);
     
     // Rota AJAX para buscar aeronaves por companhia - página de cadastro de voo
-    Route::get('/api/companhias/{companhia}/aeronaves', [VooController::class, 'getAeronavesByCompanhia']);
+    Route::get('/api/companhias/{companhiaId}/aeronaves', [VooController::class, 'getAeronavesByCompanhia'])
+        ->name('api.companhias.aeronaves');
 
     // Rota AJAX para verificar ID do voo - página de cadastro de voo (para evitar duplicidade)
-    Route::post('/api/verificar-id-voo', [VooController::class, 'verificarIdVoo'])->name('verificar.id.voo');
+    Route::post('/verificar-id-voo', [VooController::class, 'verificarIdVoo'])
+        ->name('verificar.id.voo');
 
     // Rota AJAX para buscar companhia pelo código do voo
     Route::get('/api/buscar-companhia/{codigo}', [VooController::class, 'buscarCompanhiaPorCodigo'])->name('buscar.companhia');

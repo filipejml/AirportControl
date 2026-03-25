@@ -71,7 +71,29 @@ class VooController extends Controller
         $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
         $companhias = CompanhiaAerea::orderBy('nome')->get();
         
-        return view('voos.create', compact('aeroportos', 'companhias'));
+        // Buscar último voo com todos os relacionamentos necessários
+        $ultimoVoo = Voo::with([
+            'aeroporto' => function($query) {
+                $query->select('id', 'nome_aeroporto');
+            },
+            'companhiaAerea' => function($query) {
+                $query->select('id', 'nome');
+            },
+            'aeronave' => function($query) {
+                $query->select('id', 'modelo', 'capacidade', 'porte');
+            }
+        ])
+        ->select([
+            'id', 'id_voo', 'aeroporto_id', 'companhia_aerea_id', 
+            'aeronave_id', 'tipo_aeronave', 'qtd_voos',
+            'horario_voo', 'nota_obj', 'nota_pontualidade', 'nota_servicos',
+            'nota_patio', 'media_notas', 'qtd_passageiros', 'created_at', 
+            'tipo_voo'
+        ])
+        ->orderBy('created_at', 'desc')
+        ->first();
+        
+        return view('voos.create', compact('aeroportos', 'companhias', 'ultimoVoo'));
     }
 
     public function store(Request $request)
@@ -257,9 +279,20 @@ class VooController extends Controller
     {
         $aeronaves = Aeronave::whereHas('companhias', function($query) use ($companhiaId) {
             $query->where('companhias_aereas.id', $companhiaId);
-        })->with('fabricante')->get();
+        })
+        ->with('fabricante')
+        ->get();
         
-        return response()->json($aeronaves);
+        // Retornar apenas os campos necessários
+        return response()->json($aeronaves->map(function($aeronave) {
+            return [
+                'id' => $aeronave->id,
+                'modelo' => $aeronave->modelo,
+                'capacidade' => $aeronave->capacidade,
+                'porte' => $aeronave->porte,
+                'fabricante' => $aeronave->fabricante ? ['nome' => $aeronave->fabricante->nome] : null
+            ];
+        }));
     }
 
     // Rota AJAX para verificar código do ID do voo

@@ -16,183 +16,302 @@
         </div>
     </div>
 
-    <!-- Card do Último Voo Cadastrado -->
+    {{-- Card do Último Voo Cadastrado (Colapsável) --}}
     @php
     $ultimoVoo = \App\Models\Voo::with([
         'aeroporto' => function($query) {
-            $query->select('id', 'nome_aeroporto'); // apenas campos necessários
+            $query->select('id', 'nome_aeroporto');
         },
         'companhiaAerea' => function($query) {
             $query->select('id', 'nome');
         },
         'aeronave' => function($query) {
-            $query->select('id', 'modelo', 'capacidade');
+            $query->select('id', 'modelo', 'capacidade', 'porte');
         }
     ])
     ->select([
         'id', 'id_voo', 'aeroporto_id', 'companhia_aerea_id', 
         'aeronave_id', 'tipo_aeronave', 'qtd_voos', 'total_passageiros',
         'horario_voo', 'nota_obj', 'nota_pontualidade', 'nota_servicos',
-        'nota_patio', 'media_notas', 'created_at'
+        'nota_patio', 'media_notas', 'qtd_passageiros', 'created_at', 'tipo_voo'
     ])
     ->orderBy('created_at', 'desc')
     ->first();
     @endphp
 
     @if($ultimoVoo)
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-success shadow-sm" id="ultimoVooCard">
-                <div class="card-header bg-success text-white" style="cursor: pointer;" id="toggleCardHeader">
+    <div class="card mb-4 border-success shadow-sm">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center cursor-pointer"
+             data-bs-toggle="collapse" 
+             data-bs-target="#ultimoVooCollapse" 
+             aria-expanded="false" 
+             aria-controls="ultimoVooCollapse">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-clock-history me-2 fs-5"></i>
+                <h5 class="mb-0 fw-semibold">Último Voo Cadastrado</h5>
+            </div>
+            <div class="d-flex align-items-center">
+                <small class="text-white-50 me-3">
+                    <i class="bi bi-calendar me-1"></i>
+                    {{ $ultimoVoo->created_at->diffForHumans() }}
+                </small>
+                <i class="bi bi-chevron-down collapse-icon"></i>
+            </div>
+        </div>
+        
+        {{-- Resumo (sempre visível quando colapsado) --}}
+        <div id="ultimoVooResumo">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                     <div class="d-flex align-items-center">
-                        <i class="bi bi-clock-history me-2 fs-5"></i>
-                        <strong>Último Voo Cadastrado</strong>
-                        <span class="ms-auto small">
-                            <span class="me-2">{{ $ultimoVoo->created_at->format('d/m/Y H:i:s') }}</span>
-                            <i class="bi bi-chevron-up" id="toggleIcon"></i>
-                        </span>
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="bi bi-airplane-fill text-success fs-4"></i>
+                        </div>
+                        <div>
+                            <strong class="text-dark fs-5">{{ $ultimoVoo->id_voo }}</strong>
+                            <div class="text-muted small">
+                                <span class="me-3">
+                                    <i class="bi bi-building me-1"></i>{{ $ultimoVoo->companhiaAerea->nome ?? 'N/A' }}
+                                </span>
+                                <span class="me-3">
+                                    <i class="bi bi-airplane me-1"></i>{{ $ultimoVoo->aeronave->modelo ?? 'N/A' }}
+                                </span>
+                                <span class="badge bg-info bg-opacity-10 text-info">
+                                    <i class="bi bi-tag me-1"></i>{{ $ultimoVoo->tipo_voo }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="text-success fw-bold fs-5">
+                            {{ number_format($ultimoVoo->total_passageiros, 0, ',', '.') }} 
+                            <small class="text-muted fw-normal fs-6">passageiros</small>
+                        </div>
+                        <div class="text-muted small">
+                            <i class="bi bi-geo-alt me-1"></i>{{ $ultimoVoo->aeroporto->nome_aeroporto ?? 'N/A' }} 
+                            • 
+                            <i class="bi bi-clock me-1"></i>
+                            @switch($ultimoVoo->horario_voo)
+                                @case('EAM') Early Morning @break
+                                @case('AM') Morning @break
+                                @case('AN') Afternoon @break
+                                @case('PM') Evening @break
+                                @default {{ $ultimoVoo->horario_voo }}
+                            @endswitch
+                        </div>
                     </div>
                 </div>
-                <div class="card-body" id="cardBodyContent">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <div class="bg-light rounded-circle p-3 d-inline-block mb-2">
-                                    <i class="bi bi-airplane-fill text-primary fs-3"></i>
-                                </div>
-                                <h5 class="mb-0">{{ $ultimoVoo->id_voo }}</h5>
-                                <small class="text-muted">ID do Voo</small>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-building me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Companhia</small>
-                                    <strong>{{ $ultimoVoo->companhiaAerea->nome }}</strong>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-geo-alt me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Aeroporto</small>
-                                    <strong>{{ $ultimoVoo->aeroporto->nome_aeroporto }}</strong>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-airplane me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Aeronave</small>
-                                    <strong>{{ $ultimoVoo->aeronave->modelo }}</strong>
-                                    <small class="text-muted">({{ $ultimoVoo->aeronave->capacidade }} pax)</small>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-diagram-3 me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Tipo</small>
-                                    <strong>
-                                        @if($ultimoVoo->tipo_aeronave == 'PC')
-                                            Pequeno Porte
-                                        @elseif($ultimoVoo->tipo_aeronave == 'MC')
-                                            Médio Porte
-                                        @elseif($ultimoVoo->tipo_aeronave == 'LC')
-                                            Grande Porte
-                                        @else
-                                            {{ $ultimoVoo->tipo_aeronave }}
-                                        @endif
-                                    </strong>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="d-flex align-items-center mb-2">
-                                <i class="bi bi-sort-numeric-up me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Voos</small>
-                                    <strong>{{ $ultimoVoo->qtd_voos }}x</strong>
-                                    <small class="text-muted">({{ number_format($ultimoVoo->total_passageiros, 0, ',', '.') }} pax)</small>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-clock me-2 text-primary"></i>
-                                <div>
-                                    <small class="text-muted d-block">Horário</small>
-                                    <strong>{{ $ultimoVoo->horario_voo }}</strong>
-                                    <small class="text-muted">
-                                        @if($ultimoVoo->horario_voo == 'EAM')
-                                            (00h-06h)
-                                        @elseif($ultimoVoo->horario_voo == 'AM')
-                                            (06h-12h)
-                                        @elseif($ultimoVoo->horario_voo == 'AN')
-                                            (12h-18h)
-                                        @elseif($ultimoVoo->horario_voo == 'PM')
-                                            (18h-00h)
-                                        @else
-                                            (Diário)
-                                        @endif
-                                    </small>
-                                </div>
-                            </div>
+            </div>
+        </div>
+        
+        {{-- Detalhes (expansível) --}}
+        <div class="collapse" id="ultimoVooCollapse" data-bs-parent=".card">
+            <div class="card-body border-top">
+                <div class="row g-4">
+                    <div class="col-md-2 text-center">
+                        <div class="bg-light p-3 rounded-3">
+                            <i class="bi bi-airplane-engines fs-1 text-success"></i>
                         </div>
                     </div>
-                    
-                    @if($ultimoVoo->media_notas)
-                    <div class="row mt-3 pt-2 border-top">
-                        <div class="col-12">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="bi bi-star-fill text-warning me-1"></i>
-                                    <small class="text-muted">Avaliações:</small>
+                    <div class="col-md-10">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <strong class="text-muted d-block mb-1">
+                                    <i class="bi bi-tag me-1"></i>ID do Voo
+                                </strong>
+                                <span class="fs-5 fw-semibold text-dark">{{ $ultimoVoo->id_voo }}</span>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <strong class="text-muted d-block mb-1">
+                                    <i class="bi bi-building me-1"></i>Companhia
+                                </strong>
+                                <span class="text-dark">{{ $ultimoVoo->companhiaAerea->nome ?? 'N/A' }}</span>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <strong class="text-muted d-block mb-1">
+                                    <i class="bi bi-airplane me-1"></i>Modelo
+                                </strong>
+                                <span class="text-dark">{{ $ultimoVoo->aeronave->modelo ?? 'N/A' }}</span>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <strong class="text-muted d-block mb-1">
+                                    <i class="bi bi-geo-alt me-1"></i>Aeroporto
+                                </strong>
+                                <span class="text-dark">{{ $ultimoVoo->aeroporto->nome_aeroporto ?? 'N/A' }}</span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-md-3 mb-3">
+                                <strong class="text-muted d-block mb-1">
+                                    <i class="bi bi-diagram-3 me-1"></i>Tipo de Voo
+                                </strong>
+                                <span class="badge bg-info">{{ $ultimoVoo->tipo_voo }}</span>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <strong class="text-muted d-block mb-1">
+                                    <i class="bi bi-box me-1"></i>Porte Aeronave
+                                </strong>
+                                <span class="badge bg-secondary">
+                                    @switch($ultimoVoo->tipo_aeronave)
+                                        @case('PC') Pequeno Porte @break
+                                        @case('MC') Médio Porte @break
+                                        @case('LC') Grande Porte @break
+                                        @default {{ $ultimoVoo->tipo_aeronave }}
+                                    @endswitch
+                                </span>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <strong class="text-muted d-block mb-1">
+                                    <i class="bi bi-people me-1"></i>Capacidade
+                                </strong>
+                                <span class="text-dark">{{ number_format($ultimoVoo->qtd_passageiros, 0, ',', '.') }} pax/voo</span>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <strong class="text-muted d-block mb-1">
+                                    <i class="bi bi-sort-numeric-up me-1"></i>Qtd. Voos
+                                </strong>
+                                <span class="text-dark">{{ $ultimoVoo->qtd_voos }}x</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <strong class="text-muted d-block mb-1">
+                                    <i class="bi bi-clock me-1"></i>Horário
+                                </strong>
+                                <span class="badge bg-warning text-dark">
+                                    {{ $ultimoVoo->horario_voo }}
+                                    @switch($ultimoVoo->horario_voo)
+                                        @case('EAM') (00h-06h) @break
+                                        @case('AM') (06h-12h) @break
+                                        @case('AN') (12h-18h) @break
+                                        @case('PM') (18h-00h) @break
+                                        @case('ALL') (Diário) @break
+                                    @endswitch
+                                </span>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <strong class="text-muted d-block mb-1">
+                                    <i class="bi bi-calculator me-1"></i>Total Pax
+                                </strong>
+                                <span class="text-dark fw-semibold">{{ number_format($ultimoVoo->total_passageiros, 0, ',', '.') }}</span>
+                            </div>
+                        </div>
+                        
+                        @if($ultimoVoo->nota_obj || $ultimoVoo->nota_pontualidade || $ultimoVoo->nota_servicos || $ultimoVoo->nota_patio)
+                        <div class="row mt-2 pt-2 border-top">
+                            <div class="col-12">
+                                <strong class="text-muted d-block mb-2">
+                                    <i class="bi bi-star-fill me-1 text-warning"></i>Avaliações
+                                </strong>
+                                <div class="d-flex flex-wrap gap-3">
                                     @if($ultimoVoo->nota_obj)
-                                        <span class="badge bg-info bg-opacity-10 text-info ms-2">Obj: {{ $ultimoVoo->nota_obj_letra }}</span>
+                                    <div class="text-center">
+                                        <small class="text-muted d-block">Objetivo</small>
+                                        <span class="badge bg-primary fs-6 px-3 py-2">{{ $ultimoVoo->nota_obj }}/10</span>
+                                        <small class="text-muted d-block">
+                                            @php
+                                                $mapaLetra = [10 => 'A', 9 => 'B', 8 => 'C', 6 => 'D', 4 => 'E', 2 => 'F'];
+                                                $notaLetraObj = $mapaLetra[$ultimoVoo->nota_obj] ?? '';
+                                            @endphp
+                                            {{ $notaLetraObj }}
+                                        </small>
+                                    </div>
                                     @endif
                                     @if($ultimoVoo->nota_pontualidade)
-                                        <span class="badge bg-info bg-opacity-10 text-info">Pont: {{ $ultimoVoo->nota_pontualidade_letra }}</span>
+                                    <div class="text-center">
+                                        <small class="text-muted d-block">Pontualidade</small>
+                                        <span class="badge bg-primary fs-6 px-3 py-2">{{ $ultimoVoo->nota_pontualidade }}/10</span>
+                                        <small class="text-muted d-block">
+                                            @php
+                                                $notaLetraPont = $mapaLetra[$ultimoVoo->nota_pontualidade] ?? '';
+                                            @endphp
+                                            {{ $notaLetraPont }}
+                                        </small>
+                                    </div>
                                     @endif
                                     @if($ultimoVoo->nota_servicos)
-                                        <span class="badge bg-info bg-opacity-10 text-info">Serv: {{ $ultimoVoo->nota_servicos_letra }}</span>
+                                    <div class="text-center">
+                                        <small class="text-muted d-block">Serviços</small>
+                                        <span class="badge bg-primary fs-6 px-3 py-2">{{ $ultimoVoo->nota_servicos }}/10</span>
+                                        <small class="text-muted d-block">
+                                            @php
+                                                $notaLetraServ = $mapaLetra[$ultimoVoo->nota_servicos] ?? '';
+                                            @endphp
+                                            {{ $notaLetraServ }}
+                                        </small>
+                                    </div>
                                     @endif
                                     @if($ultimoVoo->nota_patio)
-                                        <span class="badge bg-info bg-opacity-10 text-info">Pátio: {{ $ultimoVoo->nota_patio_letra }}</span>
+                                    <div class="text-center">
+                                        <small class="text-muted d-block">Pátio</small>
+                                        <span class="badge bg-primary fs-6 px-3 py-2">{{ $ultimoVoo->nota_patio }}/10</span>
+                                        <small class="text-muted d-block">
+                                            @php
+                                                $notaLetraPatio = $mapaLetra[$ultimoVoo->nota_patio] ?? '';
+                                            @endphp
+                                            {{ $notaLetraPatio }}
+                                        </small>
+                                    </div>
                                     @endif
-                                </div>
-                                <div>
-                                    <span class="badge bg-success rounded-pill fs-6 p-2">
-                                        <i class="bi bi-calculator me-1"></i>
-                                        Média: {{ number_format($ultimoVoo->media_notas, 1) }} ({{ $ultimoVoo->media_notas_letra }})
-                                    </span>
+                                    @if($ultimoVoo->media_notas)
+                                    <div class="text-center ms-auto">
+                                        <small class="text-muted d-block">Média Geral</small>
+                                        <span class="badge bg-success fs-6 px-3 py-2">
+                                            {{ number_format($ultimoVoo->media_notas, 1) }}/10
+                                        </span>
+                                        <small class="text-muted d-block">
+                                            @php
+                                                $mediaLetra = match(true) {
+                                                    $ultimoVoo->media_notas >= 9 => 'A',
+                                                    $ultimoVoo->media_notas >= 8 => 'B',
+                                                    $ultimoVoo->media_notas >= 7 => 'C',
+                                                    $ultimoVoo->media_notas >= 5 => 'D',
+                                                    $ultimoVoo->media_notas >= 3 => 'E',
+                                                    default => 'F'
+                                                };
+                                            @endphp
+                                            {{ $mediaLetra }}
+                                        </small>
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
+                        @endif
                     </div>
-                    @endif
                 </div>
-                <div class="card-footer bg-light" id="cardFooterContent">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Use os dados acima como referência para o novo cadastro
-                        </small>
-                        <a href="{{ route('voos.show', $ultimoVoo) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-eye me-1"></i>
-                            Ver Detalhes
-                        </a>
-                    </div>
+            </div>
+            <div class="card-footer bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <small class="text-muted">
+                    <i class="bi bi-calendar-check me-1"></i>
+                    Cadastrado em: {{ $ultimoVoo->created_at->format('d/m/Y H:i:s') }}
+                    <span class="mx-2">•</span>
+                    <i class="bi bi-arrow-repeat me-1"></i>
+                    {{ $ultimoVoo->qtd_voos }} voos registrados
+                </small>
+                <div>
+                    <a href="{{ route('voos.show', $ultimoVoo) }}" class="btn btn-sm btn-outline-primary me-2">
+                        <i class="bi bi-eye me-1"></i>
+                        Ver Detalhes
+                    </a>
+                    <a href="{{ route('voos.create') }}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Novo Voo
+                    </a>
                 </div>
             </div>
         </div>
     </div>
     @else
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-secondary shadow-sm">
-                <div class="card-body text-center py-3">
-                    <i class="bi bi-info-circle me-2 text-secondary"></i>
-                    <span class="text-secondary">Nenhum voo cadastrado ainda. Este será o primeiro!</span>
-                </div>
+    <div class="card mb-4 border-secondary shadow-sm">
+        <div class="card-body text-center py-4">
+            <i class="bi bi-info-circle fs-3 text-secondary mb-2 d-block"></i>
+            <span class="text-secondary">Nenhum voo cadastrado ainda. Este será o primeiro!</span>
+            <div class="mt-3">
+                <a href="{{ route('voos.create') }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Cadastrar Primeiro Voo
+                </a>
             </div>
         </div>
     </div>
@@ -452,11 +571,11 @@
                                                 id="horario_voo" 
                                                 name="horario_voo" 
                                                 required>
-                                            <option value="EAM" {{ old('horario_voo') == 'EAM' ? 'selected' : '' }}>EAM</option>
-                                            <option value="AM" {{ old('horario_voo') == 'AM' ? 'selected' : '' }}>AM</option>
-                                            <option value="AN" {{ old('horario_voo') == 'AN' ? 'selected' : '' }}>AN</option>
-                                            <option value="PM" {{ old('horario_voo') == 'PM' ? 'selected' : '' }}>PM</option>
-                                            <option value="ALL" {{ old('horario_voo') == 'ALL' ? 'selected' : '' }}>ALL</option>
+                                            <option value="EAM" {{ old('horario_voo') == 'EAM' ? 'selected' : '' }}>EAM (00h-06h)</option>
+                                            <option value="AM" {{ old('horario_voo') == 'AM' ? 'selected' : '' }}>AM (06h-12h)</option>
+                                            <option value="AN" {{ old('horario_voo') == 'AN' ? 'selected' : '' }}>AN (12h-18h)</option>
+                                            <option value="PM" {{ old('horario_voo') == 'PM' ? 'selected' : '' }}>PM (18h-00h)</option>
+                                            <option value="ALL" {{ old('horario_voo') == 'ALL' ? 'selected' : '' }}>ALL (Diário)</option>
                                         </select>
                                     </div>
                                     @error('horario_voo')
@@ -571,7 +690,11 @@
                         </div>
 
                         <!-- Botões -->
-                        <div class="d-flex justify-content-center align-items-center">
+                        <div class="d-flex justify-content-center gap-3 align-items-center">
+                            <button type="button" class="btn btn-secondary px-4 py-2" id="btnLimpar">
+                                <i class="bi bi-eraser me-2"></i>
+                                Limpar Formulário
+                            </button>
                             <button type="submit" class="btn btn-primary px-5 py-2">
                                 <i class="bi bi-check-circle me-2"></i>
                                 Cadastrar Voo
@@ -584,32 +707,86 @@
     </div>
 </div>
 
-<!-- CSS e Script permanecem iguais -->
 <style>
-.card {
-    transition: all 0.3s ease;
-}
-
-.form-control:focus, .form-select:focus {
-    border-color: #86b7fe;
-    box-shadow: 0 0 0 0.25rem rgba(13, 92, 139, 0.25);
-}
-
-.btn-primary {
-    background-color: #0d5c8b;
-    border-color: #0d5c8b;
-}
-
-.btn-primary:hover {
-    background-color: #0a4a70;
-    border-color: #0a4a70;
-    transform: translateY(-1px);
-}
-
-input:read-only {
-    cursor: not-allowed;
-    background-color: #e9ecef;
-}
+    select.form-control, 
+    select.form-select {
+        -webkit-appearance: menulist;
+        -moz-appearance: menulist;
+        appearance: menulist;
+        background-image: none;
+        padding-right: 2.5rem;
+    }
+    
+    .collapse-icon {
+        transition: transform 0.3s ease;
+        font-size: 1.2rem;
+    }
+    
+    .collapsed .collapse-icon {
+        transform: rotate(-90deg);
+    }
+    
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    
+    .card-header {
+        transition: background-color 0.2s ease;
+    }
+    
+    .card-header:hover {
+        background-color: #0a6b4e !important;
+    }
+    
+    /* Animações suaves */
+    .collapse {
+        transition: all 0.3s ease;
+    }
+    
+    #ultimoVooResumo {
+        transition: all 0.2s ease;
+    }
+    
+    .card {
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 92, 139, 0.25);
+    }
+    
+    .btn-primary {
+        background-color: #0d5c8b;
+        border-color: #0d5c8b;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0a4a70;
+        border-color: #0a4a70;
+        transform: translateY(-1px);
+    }
+    
+    input:read-only {
+        cursor: not-allowed;
+        background-color: #e9ecef;
+    }
+    
+    /* Animação de slide down */
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .alert {
+        animation: slideDown 0.3s ease;
+    }
 </style>
 
 <script>
@@ -636,95 +813,66 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     // FUNCIONALIDADE DE EXPANDIR/RECOLHER DO CARD
     // ============================================
-    const cardHeader = document.getElementById('toggleCardHeader');
-    const cardBody = document.getElementById('cardBodyContent');
-    const cardFooter = document.getElementById('cardFooterContent');
-    const toggleIcon = document.getElementById('toggleIcon');
-
-    // Verificar se há estado salvo no localStorage
-    const isCardExpanded = localStorage.getItem('ultimoVooCardExpanded');
-
-    // Inicializar estado do card
-    if (cardBody && cardFooter && toggleIcon) {
-        if (isCardExpanded === 'false') {
-            // Card recolhido
-            cardBody.style.display = 'none';
-            cardFooter.style.display = 'none';
-            toggleIcon.classList.remove('bi-chevron-up');
-            toggleIcon.classList.add('bi-chevron-down');
+    const collapseElement = document.getElementById('ultimoVooCollapse');
+    const headerElement = document.querySelector('.card-header[data-bs-target="#ultimoVooCollapse"]');
+    
+    if (collapseElement && headerElement) {
+        const iconElement = headerElement.querySelector('.collapse-icon');
+        
+        // Verificar estado salvo no localStorage
+        const savedState = localStorage.getItem('ultimoVooCollapseState');
+        if (savedState === 'expanded') {
+            // Garantir que o collapse esteja expandido
+            collapseElement.classList.add('show');
+            if (headerElement.classList) {
+                headerElement.classList.remove('collapsed');
+            }
+            if (iconElement) {
+                iconElement.style.transform = 'rotate(0deg)';
+            }
+        } else if (savedState === 'collapsed') {
+            // Garantir que o collapse esteja colapsado
+            collapseElement.classList.remove('show');
+            if (headerElement.classList) {
+                headerElement.classList.add('collapsed');
+            }
+            if (iconElement) {
+                iconElement.style.transform = 'rotate(-90deg)';
+            }
         } else {
-            // Card expandido (padrão)
-            cardBody.style.display = 'block';
-            cardFooter.style.display = 'block';
-            toggleIcon.classList.remove('bi-chevron-down');
-            toggleIcon.classList.add('bi-chevron-up');
-        }
-
-        // Função para alternar o card
-        function toggleCard() {
-            if (cardBody.style.display === 'none') {
-                // Expandir card
-                cardBody.style.display = 'block';
-                cardFooter.style.display = 'block';
-                toggleIcon.classList.remove('bi-chevron-down');
-                toggleIcon.classList.add('bi-chevron-up');
-                localStorage.setItem('ultimoVooCardExpanded', 'true');
-                
-                // Adicionar animação suave
-                cardBody.style.animation = 'slideDown 0.3s ease';
-                cardFooter.style.animation = 'slideDown 0.3s ease';
-                setTimeout(() => {
-                    cardBody.style.animation = '';
-                    cardFooter.style.animation = '';
-                }, 300);
-            } else {
-                // Recolher card
-                cardBody.style.display = 'none';
-                cardFooter.style.display = 'none';
-                toggleIcon.classList.remove('bi-chevron-up');
-                toggleIcon.classList.add('bi-chevron-down');
-                localStorage.setItem('ultimoVooCardExpanded', 'false');
+            // Estado inicial: colapsado por padrão
+            collapseElement.classList.remove('show');
+            if (headerElement.classList) {
+                headerElement.classList.add('collapsed');
             }
+            if (iconElement) {
+                iconElement.style.transform = 'rotate(-90deg)';
+            }
+            localStorage.setItem('ultimoVooCollapseState', 'collapsed');
         }
-
-        // Adicionar evento de clique ao header
-        if (cardHeader) {
-            cardHeader.addEventListener('click', toggleCard);
-            cardHeader.style.cursor = 'pointer';
-            
-            // Adicionar efeito hover
-            cardHeader.addEventListener('mouseenter', () => {
-                cardHeader.style.backgroundColor = '#0d5c8b';
-            });
-            cardHeader.addEventListener('mouseleave', () => {
-                cardHeader.style.backgroundColor = '';
-            });
-        }
+        
+        // Configura o evento para quando o collapse abre
+        collapseElement.addEventListener('show.bs.collapse', function () {
+            if (headerElement.classList) {
+                headerElement.classList.remove('collapsed');
+            }
+            if (iconElement) {
+                iconElement.style.transform = 'rotate(0deg)';
+            }
+            localStorage.setItem('ultimoVooCollapseState', 'expanded');
+        });
+        
+        // Configura o evento para quando o collapse fecha
+        collapseElement.addEventListener('hide.bs.collapse', function () {
+            if (headerElement.classList) {
+                headerElement.classList.add('collapsed');
+            }
+            if (iconElement) {
+                iconElement.style.transform = 'rotate(-90deg)';
+            }
+            localStorage.setItem('ultimoVooCollapseState', 'collapsed');
+        });
     }
-
-    // Adicionar CSS para animação suave
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        #cardBodyContent, #cardFooterContent {
-            transition: all 0.3s ease;
-        }
-        
-        #toggleCardHeader {
-            transition: background-color 0.2s ease;
-        }
-    `;
-    document.head.appendChild(style);
 
     function carregarAeronaves(companhiaId) {
         if (!companhiaId) {
