@@ -5,325 +5,108 @@
     <h1 class="mb-4 text-center h2">Bem-vindo ao Airport Manager!</h1>
 
     {{-- Primeira linha - Cards de Estatísticas --}}
-    <div class="row g-3 align-items-stretch mb-4">
+    <div class="row g-3 mb-4">
 
         {{-- Total de Companhias --}}
         <div class="col-md-3 col-sm-6">
-            <div class="card border-0 h-100 shadow-sm" style="cursor: default; border-left: 5px solid #0d6efd; border-radius: 8px;">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                            style="width: 40px; height: 40px; background-color: rgba(13, 110, 253, 0.1);">
-                            <i class="bi bi-building fs-5 text-primary"></i>
-                        </div>
-                        <h6 class="card-title ms-2 mb-0 text-dark">Companhias</h6>
-                    </div>
-                    <div>
-                        <p class="h3 fw-bold text-primary mb-0">{{ number_format($stats['companhias'], 0, ',', '.') }}</p>
-                        <p class="text-muted small mb-0">Companhias registradas</p>
-                    </div>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #0d6efd !important; border-radius: 8px;">
+                <div class="card-body py-3 text-center">
+                    <h6 class="text-muted mb-2">Companhias</h6>
+                    <i class="bi bi-building text-primary fs-1 mb-2 d-block"></i>
+                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['companhias'], 0, ',', '.') }}</p>
+                    <p class="text-muted small mb-0">Companhias registradas</p>
                 </div>
             </div>
         </div>
 
         {{-- Total de Modelos --}}
         <div class="col-md-3 col-sm-6">
-            <div class="card border-0 h-100 shadow-sm" style="cursor: default; border-left: 5px solid #198754; border-radius: 8px;">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                            style="width: 40px; height: 40px; background-color: rgba(25, 135, 84, 0.1);">
-                            <i class="bi bi-airplane-fill fs-5 text-success"></i>
-                        </div>
-                        <h6 class="card-title ms-2 mb-0 text-dark">Modelos</h6>
-                    </div>
-                    <div>
-                        <p class="h3 fw-bold text-success mb-0">{{ number_format($stats['modelos'], 0, ',', '.') }}</p>
-                        <p class="text-muted small mb-0">Modelos distintos</p>
-                    </div>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #198754 !important; border-radius: 8px;">
+                <div class="card-body py-3 text-center">
+                    <h6 class="text-muted mb-2">Modelos</h6>
+                    <i class="bi bi-airplane-fill text-success fs-1 mb-2 d-block"></i>
+                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['modelos'], 0, ',', '.') }}</p>
+                    <p class="text-muted small mb-0">Modelos distintos</p>
                 </div>
             </div>
         </div>
 
         {{-- Total de Aeroportos --}}
         <div class="col-md-3 col-sm-6">
-            <div class="card border-0 h-100 shadow-sm" style="cursor: default; border-left: 5px solid #0dcaf0; border-radius: 8px;">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                            style="width: 40px; height: 40px; background-color: rgba(13, 202, 240, 0.1);">
-                            <i class="bi bi-geo-alt-fill fs-5 text-info"></i>
-                        </div>
-                        <h6 class="card-title ms-2 mb-0 text-dark">Aeroportos</h6>
-                    </div>
-                    <div>
-                        <p class="h3 fw-bold text-info mb-0">{{ number_format($stats['aeroportos'], 0, ',', '.') }}</p>
-                        <p class="text-muted small mb-0">Aeroportos registrados</p>
-                    </div>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #0dcaf0 !important; border-radius: 8px;">
+                <div class="card-body py-3 text-center">
+                    <h6 class="text-muted mb-2">Aeroportos</h6>
+                    <i class="bi bi-geo-alt-fill text-info fs-1 mb-2 d-block"></i>
+                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['aeroportos'], 0, ',', '.') }}</p>
+                    <p class="text-muted small mb-0">Aeroportos registrados</p>
                 </div>
             </div>
         </div>
 
         {{-- Total de Voos --}}
         <div class="col-md-3 col-sm-6">
-            <div class="card border-0 h-100 shadow-sm" style="cursor: default; border-left: 5px solid #ffc107; border-radius: 8px;">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                            style="width: 40px; height: 40px; background-color: rgba(255, 193, 7, 0.1);">
-                            <i class="bi bi-calendar-check-fill fs-5 text-warning"></i>
-                        </div>
-                        <h6 class="card-title ms-2 mb-0 text-dark">Voos</h6>
-                    </div>
-                    <div>
-                        <p class="h3 fw-bold text-warning mb-0">{{ number_format($stats['voos'], 0, ',', '.') }}</p>
-                        <p class="text-muted small mb-0">Voos realizados</p>
-                    </div>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #ffc107 !important; border-radius: 8px;">
+                <div class="card-body py-3 text-center">
+                    <h6 class="text-muted mb-2">Voos</h6>
+                    <i class="bi bi-calendar-check-fill text-warning fs-1 mb-2 d-block"></i>
+                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['voos'], 0, ',', '.') }}</p>
+                    <p class="text-muted small mb-0">Voos realizados</p>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Segunda linha - Cards de Passageiros --}}
-    <div class="row g-3 mt-3 align-items-stretch">
-        
-        {{-- Card: Total de Passageiros por Aeroporto --}}
-        <div class="col-md-6">
-            <div class="card shadow-lg border-0 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <div class="d-flex align-items-center">
-                            <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                                style="width: 40px; height: 40px; background-color: rgba(220, 53, 69, 0.1);">
-                                <i class="bi bi-people-fill text-danger"></i>
-                            </div>
-                            <h5 class="card-title mb-0 ms-2">Total de Passageiros</h5>
-                        </div>
-                        <span class="h4 fw-bold text-danger mb-0">{{ number_format($stats['passageiros_total'], 0, ',', '.') }}</span>
-                    </div>
-                    
-                    <div class="mt-2">
-                        <ul class="list-group list-group-flush">
-                            @php
-                                $totalPassageirosAeroporto = array_sum($passageirosPorAeroporto);
-                                arsort($passageirosPorAeroporto);
-                                $contador = 0;
-                                $medalhas = ['🥇', '🥈', '🥉'];
-                            @endphp
-                            
-                            @foreach($passageirosPorAeroporto as $aeroporto => $total)
-                                @php
-                                    $contador++;
-                                    $percentual = $totalPassageirosAeroporto > 0 ? ($total / $totalPassageirosAeroporto) * 100 : 0;
-                                    $medalha = $contador <= 3 ? $medalhas[$contador - 1] : $contador . 'º';
-                                    $corMedalha = match($contador) {
-                                        1 => '#FFD700',
-                                        2 => '#C0C0C0',
-                                        3 => '#CD7F32',
-                                        default => 'secondary'
-                                    };
-                                @endphp
-                                <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                                    <div class="d-flex align-items-center">
-                                        <span class="me-2 fw-bold" style="color: {{ $corMedalha }}; font-size: 1rem;">
-                                            {{ $medalha }}
-                                        </span>
-                                        <div>
-                                            <span class="fw-medium">{{ $aeroporto }}</span>
-                                            <small class="text-muted ms-1">({{ number_format($percentual, 1) }}%)</small>
-                                        </div>
-                                    </div>
-                                    <span class="badge bg-danger rounded-pill px-2 py-1">
-                                        {{ number_format($total, 0, ',', '.') }}
-                                    </span>
-                                </li>
-                                
-                                @if($contador >= 5)
-                                    @php
-                                        $outros = array_slice($passageirosPorAeroporto, 5);
-                                        $totalOutros = array_sum($outros);
-                                        $percentualOutros = $totalPassageirosAeroporto > 0 ? ($totalOutros / $totalPassageirosAeroporto) * 100 : 0;
-                                        $totalAeroportosRestantes = count($outros);
-                                    @endphp
-                                    <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2 bg-light">
-                                        <div class="d-flex align-items-center">
-                                            <span class="me-2 fw-bold text-muted">+{{ $totalAeroportosRestantes }}</span>
-                                            <div>
-                                                <span class="fw-medium">Outros aeroportos</span>
-                                                <small class="text-muted ms-1">({{ number_format($percentualOutros, 1) }}%)</small>
-                                            </div>
-                                        </div>
-                                        <span class="badge bg-secondary rounded-pill px-2 py-1">
-                                            {{ number_format($totalOutros, 0, ',', '.') }}
-                                        </span>
-                                    </li>
-                                    @break
-                                @endif
-                            @endforeach
-                        </ul>
-                    </div>
+    {{-- Segunda linha - Passageiros e Médias --}}
+    <div class="row g-3 mb-4">
+
+        {{-- Total de Passageiros --}}
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #dc3545 !important; border-radius: 8px;">
+                <div class="card-body py-3 text-center">
+                    <h6 class="text-muted mb-2">Total de Passageiros</h6>
+                    <i class="bi bi-people-fill text-danger fs-1 mb-2 d-block"></i>
+                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['passageiros_total'], 0, ',', '.') }}</p>
+                    <p class="text-muted small mb-0">Passageiros transportados</p>
                 </div>
             </div>
         </div>
 
-        {{-- Card: Passageiros por Horário --}}
-        <div class="col-md-6">
-            <div class="card shadow-lg border-0 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                            style="width: 40px; height: 40px; background-color: rgba(13, 202, 240, 0.1);">
-                            <i class="bi bi-clock-history text-info"></i>
+        {{-- Médias das Notas --}}
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #6c757d !important; border-radius: 8px;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="text-muted mb-1">Desempenho por Categoria</h6>
+                            <p class="small text-muted mb-2">Médias das avaliações (escala 0-10)</p>
                         </div>
-                        <h5 class="card-title mb-0 ms-2">Passageiros por Horário</h5>
+                        <i class="bi bi-star-fill text-secondary fs-3"></i>
                     </div>
-                    
-                    <div class="mt-2">
-                        <ul class="list-group list-group-flush">
-                            @php
-                                $ordemHorarios = [
-                                    'EAM' => ['nome' => 'EAM (05h-08h)', 'cor' => 'primary', 'icone' => '🌅'],
-                                    'AM'  => ['nome' => 'AM (08h-12h)', 'cor' => 'info', 'icone' => '☀️'],
-                                    'AN'  => ['nome' => 'AN (12h-16h)', 'cor' => 'warning', 'icone' => '🌤️'],
-                                    'PM'  => ['nome' => 'PM (16h-20h)', 'cor' => 'danger', 'icone' => '🌙'],
-                                    'ALL' => ['nome' => 'ALL (20h-05h)', 'cor' => 'secondary', 'icone' => '🌃']
-                                ];
-                                $totalPassageirosHorario = array_sum($passageirosPorHorario);
-                            @endphp
-
-                            @foreach ($ordemHorarios as $sigla => $dados)
-                                @php
-                                    $qtdPassageiros = $passageirosPorHorario[$sigla] ?? 0;
-                                    $percentual = $totalPassageirosHorario > 0 ? ($qtdPassageiros / $totalPassageirosHorario) * 100 : 0;
-                                @endphp
-                                <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                                    <div class="d-flex align-items-center">
-                                        <span class="me-2">{{ $dados['icone'] }}</span>
-                                        <div>
-                                            <strong class="small">{{ $dados['nome'] }}</strong>
-                                            <small class="text-muted ms-1">({{ number_format($percentual, 1) }}%)</small>
-                                        </div>
-                                    </div>
-                                    <span class="badge bg-{{ $dados['cor'] }} rounded-pill px-2 py-1">
-                                        {{ number_format($qtdPassageiros, 0, ',', '.') }}
-                                    </span>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-
-                    <div class="mt-2 pt-2 border-top">
-                        <div class="d-flex justify-content-between align-items-center small">
-                            <div>
-                                <i class="bi bi-people-fill text-info me-1"></i>
-                                <strong>Total:</strong> {{ number_format($totalPassageirosHorario, 0, ',', '.') }}
-                            </div>
-                            <div class="text-muted">
-                                <i class="bi bi-clock me-1"></i>Distribuição por período
-                            </div>
+                    <div class="row">
+                        <div class="col-3">
+                            <span class="text-muted small">Objetivo</span>
+                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['objetivo'], 1) }}</p>
+                        </div>
+                        <div class="col-3">
+                            <span class="text-muted small">Pontualidade</span>
+                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['pontualidade'], 1) }}</p>
+                        </div>
+                        <div class="col-3">
+                            <span class="text-muted small">Serviços</span>
+                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['servicos'], 1) }}</p>
+                        </div>
+                        <div class="col-3">
+                            <span class="text-muted small">Pátio</span>
+                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['patio'], 1) }}</p>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Terceira linha - Cards de Médias e Melhores Companhias --}}
-    <div class="row g-3 mt-3 align-items-stretch">
-        
-        {{-- Card: Médias das Notas --}}
-        <div class="col-md-6">
-            <div class="card shadow-lg border-0 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                            style="width: 40px; height: 40px; background-color: rgba(108, 117, 125, 0.1);">
-                            <i class="bi bi-star-fill text-secondary"></i>
-                        </div>
-                        <h5 class="card-title mb-0 ms-2">Médias das Notas</h5>
-                    </div>
-                    
-                    <ul class="list-group list-group-flush mt-2">
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>🎯 Objetivo</span>
-                            <span class="badge bg-primary rounded-pill">{{ number_format($mediasNotas['objetivo'], 1) }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>⏱️ Pontualidade</span>
-                            <span class="badge bg-success rounded-pill">{{ number_format($mediasNotas['pontualidade'], 1) }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>🛎️ Serviços</span>
-                            <span class="badge bg-info rounded-pill">{{ number_format($mediasNotas['servicos'], 1) }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>🏢 Pátio</span>
-                            <span class="badge bg-warning rounded-pill">{{ number_format($mediasNotas['patio'], 1) }}</span>
-                        </li>
-                    </ul>
-
                     @php
                         $mediaGeral = ($mediasNotas['objetivo'] + $mediasNotas['pontualidade'] + $mediasNotas['servicos'] + $mediasNotas['patio']) / 4;
-                        $corMediaGeral = match(true) {
-                            $mediaGeral >= 9.0 => 'success',
-                            $mediaGeral >= 8.0 => 'info',
-                            $mediaGeral >= 7.0 => 'warning',
-                            default => 'secondary'
-                        };
                     @endphp
-                    
                     <div class="mt-2 pt-2 border-top">
                         <div class="d-flex justify-content-between align-items-center small">
-                            <div>
-                                <i class="bi bi-star-fill text-warning me-1"></i>
-                                <strong>Média Geral:</strong>
-                                <span class="badge bg-{{ $corMediaGeral }} ms-1">{{ number_format($mediaGeral, 1) }}</span>
-                            </div>
-                            <div class="text-muted">0-10</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Card: Melhores Companhias --}}
-        <div class="col-md-6">
-            <div class="card shadow-lg border-0 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                            style="width: 40px; height: 40px; background-color: rgba(13, 110, 253, 0.1);">
-                            <i class="bi bi-award-fill text-primary"></i>
-                        </div>
-                        <h5 class="card-title mb-0 ms-2">Melhores Companhias</h5>
-                    </div>
-                    
-                    <ul class="list-group list-group-flush mt-2">
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>🎯 Objetivo</span>
-                            <span class="badge bg-primary rounded-pill">{{ $melhoresCompanhias['objetivo'] ?? 'N/A' }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>⏱️ Pontualidade</span>
-                            <span class="badge bg-success rounded-pill">{{ $melhoresCompanhias['pontualidade'] ?? 'N/A' }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>🛎️ Serviços</span>
-                            <span class="badge bg-info rounded-pill">{{ $melhoresCompanhias['servicos'] ?? 'N/A' }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>🏢 Pátio</span>
-                            <span class="badge bg-warning rounded-pill">{{ $melhoresCompanhias['patio'] ?? 'N/A' }}</span>
-                        </li>
-                    </ul>
-
-                    <div class="mt-2 pt-2 border-top">
-                        <div class="d-flex justify-content-between align-items-center small">
-                            <div>
-                                <i class="bi bi-trophy text-primary me-1"></i>
-                                <strong>Premiadas:</strong> {{ count(array_filter($melhoresCompanhias)) }}/4
-                            </div>
-                            <div class="text-muted">Melhor por categoria</div>
+                            <span class="text-muted">Média Geral</span>
+                            <span class="fw-bold text-dark">{{ number_format($mediaGeral, 1) }}</span>
                         </div>
                     </div>
                 </div>
@@ -331,54 +114,176 @@
         </div>
     </div>
 
-    {{-- Quarta linha - Cards de Voos por Aeroporto e Melhor Modelo --}}
-    <div class="row g-3 mt-3 align-items-stretch">
-        
-        {{-- Card: Voos por Aeroporto --}}
+    {{-- Terceira linha - Passageiros por Aeroporto e Horário --}}
+    <div class="row g-3 mb-4">
+
+        {{-- Card: Passageiros por Aeroporto --}}
         <div class="col-md-6">
-            <div class="card shadow-lg border-0 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                            style="width: 40px; height: 40px; background-color: rgba(25, 135, 84, 0.1);">
-                            <i class="bi bi-airplane-fill text-success"></i>
-                        </div>
-                        <h5 class="card-title mb-0 ms-2">Voos por Aeroporto</h5>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #dc3545 !important; border-radius: 8px;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="text-muted mb-0">Passageiros por Aeroporto</h6>
+                        <i class="bi bi-people-fill text-danger fs-4"></i>
                     </div>
-                    
-                    <ul class="list-group list-group-flush mt-2">
+                    <div>
+                        @php
+                            $totalPassageirosAeroporto = array_sum($passageirosPorAeroporto);
+                            arsort($passageirosPorAeroporto);
+                            $contador = 0;
+                            $medalhas = ['🥇', '🥈', '🥉'];
+                            $coresMedalha = ['#FFD700', '#C0C0C0', '#CD7F32'];
+                        @endphp
+                        @foreach($passageirosPorAeroporto as $aeroporto => $total)
+                            @php
+                                $contador++;
+                                $percentual = $totalPassageirosAeroporto > 0 ? ($total / $totalPassageirosAeroporto) * 100 : 0;
+                                $medalha = $contador <= 3 ? $medalhas[$contador - 1] : null;
+                                $corMedalha = $contador <= 3 ? $coresMedalha[$contador - 1] : null;
+                            @endphp
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="small">
+                                    @if($medalha)
+                                        <span style="font-size: 1.1rem; margin-right: 5px;">{{ $medalha }}</span>
+                                    @endif
+                                    <span class="fw-semibold">{{ $aeroporto }}</span>
+                                    <small class="text-muted ms-2">{{ number_format($percentual, 1) }}%</small>
+                                </div>
+                                <span class="badge rounded-pill" style="background-color: #dc3545 !important;">
+                                    {{ number_format($total, 0, ',', '.') }}
+                                </span>
+                            </div>
+                            <div class="progress mb-2" style="height: 3px;">
+                                <div class="progress-bar" role="progressbar" style="width: {{ $percentual }}%; background-color: #dc3545 !important;"></div>
+                            </div>
+                            @if($contador >= 5)
+                                @php
+                                    $outros = array_slice($passageirosPorAeroporto, 5);
+                                    $totalOutros = array_sum($outros);
+                                    $percentualOutros = $totalPassageirosAeroporto > 0 ? ($totalOutros / $totalPassageirosAeroporto) * 100 : 0;
+                                    $totalAeroportosRestantes = count($outros);
+                                @endphp
+                                <div class="d-flex justify-content-between align-items-center mb-2 mt-2 pt-1 border-top">
+                                    <div class="small">
+                                        <span class="fw-semibold text-muted">+{{ $totalAeroportosRestantes }} outros</span>
+                                        <small class="text-muted ms-2">{{ number_format($percentualOutros, 1) }}%</small>
+                                    </div>
+                                    <span class="badge rounded-pill bg-secondary">
+                                        {{ number_format($totalOutros, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                                @break
+                            @endif
+                        @endforeach
+                    </div>
+                    <div class="mt-2 pt-2 border-top">
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span class="text-muted">Total Geral</span>
+                            <span class="fw-bold text-dark">{{ number_format($totalPassageirosAeroporto, 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Card: Passageiros por Horário (sem medalhas) --}}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #0dcaf0 !important; border-radius: 8px;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="text-muted mb-0">Passageiros por Horário</h6>
+                        <i class="bi bi-clock-history text-info fs-4"></i>
+                    </div>
+                    <div>
+                        @php
+                            $ordemHorarios = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
+                            $totalPassageirosHorario = array_sum($passageirosPorHorario);
+                            $legendas = [
+                                'EAM' => '05h-08h',
+                                'AM' => '08h-12h',
+                                'AN' => '12h-16h',
+                                'PM' => '16h-20h',
+                                'ALL' => '20h-05h'
+                            ];
+                            $cores = [
+                                'EAM' => '#0a58ca',
+                                'AM' => '#0d6efd',
+                                'AN' => '#ffc107',
+                                'PM' => '#dc3545',
+                                'ALL' => '#6f42c1'
+                            ];
+                        @endphp
+                        @foreach($ordemHorarios as $horario)
+                            @php
+                                $qtdPassageiros = $passageirosPorHorario[$horario] ?? 0;
+                                $percentual = $totalPassageirosHorario > 0 ? ($qtdPassageiros / $totalPassageirosHorario) * 100 : 0;
+                            @endphp
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="small">
+                                    <span class="fw-semibold" style="color: {{ $cores[$horario] }};">{{ $horario }}</span>
+                                    <small class="text-muted">({{ $legendas[$horario] }})</small>
+                                    <small class="text-muted ms-2">{{ number_format($percentual, 1) }}%</small>
+                                </div>
+                                <span class="badge rounded-pill" style="background-color: {{ $cores[$horario] }} !important;">
+                                    {{ number_format($qtdPassageiros, 0, ',', '.') }}
+                                </span>
+                            </div>
+                            <div class="progress mb-2" style="height: 3px;">
+                                <div class="progress-bar" role="progressbar" style="width: {{ $percentual }}%; background-color: {{ $cores[$horario] }} !important;"></div>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="mt-2 pt-2 border-top">
+                        <div class="d-flex justify-content-between align-items-center small">
+                            <span class="text-muted">Total Geral</span>
+                            <span class="fw-bold text-dark">{{ number_format($totalPassageirosHorario, 0, ',', '.') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Quarta linha - Voos por Aeroporto e Melhores Companhias/Modelos --}}
+    <div class="row g-3 mb-4">
+
+        {{-- Card: Voos por Aeroporto (com medalhas) --}}
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #198754 !important; border-radius: 8px;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="text-muted mb-0">Voos por Aeroporto</h6>
+                        <i class="bi bi-airplane-fill text-success fs-4"></i>
+                    </div>
+                    <div>
                         @php
                             $totalVoosAeroporto = array_sum($voosPorAeroporto);
                             arsort($voosPorAeroporto);
                             $contador = 0;
                             $medalhas = ['🥇', '🥈', '🥉'];
+                            $coresMedalha = ['#FFD700', '#C0C0C0', '#CD7F32'];
                         @endphp
-                        
                         @foreach($voosPorAeroporto as $aeroporto => $total)
                             @php
                                 $contador++;
                                 $percentual = $totalVoosAeroporto > 0 ? ($total / $totalVoosAeroporto) * 100 : 0;
-                                $medalha = $contador <= 3 ? $medalhas[$contador - 1] : '';
-                                $corMedalha = match($contador) {
-                                    1 => '#FFD700',
-                                    2 => '#C0C0C0',
-                                    3 => '#CD7F32',
-                                    default => 'text-dark'
-                                };
+                                $medalha = $contador <= 3 ? $medalhas[$contador - 1] : null;
+                                $corMedalha = $contador <= 3 ? $coresMedalha[$contador - 1] : null;
                             @endphp
-                            <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                                <div class="d-flex align-items-center">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="small">
                                     @if($medalha)
-                                        <span class="me-2" style="color: {{ $corMedalha }};">{{ $medalha }}</span>
+                                        <span style="font-size: 1.1rem; margin-right: 5px;">{{ $medalha }}</span>
                                     @endif
-                                    <div>
-                                        <span class="fw-medium">{{ $aeroporto }}</span>
-                                        <small class="text-muted ms-1">({{ number_format($percentual, 1) }}%)</small>
-                                    </div>
+                                    <span class="fw-semibold">{{ $aeroporto }}</span>
+                                    <small class="text-muted ms-2">{{ number_format($percentual, 1) }}%</small>
                                 </div>
-                                <span class="badge bg-success rounded-pill px-2 py-1">{{ number_format($total, 0, ',', '.') }}</span>
-                            </li>
-                            
+                                <span class="badge rounded-pill" style="background-color: #198754 !important;">
+                                    {{ number_format($total, 0, ',', '.') }}
+                                </span>
+                            </div>
+                            <div class="progress mb-2" style="height: 3px;">
+                                <div class="progress-bar" role="progressbar" style="width: {{ $percentual }}%; background-color: #198754 !important;"></div>
+                            </div>
                             @if($contador >= 5)
                                 @php
                                     $outros = array_slice($voosPorAeroporto, 5);
@@ -386,86 +291,73 @@
                                     $percentualOutros = $totalVoosAeroporto > 0 ? ($totalOutros / $totalVoosAeroporto) * 100 : 0;
                                     $totalAeroportosRestantes = count($outros);
                                 @endphp
-                                <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2 bg-light">
-                                    <div class="d-flex align-items-center">
-                                        <span class="me-2 text-muted">+{{ $totalAeroportosRestantes }}</span>
-                                        <div>
-                                            <span class="fw-medium">Outros aeroportos</span>
-                                            <small class="text-muted ms-1">({{ number_format($percentualOutros, 1) }}%)</small>
-                                        </div>
+                                <div class="d-flex justify-content-between align-items-center mb-2 mt-2 pt-1 border-top">
+                                    <div class="small">
+                                        <span class="fw-semibold text-muted">+{{ $totalAeroportosRestantes }} outros</span>
+                                        <small class="text-muted ms-2">{{ number_format($percentualOutros, 1) }}%</small>
                                     </div>
-                                    <span class="badge bg-secondary rounded-pill px-2 py-1">{{ number_format($totalOutros, 0, ',', '.') }}</span>
-                                </li>
+                                    <span class="badge rounded-pill bg-secondary">
+                                        {{ number_format($totalOutros, 0, ',', '.') }}
+                                    </span>
+                                </div>
                                 @break
                             @endif
                         @endforeach
-                    </ul>
-
+                    </div>
                     <div class="mt-2 pt-2 border-top">
                         <div class="d-flex justify-content-between align-items-center small">
-                            <div>
-                                <i class="bi bi-airplane-fill text-success me-1"></i>
-                                <strong>Total:</strong> {{ number_format($totalVoosAeroporto, 0, ',', '.') }} voos
-                            </div>
-                            <div class="text-muted">{{ count($voosPorAeroporto) }} aeroportos</div>
+                            <span class="text-muted">Total Geral</span>
+                            <span class="fw-bold text-dark">{{ number_format($totalVoosAeroporto, 0, ',', '.') }}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Card: Melhor Modelo por Nota --}}
+        {{-- Card: Melhores Companhias e Modelos --}}
         <div class="col-md-6">
-            <div class="card shadow-lg border-0 h-100">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" 
-                            style="width: 40px; height: 40px; background-color: rgba(255, 193, 7, 0.1);">
-                            <i class="bi bi-airplane text-warning"></i>
-                        </div>
-                        <h5 class="card-title mb-0 ms-2">Melhor Modelo por Nota</h5>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #ffc107 !important; border-radius: 8px;">
+                <div class="card-body py-3">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h6 class="text-muted mb-0">Melhores por Categoria</h6>
+                        <i class="bi bi-trophy-fill text-warning fs-4"></i>
                     </div>
-                    
-                    <ul class="list-group list-group-flush mt-2">
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>🎯 Objetivo</span>
-                            <span class="badge bg-primary rounded-pill">{{ $melhoresModelos['objetivo'] ?? 'N/A' }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>⏱️ Pontualidade</span>
-                            <span class="badge bg-success rounded-pill">{{ $melhoresModelos['pontualidade'] ?? 'N/A' }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>🛎️ Serviços</span>
-                            <span class="badge bg-info rounded-pill">{{ $melhoresModelos['servicos'] ?? 'N/A' }}</span>
-                        </li>
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-2">
-                            <span>🏢 Pátio</span>
-                            <span class="badge bg-warning rounded-pill">{{ $melhoresModelos['patio'] ?? 'N/A' }}</span>
-                        </li>
-                    </ul>
-
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="small text-muted mb-1">🎯 Objetivo</p>
+                            <p class="h6 fw-bold mb-2">Companhia: <span class="text-primary">{{ $melhoresCompanhias['objetivo'] ?? 'N/A' }}</span></p>
+                            <p class="h6 fw-bold mb-3">Modelo: <span class="text-primary">{{ $melhoresModelos['objetivo'] ?? 'N/A' }}</span></p>
+                            
+                            <p class="small text-muted mb-1">⏱️ Pontualidade</p>
+                            <p class="h6 fw-bold mb-2">Companhia: <span class="text-success">{{ $melhoresCompanhias['pontualidade'] ?? 'N/A' }}</span></p>
+                            <p class="h6 fw-bold mb-3">Modelo: <span class="text-success">{{ $melhoresModelos['pontualidade'] ?? 'N/A' }}</span></p>
+                        </div>
+                        <div class="col-6">
+                            <p class="small text-muted mb-1">🛎️ Serviços</p>
+                            <p class="h6 fw-bold mb-2">Companhia: <span class="text-info">{{ $melhoresCompanhias['servicos'] ?? 'N/A' }}</span></p>
+                            <p class="h6 fw-bold mb-3">Modelo: <span class="text-info">{{ $melhoresModelos['servicos'] ?? 'N/A' }}</span></p>
+                            
+                            <p class="small text-muted mb-1">🏢 Pátio</p>
+                            <p class="h6 fw-bold mb-2">Companhia: <span class="text-warning">{{ $melhoresCompanhias['patio'] ?? 'N/A' }}</span></p>
+                            <p class="h6 fw-bold mb-3">Modelo: <span class="text-warning">{{ $melhoresModelos['patio'] ?? 'N/A' }}</span></p>
+                        </div>
+                    </div>
                     <div class="mt-2 pt-2 border-top">
                         <div class="d-flex justify-content-between align-items-center small">
-                            <div>
-                                <i class="bi bi-trophy text-warning me-1"></i>
-                                <strong>Premiados:</strong> {{ count(array_filter($melhoresModelos)) }}/4
-                            </div>
-                            <div class="text-muted">Melhor por categoria</div>
+                            <span class="text-muted">Premiados</span>
+                            <span class="fw-bold text-dark">{{ count(array_filter($melhoresCompanhias)) }}/4 companhias • {{ count(array_filter($melhoresModelos)) }}/4 modelos</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
+    {{-- Rodapé --}}
+    <hr class="mt-4">
+    <p class="text-center text-muted small mb-0">
+        <i class="bi bi-bar-chart-line me-1"></i>
+        Desenvolvido por <strong>Filipe Lopes</strong>
+    </p>
 </div>
-
-{{-- Bootstrap Icons --}}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
-<hr class="mt-4">
-<p class="text-center text-muted small mb-0">
-    Desenvolvido por <strong>Filipe Lopes</strong>
-</p>
 @endsection
