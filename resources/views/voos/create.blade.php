@@ -571,11 +571,11 @@
                                                 id="horario_voo" 
                                                 name="horario_voo" 
                                                 required>
-                                            <option value="EAM" {{ old('horario_voo') == 'EAM' ? 'selected' : '' }}>EAM (00h-06h)</option>
-                                            <option value="AM" {{ old('horario_voo') == 'AM' ? 'selected' : '' }}>AM (06h-12h)</option>
-                                            <option value="AN" {{ old('horario_voo') == 'AN' ? 'selected' : '' }}>AN (12h-18h)</option>
-                                            <option value="PM" {{ old('horario_voo') == 'PM' ? 'selected' : '' }}>PM (18h-00h)</option>
-                                            <option value="ALL" {{ old('horario_voo') == 'ALL' ? 'selected' : '' }}>ALL (Diário)</option>
+                                            <option value="EAM" {{ old('horario_voo') == 'EAM' ? 'selected' : '' }}>EAM </option>
+                                            <option value="AM" {{ old('horario_voo') == 'AM' ? 'selected' : '' }}>AM </option>
+                                            <option value="AN" {{ old('horario_voo') == 'AN' ? 'selected' : '' }}>AN </option>
+                                            <option value="PM" {{ old('horario_voo') == 'PM' ? 'selected' : '' }}>PM </option>
+                                            <option value="ALL" {{ old('horario_voo') == 'ALL' ? 'selected' : '' }}>ALL </option>
                                         </select>
                                     </div>
                                     @error('horario_voo')
@@ -639,12 +639,12 @@
                                     <label for="nota_obj" class="form-label fw-semibold">Nota Objetivo</label>
                                     <select class="form-select" id="nota_obj" name="nota_obj">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_obj') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
-                                        <option value="B" {{ old('nota_obj') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
-                                        <option value="C" {{ old('nota_obj') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
-                                        <option value="D" {{ old('nota_obj') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
-                                        <option value="E" {{ old('nota_obj') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
-                                        <option value="F" {{ old('nota_obj') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
+                                        <option value="A" {{ old('nota_obj') == 'A' ? 'selected' : '' }}>A </option>
+                                        <option value="B" {{ old('nota_obj') == 'B' ? 'selected' : '' }}>B </option>
+                                        <option value="C" {{ old('nota_obj') == 'C' ? 'selected' : '' }}>C </option>
+                                        <option value="D" {{ old('nota_obj') == 'D' ? 'selected' : '' }}>D </option>
+                                        <option value="E" {{ old('nota_obj') == 'E' ? 'selected' : '' }}>E </option>
+                                        <option value="F" {{ old('nota_obj') == 'F' ? 'selected' : '' }}>F </option>
                                     </select>
                                 </div>
 
@@ -652,12 +652,12 @@
                                     <label for="nota_pontualidade" class="form-label fw-semibold">Nota Pontualidade</label>
                                     <select class="form-select" id="nota_pontualidade" name="nota_pontualidade">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_pontualidade') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
-                                        <option value="B" {{ old('nota_pontualidade') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
-                                        <option value="C" {{ old('nota_pontualidade') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
-                                        <option value="D" {{ old('nota_pontualidade') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
-                                        <option value="E" {{ old('nota_pontualidade') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
-                                        <option value="F" {{ old('nota_pontualidade') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
+                                        <option value="A" {{ old('nota_pontualidade') == 'A' ? 'selected' : '' }}>A </option>
+                                        <option value="B" {{ old('nota_pontualidade') == 'B' ? 'selected' : '' }}>B </option>
+                                        <option value="C" {{ old('nota_pontualidade') == 'C' ? 'selected' : '' }}>C </option>
+                                        <option value="D" {{ old('nota_pontualidade') == 'D' ? 'selected' : '' }}>D </option>
+                                        <option value="E" {{ old('nota_pontualidade') == 'E' ? 'selected' : '' }}>E </option>
+                                        <option value="F" {{ old('nota_pontualidade') == 'F' ? 'selected' : '' }}>F </option>
                                     </select>
                                 </div>
 
@@ -665,12 +665,12 @@
                                     <label for="nota_servicos" class="form-label fw-semibold">Nota Serviços</label>
                                     <select class="form-select" id="nota_servicos" name="nota_servicos">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_servicos') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
-                                        <option value="B" {{ old('nota_servicos') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
-                                        <option value="C" {{ old('nota_servicos') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
-                                        <option value="D" {{ old('nota_servicos') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
-                                        <option value="E" {{ old('nota_servicos') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
-                                        <option value="F" {{ old('nota_servicos') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
+                                        <option value="A" {{ old('nota_servicos') == 'A' ? 'selected' : '' }}>A </option>
+                                        <option value="B" {{ old('nota_servicos') == 'B' ? 'selected' : '' }}>B </option>
+                                        <option value="C" {{ old('nota_servicos') == 'C' ? 'selected' : '' }}>C </option>
+                                        <option value="D" {{ old('nota_servicos') == 'D' ? 'selected' : '' }}>D </option>
+                                        <option value="E" {{ old('nota_servicos') == 'E' ? 'selected' : '' }}>E </option>
+                                        <option value="F" {{ old('nota_servicos') == 'F' ? 'selected' : '' }}>F </option>
                                     </select>
                                 </div>
 
@@ -678,12 +678,12 @@
                                     <label for="nota_patio" class="form-label fw-semibold">Nota Pátio</label>
                                     <select class="form-select" id="nota_patio" name="nota_patio">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_patio') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
-                                        <option value="B" {{ old('nota_patio') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
-                                        <option value="C" {{ old('nota_patio') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
-                                        <option value="D" {{ old('nota_patio') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
-                                        <option value="E" {{ old('nota_patio') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
-                                        <option value="F" {{ old('nota_patio') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
+                                        <option value="A" {{ old('nota_patio') == 'A' ? 'selected' : '' }}>A </option>
+                                        <option value="B" {{ old('nota_patio') == 'B' ? 'selected' : '' }}>B </option>
+                                        <option value="C" {{ old('nota_patio') == 'C' ? 'selected' : '' }}>C </option>
+                                        <option value="D" {{ old('nota_patio') == 'D' ? 'selected' : '' }}>D </option>
+                                        <option value="E" {{ old('nota_patio') == 'E' ? 'selected' : '' }}>E </option>
+                                        <option value="F" {{ old('nota_patio') == 'F' ? 'selected' : '' }}>F </option>
                                     </select>
                                 </div>
                             </div>
