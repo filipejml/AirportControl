@@ -19,6 +19,33 @@
         </div>
     </div>
 
+    <!-- Informações de Auditoria -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
+                <div class="d-flex align-items-center justify-content-between flex-wrap">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle-fill me-2 fs-4"></i>
+                        <div>
+                            <strong>Informações do Registro</strong><br>
+                            @if($voo->created_at && $voo->updated_at && $voo->created_at->ne($voo->updated_at))
+                                <small>Última atualização: {{ $voo->updated_at->format('d/m/Y H:i:s') }}</small>
+                            @endif
+                        </div>
+                    </div>
+                    @if($voo->created_at)
+                        <div class="mt-2 mt-sm-0">
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-calendar3 me-1"></i>
+                                Criado há {{ $voo->created_at->diffForHumans() }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Mensagens de Feedback -->
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeInDown" role="alert">
@@ -85,6 +112,22 @@
                                class="form-control @error('id_voo') is-invalid @enderror">
                         <div class="form-text">Formato: Código da companhia (2-4 letras) + hífen + 4 números</div>
                         @error('id_voo')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Data de Criação - EDITÁVEL -->
+                    <div class="col-md-6">
+                        <label for="created_at" class="form-label fw-semibold">
+                            <i class="bi bi-calendar-plus me-1"></i>
+                            Data de Criação
+                        </label>
+                        <input type="datetime-local" 
+                               name="created_at" 
+                               id="created_at" 
+                               class="form-control @error('created_at') is-invalid @enderror">
+                        <div class="form-text">Altere a data de criação se necessário (opcional)</div>
+                        @error('created_at')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -471,6 +514,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const capacidadeInfo = document.getElementById('capacidadeInfo');
     const porteInfo = document.getElementById('porteInfo');
     const infoAeronave = document.getElementById('infoAeronave');
+    const created_at_input = document.getElementById('created_at');
+
+    // Formatar a data para o formato aceito pelo input datetime-local
+    const created_at_value = "{{ old('created_at', $voo->created_at ? $voo->created_at->format('Y-m-d\TH:i') : '') }}";
+    
+    if (created_at_value && created_at_input) {
+        created_at_input.value = created_at_value;
+    }
 
     const porteTexto = {
         'PC': 'Pequeno Porte',
@@ -562,20 +613,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ID do voo formatting
     const idVooInput = document.getElementById('id_voo');
-    idVooInput.addEventListener('input', function() {
-        let valor = this.value.toUpperCase();
-        valor = valor.replace(/[^A-Z0-9]/g, '');
-        
-        if (valor.length > 2 && !valor.includes('-')) {
-            valor = valor.slice(0, 2) + '-' + valor.slice(2, 6);
-        }
-        
-        if (valor.length > 7) {
-            valor = valor.slice(0, 7);
-        }
-        
-        this.value = valor;
-    });
+    if (idVooInput) {
+        idVooInput.addEventListener('input', function() {
+            let valor = this.value.toUpperCase();
+            valor = valor.replace(/[^A-Z0-9]/g, '');
+            
+            if (valor.length > 2 && !valor.includes('-')) {
+                valor = valor.slice(0, 2) + '-' + valor.slice(2, 6);
+            }
+            
+            if (valor.length > 7) {
+                valor = valor.slice(0, 7);
+            }
+            
+            this.value = valor;
+        });
+    }
 
     // Carregar aeronaves iniciais
     if (companhiaSelect.value) {

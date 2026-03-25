@@ -20,7 +20,7 @@ class VooController extends Controller
     public function index(Request $request)
     {
         $query = Voo::with(['aeroporto', 'companhiaAerea', 'aeronave.fabricante'])
-            ->orderBy('created_at', 'desc'); // Ordem decrescente (mais recentes primeiro)
+            ->orderBy('created_at', 'desc');
         
         // Aplicar filtros se existirem
         if ($request->has('search') && $request->search) {
@@ -52,11 +52,10 @@ class VooController extends Controller
             $query->where('created_at', '>=', $dataLimite);
         }
         
-        // Paginar com 10 itens por página
-        $voos = $query->paginate(10)->withQueryString(); // withQueryString() mantém os filtros na URL
+        $voos = $query->paginate(10)->withQueryString();
         
         $estatisticas = [
-            'total_voos' => Voo::count(), // Total sem filtros
+            'total_voos' => Voo::count(),
             'total_passageiros' => Voo::sum('total_passageiros'),
             'media_pax_voo' => Voo::count() > 0 ? round(Voo::sum('total_passageiros') / Voo::count(), 0) : 0,
             'voos_com_notas' => Voo::whereNotNull('media_notas')->count(),
@@ -71,7 +70,6 @@ class VooController extends Controller
         $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
         $companhias = CompanhiaAerea::orderBy('nome')->get();
         
-        // Buscar último voo com todos os relacionamentos necessários
         $ultimoVoo = Voo::with([
             'aeroporto' => function($query) {
                 $query->select('id', 'nome_aeroporto');
@@ -98,7 +96,6 @@ class VooController extends Controller
 
     public function store(Request $request)
     {
-        // Primeiro, validamos o formato básico
         $validated = $request->validate([
             'id_voo' => 'required|string|max:10|unique:voos,id_voo|regex:/^[A-Z]{2,4}-\d{4}$/',
             'aeroporto_id' => 'required|exists:aeroportos,id',
@@ -113,7 +110,6 @@ class VooController extends Controller
             'nota_patio' => 'nullable|in:A,B,C,D,E,F'
         ]);
 
-        // Validar o código do ID do voo
         $codigo = CompanhiaHelper::extrairCodigo($request->id_voo);
         
         if (!$codigo || !CompanhiaHelper::isCodigoValido($codigo)) {
@@ -128,7 +124,6 @@ class VooController extends Controller
 
             $aeronave = Aeronave::findOrFail($request->aeronave_id);
             
-            // Mapeamento de notas letra para número
             $mapaNotas = [
                 'A' => 10,
                 'B' => 9,
@@ -200,10 +195,10 @@ class VooController extends Controller
             'nota_obj' => 'nullable|in:A,B,C,D,E,F',
             'nota_pontualidade' => 'nullable|in:A,B,C,D,E,F',
             'nota_servicos' => 'nullable|in:A,B,C,D,E,F',
-            'nota_patio' => 'nullable|in:A,B,C,D,E,F'
+            'nota_patio' => 'nullable|in:A,B,C,D,E,F',
+            'created_at' => 'nullable|date'
         ]);
 
-        // Validar o código do ID do voo
         $codigo = CompanhiaHelper::extrairCodigo($request->id_voo);
         
         if (!$codigo || !CompanhiaHelper::isCodigoValido($codigo)) {
@@ -227,7 +222,7 @@ class VooController extends Controller
                 'F' => 2
             ];
             
-            $voo->update([
+            $updateData = [
                 'id_voo' => strtoupper($request->id_voo),
                 'aeroporto_id' => $request->aeroporto_id,
                 'companhia_aerea_id' => $request->companhia_aerea_id,
@@ -241,7 +236,13 @@ class VooController extends Controller
                 'nota_pontualidade' => $request->nota_pontualidade ? $mapaNotas[$request->nota_pontualidade] : null,
                 'nota_servicos' => $request->nota_servicos ? $mapaNotas[$request->nota_servicos] : null,
                 'nota_patio' => $request->nota_patio ? $mapaNotas[$request->nota_patio] : null
-            ]);
+            ];
+            
+            if ($request->has('created_at') && $request->created_at) {
+                $updateData['created_at'] = $request->created_at;
+            }
+            
+            $voo->update($updateData);
 
             DB::commit();
 
@@ -274,7 +275,6 @@ class VooController extends Controller
         }
     }
 
-    // Rota AJAX para buscar aeronaves por companhia
     public function getAeronavesByCompanhia($companhiaId)
     {
         $aeronaves = Aeronave::whereHas('companhias', function($query) use ($companhiaId) {
@@ -283,7 +283,6 @@ class VooController extends Controller
         ->with('fabricante')
         ->get();
         
-        // Retornar apenas os campos necessários
         return response()->json($aeronaves->map(function($aeronave) {
             return [
                 'id' => $aeronave->id,
@@ -295,7 +294,6 @@ class VooController extends Controller
         }));
     }
 
-    // Rota AJAX para verificar código do ID do voo
     public function verificarIdVoo(Request $request)
     {
         $idVoo = $request->get('id_voo');
@@ -310,7 +308,6 @@ class VooController extends Controller
             ]);
         }
         
-        // Buscar a companhia pelo código
         $companhia = CompanhiaAerea::where('codigo', $codigo)
             ->orWhere('nome', 'like', '%' . CompanhiaHelper::getNomeCompanhia($codigo) . '%')
             ->first();
@@ -339,16 +336,11 @@ class VooController extends Controller
         ]);
     }
 
-    /**
-     * Exporta a lista de voos para CSV com suporte a filtros
-     */
     public function exportCSV(Request $request)
     {
-        // Buscar voos com relacionamentos, aplicando os mesmos filtros da listagem
         $query = Voo::with(['aeroporto', 'companhiaAerea', 'aeronave'])
             ->orderBy('created_at', 'desc');
         
-        // Aplicar filtros se existirem
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -380,15 +372,12 @@ class VooController extends Controller
         
         $voos = $query->get();
         
-        // Se não houver dados, retornar com mensagem de erro
         if ($voos->isEmpty()) {
             return redirect()->back()->with('error', 'Não há voos para exportar com os filtros selecionados.');
         }
         
-        // Nome do arquivo com quantidade de registros
         $filename = 'voos_' . date('Y-m-d_His') . '_' . $voos->count() . '_registros.csv';
         
-        // Headers para download
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -397,14 +386,10 @@ class VooController extends Controller
             'Pragma' => 'public'
         ];
         
-        // Callback para gerar o CSV
         $callback = function() use ($voos) {
             $file = fopen('php://output', 'w');
-            
-            // Adicionar BOM para UTF-8 (resolve problemas de acentuação no Excel)
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
             
-            // Cabeçalho do CSV (corrigido para corresponder aos dados)
             fputcsv($file, [
                 'ID do Voo',
                 'Data Cadastro',
@@ -425,15 +410,12 @@ class VooController extends Controller
                 'Classificação'
             ], ';');
             
-            // Dados
             foreach ($voos as $voo) {
-                // Mapeamento de notas
                 $notaObj = $voo->nota_obj ? $voo->nota_obj . ' (' . $this->getNotaLetra($voo->nota_obj) . ')' : '';
                 $notaPont = $voo->nota_pontualidade ? $voo->nota_pontualidade . ' (' . $this->getNotaLetra($voo->nota_pontualidade) . ')' : '';
                 $notaServ = $voo->nota_servicos ? $voo->nota_servicos . ' (' . $this->getNotaLetra($voo->nota_servicos) . ')' : '';
                 $notaPatio = $voo->nota_patio ? $voo->nota_patio . ' (' . $this->getNotaLetra($voo->nota_patio) . ')' : '';
                 
-                // Converter tipo de aeronave para texto
                 $tipoAeronaveTexto = match($voo->tipo_aeronave) {
                     'PC' => 'Pequeno Porte',
                     'MC' => 'Médio Porte',
@@ -441,7 +423,6 @@ class VooController extends Controller
                     default => $voo->tipo_aeronave ?? ''
                 };
                 
-                // Converter horário para texto
                 $horarioTexto = match($voo->horario_voo) {
                     'EAM' => 'Early Morning (00h-06h)',
                     'AM' => 'Morning (06h-12h)',
@@ -478,9 +459,6 @@ class VooController extends Controller
         return new StreamedResponse($callback, 200, $headers);
     }
 
-    /**
-     * Converte nota numérica para letra
-     */
     private function getNotaLetra($nota)
     {
         return match($nota) {
@@ -494,9 +472,6 @@ class VooController extends Controller
         };
     }
 
-    /**
-     * Retorna classificação baseada na média
-     */
     private function getClassificacaoMedia($media)
     {
         if (!$media) return '';
@@ -509,17 +484,12 @@ class VooController extends Controller
         };
     }
 
-    /**
-     * Exporta a lista de voos para PDF
-     */
     public function exportPDF(Request $request)
     {
         try {
-            // Buscar voos com relacionamentos, aplicando os mesmos filtros da listagem
             $query = Voo::with(['aeroporto', 'companhiaAerea', 'aeronave'])
                 ->orderBy('created_at', 'desc');
             
-            // Aplicar filtros
             if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function($q) use ($search) {
@@ -551,7 +521,6 @@ class VooController extends Controller
             
             $voos = $query->get();
             
-            // Se não houver dados
             if ($voos->isEmpty()) {
                 if ($request->ajax()) {
                     return response()->json(['error' => 'Não há voos para exportar com os filtros selecionados.'], 404);
@@ -559,7 +528,6 @@ class VooController extends Controller
                 return redirect()->back()->with('error', 'Não há voos para exportar com os filtros selecionados.');
             }
             
-            // Calcular estatísticas para o relatório
             $estatisticas = [
                 'total_voos' => $voos->count(),
                 'total_passageiros' => $voos->sum('total_passageiros'),
@@ -570,7 +538,6 @@ class VooController extends Controller
                 'filtros_aplicados' => $this->getFiltrosTexto($request)
             ];
             
-            // Preparar dados para a view
             $data = [
                 'voos' => $voos,
                 'estatisticas' => $estatisticas,
@@ -579,10 +546,7 @@ class VooController extends Controller
                 'data_geracao' => now()->format('d/m/Y H:i:s')
             ];
             
-            // Gerar PDF
             $pdf = Pdf::loadView('pdf.voos-relatorio', $data);
-            
-            // Configurar opções do PDF
             $pdf->setPaper('A4', 'landscape');
             $pdf->setOptions([
                 'defaultFont' => 'sans-serif',
@@ -590,10 +554,8 @@ class VooController extends Controller
                 'isRemoteEnabled' => true
             ]);
             
-            // Nome do arquivo
             $filename = 'relatorio_voos_' . date('Y-m-d_His') . '.pdf';
             
-            // Download do PDF
             return $pdf->download($filename);
             
         } catch (\Exception $e) {
@@ -605,9 +567,6 @@ class VooController extends Controller
         }
     }
 
-    /**
-     * Retorna texto dos filtros aplicados
-     */
     private function getFiltrosTexto($request)
     {
         $filtros = [];
@@ -628,12 +587,8 @@ class VooController extends Controller
         return empty($filtros) ? 'Todos os registros' : implode(' | ', $filtros);
     }
 
-    /**
-     * Busca a companhia aérea pelo código do ID do voo
-     */
     public function buscarCompanhiaPorCodigo($codigo)
     {
-        // Validar se o código é válido
         if (!CompanhiaHelper::isCodigoValido($codigo)) {
             return response()->json([
                 'valid' => false,
@@ -641,7 +596,6 @@ class VooController extends Controller
             ]);
         }
         
-        // Buscar a companhia pelo código
         $companhia = CompanhiaAerea::where('codigo', $codigo)
             ->orWhere('nome', 'like', '%' . CompanhiaHelper::getNomeCompanhia($codigo) . '%')
             ->first();
@@ -655,7 +609,6 @@ class VooController extends Controller
             ]);
         }
         
-        // Se não encontrar a companhia no banco, mas o código é válido
         return response()->json([
             'valid' => true,
             'companhia_id' => null,

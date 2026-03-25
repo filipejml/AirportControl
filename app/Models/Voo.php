@@ -22,7 +22,8 @@ class Voo extends Model
         'nota_pontualidade',
         'nota_servicos',
         'nota_patio',
-        'media_notas'
+        'media_notas',
+        'created_at' // Adicionado para permitir edição
     ];
 
     protected $casts = [
@@ -107,7 +108,6 @@ class Voo extends Model
             return null;
         }
 
-        // Usa a mesma lógica de classificação do controller
         return match(true) {
             $this->media_notas >= 9 => 'A',
             $this->media_notas >= 8 => 'B',
