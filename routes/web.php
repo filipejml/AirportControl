@@ -52,8 +52,14 @@ Route::middleware('auth')->group(function () {
         ]
     ]);
 
-    // Página Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('auth');
+    // Dashboard
+    Route::prefix('dashboard')->name('dashboard.')->middleware('auth')->group(function () {
+        Route::get('/', [DashboardController::class, 'index'])->name('index');
+        Route::get('/graficos', [DashboardController::class, 'graficos'])->name('graficos');
+    });
+
+    // Para manter compatibilidade com a rota antiga (opcional)
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Rota para exibir informações detalhadas de um aeroporto (incluindo companhias associadas)
     Route::get('/aeroportos/informacoes', [AeroportoController::class, 'informacoes'])->name('aeroportos.informacoes');

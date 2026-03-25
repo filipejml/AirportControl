@@ -135,12 +135,30 @@
                     </li>
                 @endif
 
-                <!-- 📊 DASHBOARD -->
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" 
-                    href="{{ route('dashboard') }}">
+                <!-- 📊 DASHBOARD com Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('dashboard.*') ? 'active' : '' }}" 
+                    href="#" 
+                    id="dashboardDropdown" 
+                    role="button" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false">
                         <i class="bi bi-bar-chart me-1"></i>Dashboard
                     </a>
+                    <ul class="dropdown-menu" aria-labelledby="dashboardDropdown">
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" 
+                            href="{{ route('dashboard') }}">
+                                <i class="bi bi-speedometer2 me-2"></i>Painel
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('dashboard.graficos') ? 'active' : '' }}" 
+                            href="{{ route('dashboard.graficos') }}">
+                                <i class="bi bi-graph-up me-2"></i>Gráficos
+                            </a>
+                        </li>
+                    </ul>
                 </li>
 
                 <!-- Relatórios - Visível para todos, mas com controle de acesso -->
