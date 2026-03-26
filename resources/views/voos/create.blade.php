@@ -571,11 +571,11 @@
                                                 id="horario_voo" 
                                                 name="horario_voo" 
                                                 required>
-                                            <option value="EAM" {{ old('horario_voo') == 'EAM' ? 'selected' : '' }}>EAM </option>
-                                            <option value="AM" {{ old('horario_voo') == 'AM' ? 'selected' : '' }}>AM </option>
-                                            <option value="AN" {{ old('horario_voo') == 'AN' ? 'selected' : '' }}>AN </option>
-                                            <option value="PM" {{ old('horario_voo') == 'PM' ? 'selected' : '' }}>PM </option>
-                                            <option value="ALL" {{ old('horario_voo') == 'ALL' ? 'selected' : '' }}>ALL </option>
+                                            <option value="EAM" {{ old('horario_voo') == 'EAM' ? 'selected' : '' }}>EAM (00h-06h)</option>
+                                            <option value="AM" {{ old('horario_voo') == 'AM' ? 'selected' : '' }}>AM (06h-12h)</option>
+                                            <option value="AN" {{ old('horario_voo') == 'AN' ? 'selected' : '' }}>AN (12h-18h)</option>
+                                            <option value="PM" {{ old('horario_voo') == 'PM' ? 'selected' : '' }}>PM (18h-00h)</option>
+                                            <option value="ALL" {{ old('horario_voo') == 'ALL' ? 'selected' : '' }}>ALL (Diário)</option>
                                         </select>
                                     </div>
                                     @error('horario_voo')
@@ -639,12 +639,12 @@
                                     <label for="nota_obj" class="form-label fw-semibold">Nota Objetivo</label>
                                     <select class="form-select" id="nota_obj" name="nota_obj">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_obj') == 'A' ? 'selected' : '' }}>A </option>
-                                        <option value="B" {{ old('nota_obj') == 'B' ? 'selected' : '' }}>B </option>
-                                        <option value="C" {{ old('nota_obj') == 'C' ? 'selected' : '' }}>C </option>
-                                        <option value="D" {{ old('nota_obj') == 'D' ? 'selected' : '' }}>D </option>
-                                        <option value="E" {{ old('nota_obj') == 'E' ? 'selected' : '' }}>E </option>
-                                        <option value="F" {{ old('nota_obj') == 'F' ? 'selected' : '' }}>F </option>
+                                        <option value="A" {{ old('nota_obj') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
+                                        <option value="B" {{ old('nota_obj') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
+                                        <option value="C" {{ old('nota_obj') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
+                                        <option value="D" {{ old('nota_obj') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
+                                        <option value="E" {{ old('nota_obj') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
+                                        <option value="F" {{ old('nota_obj') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
                                     </select>
                                 </div>
 
@@ -652,12 +652,12 @@
                                     <label for="nota_pontualidade" class="form-label fw-semibold">Nota Pontualidade</label>
                                     <select class="form-select" id="nota_pontualidade" name="nota_pontualidade">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_pontualidade') == 'A' ? 'selected' : '' }}>A </option>
-                                        <option value="B" {{ old('nota_pontualidade') == 'B' ? 'selected' : '' }}>B </option>
-                                        <option value="C" {{ old('nota_pontualidade') == 'C' ? 'selected' : '' }}>C </option>
-                                        <option value="D" {{ old('nota_pontualidade') == 'D' ? 'selected' : '' }}>D </option>
-                                        <option value="E" {{ old('nota_pontualidade') == 'E' ? 'selected' : '' }}>E </option>
-                                        <option value="F" {{ old('nota_pontualidade') == 'F' ? 'selected' : '' }}>F </option>
+                                        <option value="A" {{ old('nota_pontualidade') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
+                                        <option value="B" {{ old('nota_pontualidade') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
+                                        <option value="C" {{ old('nota_pontualidade') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
+                                        <option value="D" {{ old('nota_pontualidade') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
+                                        <option value="E" {{ old('nota_pontualidade') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
+                                        <option value="F" {{ old('nota_pontualidade') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
                                     </select>
                                 </div>
 
@@ -665,12 +665,12 @@
                                     <label for="nota_servicos" class="form-label fw-semibold">Nota Serviços</label>
                                     <select class="form-select" id="nota_servicos" name="nota_servicos">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_servicos') == 'A' ? 'selected' : '' }}>A </option>
-                                        <option value="B" {{ old('nota_servicos') == 'B' ? 'selected' : '' }}>B </option>
-                                        <option value="C" {{ old('nota_servicos') == 'C' ? 'selected' : '' }}>C </option>
-                                        <option value="D" {{ old('nota_servicos') == 'D' ? 'selected' : '' }}>D </option>
-                                        <option value="E" {{ old('nota_servicos') == 'E' ? 'selected' : '' }}>E </option>
-                                        <option value="F" {{ old('nota_servicos') == 'F' ? 'selected' : '' }}>F </option>
+                                        <option value="A" {{ old('nota_servicos') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
+                                        <option value="B" {{ old('nota_servicos') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
+                                        <option value="C" {{ old('nota_servicos') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
+                                        <option value="D" {{ old('nota_servicos') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
+                                        <option value="E" {{ old('nota_servicos') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
+                                        <option value="F" {{ old('nota_servicos') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
                                     </select>
                                 </div>
 
@@ -678,12 +678,12 @@
                                     <label for="nota_patio" class="form-label fw-semibold">Nota Pátio</label>
                                     <select class="form-select" id="nota_patio" name="nota_patio">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_patio') == 'A' ? 'selected' : '' }}>A </option>
-                                        <option value="B" {{ old('nota_patio') == 'B' ? 'selected' : '' }}>B </option>
-                                        <option value="C" {{ old('nota_patio') == 'C' ? 'selected' : '' }}>C </option>
-                                        <option value="D" {{ old('nota_patio') == 'D' ? 'selected' : '' }}>D </option>
-                                        <option value="E" {{ old('nota_patio') == 'E' ? 'selected' : '' }}>E </option>
-                                        <option value="F" {{ old('nota_patio') == 'F' ? 'selected' : '' }}>F </option>
+                                        <option value="A" {{ old('nota_patio') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
+                                        <option value="B" {{ old('nota_patio') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
+                                        <option value="C" {{ old('nota_patio') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
+                                        <option value="D" {{ old('nota_patio') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
+                                        <option value="E" {{ old('nota_patio') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
+                                        <option value="F" {{ old('nota_patio') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
                                     </select>
                                 </div>
                             </div>
@@ -738,7 +738,6 @@
         background-color: #0a6b4e !important;
     }
     
-    /* Animações suaves */
     .collapse {
         transition: all 0.3s ease;
     }
@@ -772,7 +771,6 @@
         background-color: #e9ecef;
     }
     
-    /* Animação de slide down */
     @keyframes slideDown {
         from {
             opacity: 0;
@@ -805,7 +803,6 @@ document.addEventListener('DOMContentLoaded', function() {
         'LC': 'Grande Porte'
     };
 
-    // Variáveis para controle do preenchimento automático
     let preenchimentoAutomaticoAtivo = true;
     let ultimoCodigoProcessado = '';
     let timeoutId = null;
@@ -819,10 +816,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (collapseElement && headerElement) {
         const iconElement = headerElement.querySelector('.collapse-icon');
         
-        // Verificar estado salvo no localStorage
         const savedState = localStorage.getItem('ultimoVooCollapseState');
         if (savedState === 'expanded') {
-            // Garantir que o collapse esteja expandido
             collapseElement.classList.add('show');
             if (headerElement.classList) {
                 headerElement.classList.remove('collapsed');
@@ -831,7 +826,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 iconElement.style.transform = 'rotate(0deg)';
             }
         } else if (savedState === 'collapsed') {
-            // Garantir que o collapse esteja colapsado
             collapseElement.classList.remove('show');
             if (headerElement.classList) {
                 headerElement.classList.add('collapsed');
@@ -840,7 +834,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 iconElement.style.transform = 'rotate(-90deg)';
             }
         } else {
-            // Estado inicial: colapsado por padrão
             collapseElement.classList.remove('show');
             if (headerElement.classList) {
                 headerElement.classList.add('collapsed');
@@ -851,7 +844,6 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('ultimoVooCollapseState', 'collapsed');
         }
         
-        // Configura o evento para quando o collapse abre
         collapseElement.addEventListener('show.bs.collapse', function () {
             if (headerElement.classList) {
                 headerElement.classList.remove('collapsed');
@@ -862,7 +854,6 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('ultimoVooCollapseState', 'expanded');
         });
         
-        // Configura o evento para quando o collapse fecha
         collapseElement.addEventListener('hide.bs.collapse', function () {
             if (headerElement.classList) {
                 headerElement.classList.add('collapsed');
@@ -934,7 +925,6 @@ document.addEventListener('DOMContentLoaded', function() {
         totalPassageirosInput.value = total.toLocaleString('pt-BR');
     }
 
-    // Função para mostrar feedback visual
     function mostrarFeedback(mensagem, tipo, container, autoRemover = true) {
         const tipos = {
             success: { class: 'alert-success', icon: 'check-circle-fill' },
@@ -954,7 +944,6 @@ document.addEventListener('DOMContentLoaded', function() {
             <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
         `;
         
-        // Remover feedbacks antigos do mesmo container
         const existingAlerts = container.querySelectorAll('.alert');
         existingAlerts.forEach(alert => alert.remove());
         
@@ -971,7 +960,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return feedbackDiv;
     }
 
-    // Validação e preenchimento automático do ID do voo
+    // ============================================
+    // VALIDAÇÃO DO ID DO VOO - CORRIGIDA
+    // ============================================
     const idVooGroup = idVooInput.closest('.mb-3');
     let idVooFeedback = document.getElementById('idVooFeedback');
     
@@ -991,6 +982,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
+        // FORMATO CORRETO: 2-4 letras maiúsculas + hífen + 4 dígitos
         const formatoValido = /^[A-Z]{2,4}-\d{4}$/.test(valor);
         
         if (!formatoValido) {
@@ -1002,6 +994,78 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
+        // EXTRAIR O CÓDIGO DO ID DO VOO
+        const codigoExtraido = valor.split('-')[0];
+        
+        // LISTA DE CÓDIGOS VÁLIDOS (mesma do CompanhiaHelper.php)
+        const codigosValidos = [
+            'PL', 'PP', 'FT', 'GK', 'AO', 'WW', 'AA', 'SK', 'RA', 'ASY', 'OB', 'JP', 
+            'VI', 'PN', 'BV', 'OT', 'SPY', 'AW', 'AK', 'VAII', 'CA', 'WAT', 'TAL', 
+            'HW', 'KW', 'FA', 'MAA', 'EX', 'SCA', 'RBA', 'CN', 'SG', 'AM', 'CZ', 
+            'PF', 'RS', 'RX', 'AS', 'RE'
+        ];
+        
+        // MAPA DE NOMES DAS COMPANHIAS
+        const nomesCompanhias = {
+            'PL': 'Prosperity Lines', 'PP': 'Pop! Airline', 'FT': 'Fast Travel', 'GK': 'Gluck Airlines', 'AO': 'Air Odysseia',
+            'WW': 'World Wide', 'AA': 'Alpha', 'SK': 'Skyways','RA': 'Ryoko Airlines', 'ASY': 'AraSky', 'OB': 'Outback',
+            'JP': 'Jurassic Pax', 'VI': 'Vahana Indonesia', 'PN': 'Península', 'BV': 'Bon Voyage', 'OT': 'Orient', 
+            'SPY': 'Stellar Party', 'AW': 'Aerowings', 'AK': 'Air Kiwi','VAII': 'Vintage Airline II', 'CA': 'ChallengAir',
+            'WAT': 'WAT', 'TAL': 'TAL', 'HW': 'Hallowings', 'KW': 'Air Kiwi','FA': 'Flyair', 'MAA': 'Maasai Airways',
+            'EX': 'Evish Xmas', 'SCA': 'Santa Claus', 'RBA': 'Ryukyu by AJA', 'CN': 'CloudNine','SG': 'Singapura Airlines',
+            'AM': 'American Airways', 'CZ': 'China Southern', 'PF': 'PayrionFestival', 'RS': 'Royal Skyways', 'RX': 'Riyadh Air',
+            'AS': 'Asfar', 'RE': 'Reis'
+        };
+        
+        // VALIDAÇÃO LOCAL IMEDIATA
+        const codigoValidoLocal = codigosValidos.includes(codigoExtraido);
+        
+        if (!codigoValidoLocal) {
+            idVooFeedback.innerHTML = `<i class="bi bi-x-circle-fill me-1 text-danger"></i> Código "${codigoExtraido}" inválido! Use um dos códigos válidos.`;
+            idVooFeedback.classList.remove('text-success', 'text-warning');
+            idVooFeedback.classList.add('text-danger');
+            idVooInput.classList.remove('is-valid');
+            idVooInput.classList.add('is-invalid');
+            return false;
+        }
+        
+        // SE O CÓDIGO É VÁLIDO LOCALMENTE, MOSTRA FEEDBACK IMEDIATO
+        const nomeCompanhia = nomesCompanhias[codigoExtraido];
+        let mensagem = `<i class="bi bi-check-circle-fill me-1 text-success"></i> ✓ Código válido: ${nomeCompanhia}`;
+        
+        // TENTA SELECIONAR A COMPANHIA AUTOMATICAMENTE (se existir no select)
+        const companhiaSelect = document.getElementById('companhia_aerea_id');
+        let companhiaEncontrada = false;
+        
+        if (companhiaSelect) {
+            for (let i = 0; i < companhiaSelect.options.length; i++) {
+                const option = companhiaSelect.options[i];
+                const optionText = option.text.toUpperCase();
+                if (optionText.includes(nomeCompanhia.toUpperCase()) || 
+                    optionText.includes(codigoExtraido)) {
+                    if (preenchimentoAutomaticoAtivo && companhiaSelect.value != option.value) {
+                        companhiaSelect.value = option.value;
+                        const changeEvent = new Event('change', { bubbles: true });
+                        companhiaSelect.dispatchEvent(changeEvent);
+                        mensagem += `<br><small class="text-success"><i class="bi bi-building me-1"></i> Companhia "${option.text}" selecionada!</small>`;
+                    }
+                    companhiaEncontrada = true;
+                    break;
+                }
+            }
+            
+            if (!companhiaEncontrada && preenchimentoAutomaticoAtivo) {
+                mensagem += `<br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i> Companhia "${nomeCompanhia}" não cadastrada. Cadastre-a primeiro.</small>`;
+            }
+        }
+        
+        idVooFeedback.innerHTML = mensagem;
+        idVooFeedback.classList.remove('text-danger', 'text-warning');
+        idVooFeedback.classList.add('text-success');
+        idVooInput.classList.remove('is-invalid');
+        idVooInput.classList.add('is-valid');
+        
+        // FAZ A VALIDAÇÃO AJAX EM BACKGROUND (apenas para verificar duplicidade)
         timeoutId = setTimeout(() => {
             fetch('{{ route("verificar.id.voo") }}', {
                 method: 'POST',
@@ -1013,96 +1077,76 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.valid) {
-                    let mensagem = '<i class="bi bi-check-circle-fill me-1 text-success"></i> ' + 
-                        (data.companhia_nome ? `✓ Código válido: ${data.companhia_nome}` : '✓ Código válido!');
-                    
-                    if (data.companhia_encontrada && data.companhia_id) {
-                        mensagem += `<br><small class="text-info"><i class="bi bi-building me-1"></i> Companhia identificada: ${data.companhia_nome_completo}</small>`;
-                        
-                        // Preencher automaticamente a companhia se ainda não estiver selecionada ou se for uma nova identificação
-                        const codigoAtual = data.codigo;
-                        
-                        if (preenchimentoAutomaticoAtivo && codigoAtual !== ultimoCodigoProcessado) {
-                            ultimoCodigoProcessado = codigoAtual;
-                            
-                            // Verificar se a companhia já está selecionada
-                            if (companhiaSelect.value != data.companhia_id) {
-                                // Selecionar a companhia no select
-                                companhiaSelect.value = data.companhia_id;
-                                
-                                // Disparar o evento change para carregar as aeronaves
-                                const changeEvent = new Event('change', { bubbles: true });
-                                companhiaSelect.dispatchEvent(changeEvent);
-                                
-                                // Mostrar feedback visual
-                                mostrarFeedback(
-                                    `Companhia "${data.companhia_nome_completo}" selecionada automaticamente!`,
-                                    'success',
-                                    companhiaSelect.closest('.mb-3'),
-                                    true
-                                );
-                            }
-                        }
-                    } else if (data.companhia_nome) {
-                        mensagem += `<br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i> Código: ${data.companhia_nome} (Companhia não cadastrada no sistema)</small>`;
-                        
-                        if (preenchimentoAutomaticoAtivo) {
-                            // Mostrar aviso que a companhia não está cadastrada
-                            mostrarFeedback(
-                                `A companhia "${data.companhia_nome}" não está cadastrada no sistema. Por favor, cadastre-a primeiro.`,
-                                'warning',
-                                companhiaSelect.closest('.mb-3'),
-                                true
-                            );
-                        }
-                    }
-                    
-                    idVooFeedback.innerHTML = mensagem;
-                    idVooFeedback.classList.remove('text-danger', 'text-warning');
-                    idVooFeedback.classList.add('text-success');
-                    idVooInput.classList.remove('is-invalid');
-                    idVooInput.classList.add('is-valid');
-                } else {
-                    idVooFeedback.innerHTML = '<i class="bi bi-x-circle-fill me-1 text-danger"></i> ' + data.message;
-                    idVooFeedback.classList.remove('text-success', 'text-warning');
+                if (!data.valid) {
+                    idVooFeedback.innerHTML = `<i class="bi bi-x-circle-fill me-1 text-danger"></i> ${data.message}`;
+                    idVooFeedback.classList.remove('text-success');
                     idVooFeedback.classList.add('text-danger');
                     idVooInput.classList.remove('is-valid');
                     idVooInput.classList.add('is-invalid');
                 }
             })
             .catch(error => {
-                console.error('Erro ao validar ID:', error);
-                idVooFeedback.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i> Erro ao validar código';
-                idVooFeedback.classList.add('text-danger');
+                console.error('Erro na validação AJAX:', error);
+                // Não altera o status se o AJAX falhar, pois já validou localmente
             });
-        }, 500);
+        }, 300);
         
         return true;
     }
 
-    // Eventos do ID do voo
-    idVooInput.addEventListener('input', function() {
+    // MÁSCARA CORRIGIDA PARA O ID DO VOO
+    idVooInput.addEventListener('input', function(e) {
         let valor = this.value.toUpperCase();
-        // Remover caracteres especiais
+        
+        // Remover caracteres que não são letras ou números
         valor = valor.replace(/[^A-Z0-9]/g, '');
         
-        // Adicionar hífen automaticamente após 2-4 letras
-        if (valor.length > 2 && !valor.includes('-')) {
-            // Verificar se os primeiros 2-4 caracteres são letras
-            let match = valor.match(/^([A-Z]{2,4})(\d+)$/);
-            if (match) {
-                valor = match[1] + '-' + match[2];
+        // Se o valor está vazio, limpar e retornar
+        if (valor.length === 0) {
+            this.value = '';
+            validarIdVoo('');
+            return;
+        }
+        
+        // Separar a parte das letras e números
+        let matchLetras = valor.match(/^([A-Z]+)/);
+        let matchNumeros = valor.match(/\d+$/);
+        
+        let letras = matchLetras ? matchLetras[1] : '';
+        let numeros = matchNumeros ? matchNumeros[0] : '';
+        
+        // Limitar letras entre 2 e 4 caracteres
+        if (letras.length > 4) {
+            letras = letras.substring(0, 4);
+        }
+        
+        // Limitar números a 4 dígitos
+        if (numeros.length > 4) {
+            numeros = numeros.substring(0, 4);
+        }
+        
+        // Construir o valor formatado
+        let novoValor = '';
+        if (letras.length >= 2) {
+            novoValor = letras;
+            
+            // Adicionar hífen se tiver pelo menos 2 letras e números ou se o usuário digitou o hífen
+            if (numeros.length > 0) {
+                novoValor += '-' + numeros;
+            } else if (this.value.includes('-') && letras.length >= 2) {
+                novoValor += '-';
             }
+        } else if (letras.length > 0) {
+            novoValor = letras;
         }
         
-        // Limitar tamanho máximo
-        if (valor.length > 9) {
-            valor = valor.slice(0, 9);
+        // Se ainda não tem letras suficientes, manter o que foi digitado
+        if (novoValor === '' && valor.length > 0) {
+            novoValor = valor;
         }
         
-        this.value = valor;
-        validarIdVoo(valor);
+        this.value = novoValor;
+        validarIdVoo(novoValor);
     });
 
     idVooInput.addEventListener('blur', function() {
@@ -1151,30 +1195,23 @@ document.addEventListener('DOMContentLoaded', function() {
         btnLimpar.addEventListener('click', function(e) {
             e.preventDefault();
             
-            // Resetar o formulário
             document.getElementById('formVoo').reset();
             
-            // Limpar campos específicos
             limparCamposAeronave();
             aeronaveSelect.innerHTML = '<option value="" disabled selected>Selecione uma aeronave</option>';
             totalPassageirosInput.value = '0';
             
-            // Limpar feedback do ID
             idVooFeedback.innerHTML = '';
             idVooInput.classList.remove('is-valid', 'is-invalid');
             
-            // Resetar variáveis de controle
             ultimoCodigoProcessado = '';
             preenchimentoAutomaticoAtivo = true;
             
-            // Resetar checkbox
             const toggleCheckbox = document.getElementById('toggleAutoFill');
             if (toggleCheckbox) toggleCheckbox.checked = true;
             
-            // Remover todos os alertas
             document.querySelectorAll('.alert').forEach(alert => alert.remove());
             
-            // Mostrar feedback
             mostrarFeedback(
                 'Formulário limpo com sucesso!',
                 'info',
@@ -1246,7 +1283,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
-        // Verificar se a companhia foi selecionada
         if (!companhiaSelect.value) {
             e.preventDefault();
             mostrarFeedback(
@@ -1259,7 +1295,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
-        // Verificar se a aeronave foi selecionada
         if (!aeronaveSelect.value) {
             e.preventDefault();
             mostrarFeedback(
@@ -1275,13 +1310,13 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     });
 
-    // Adicionar tooltips para os campos
+    // Tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function(tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    // Função para mostrar feedback de sucesso quando o cadastro for bem sucedido
+    // Feedback de sucesso após cadastro
     if (sessionStorage.getItem('voo_cadastrado')) {
         mostrarFeedback(
             sessionStorage.getItem('voo_mensagem') || 'Voo cadastrado com sucesso!',
@@ -1293,7 +1328,6 @@ document.addEventListener('DOMContentLoaded', function() {
         sessionStorage.removeItem('voo_mensagem');
     }
     
-    // Atualizar o total de passageiros quando a quantidade de voos mudar
     qtdVoosInput.addEventListener('change', function() {
         if (this.value < 1) this.value = 1;
         calcularTotalPassageiros();
@@ -1307,7 +1341,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dicaDiv.innerHTML = `
             <i class="bi bi-info-circle-fill me-1"></i>
             <strong>Dica:</strong> Os códigos de companhia válidos são: 
-            PL, PP, FT, GK, AO, WW, AA, SK, RA, ASY, OB, JP, VI, PN, BV, OT, SPY, AW, AK, VAII, CA, WAT, TAL, HW, KW, FA, MAA, EX, SCA, RBA, CN
+            PL, PP, FT, GK, AO, WW, AA, SK, RA, ASY, OB, JP, VI, PN, BV, OT, SPY, AW, AK, VAII, CA, WAT, TAL, HW, KW, FA, MAA, EX, SCA, RBA, CN, SG, AM, CZ, PF, RS, RX, AS, RE
             <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
         `;
         idVooGroup.appendChild(dicaDiv);
@@ -1317,7 +1351,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 8000);
     };
     
-    // Exibir dica apenas uma vez por sessão
     if (!sessionStorage.getItem('dica_codigos_mostrada')) {
         setTimeout(exibirDicaCodigos, 1000);
         sessionStorage.setItem('dica_codigos_mostrada', 'true');
