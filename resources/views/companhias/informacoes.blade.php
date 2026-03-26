@@ -315,8 +315,8 @@
                         {{-- Rodapé com botões de ação --}}
                         <div class="card-footer bg-white border-top-0 pt-0">
                             @if($temRegistros)
-                                <a href="{{ route('companhias.show', $companhia->id) }}" class="btn btn-outline-primary btn-sm w-100">
-                                    <i class="bi bi-graph-up me-1"></i> Ver Detalhes
+                                <a href="{{ route('companhias.dashboard', $companhia->id) }}" class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="bi bi-graph-up me-1"></i> Ver Dashboard
                                 </a>
                             @else
                                 <button class="btn btn-outline-secondary btn-sm w-100" disabled>

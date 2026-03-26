@@ -40,6 +40,8 @@ Route::middleware('auth')->group(function () {
 
     // Rota para exibir informações detalhadas de uma companhia aérea (incluindo aeronaves associadas)
     Route::get('/companhias/informacoes', [CompanhiaAereaController::class, 'informacoes'])->name('companhias.informacoes');
+    // Rota para exibir dashboard de uma companhia aérea (com gráficos e estatísticas)
+    Route::get('/companhias/{companhia}/dashboard', [CompanhiaAereaController::class, 'dashboard'])->name('companhias.dashboard');
     // Rotas para companhias aéreas - CRUD completo
     Route::resource('companhias', CompanhiaAereaController::class);
     

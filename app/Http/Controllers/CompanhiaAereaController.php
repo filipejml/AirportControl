@@ -340,4 +340,74 @@ class CompanhiaAereaController extends Controller
             'mediaGeralNotas'
         ));
     }
+
+    /**
+     * Display a public dashboard for the airline
+     */
+    public function dashboard(CompanhiaAerea $companhia)
+    {
+        // Carregar relacionamentos necessários
+        $companhia->load(['aeronaves', 'aeroportos', 'voos']);
+        
+        // Estatísticas básicas
+        $totalVoos = $companhia->voos()->count();
+        $totalPassageiros = $companhia->voos()->sum('total_passageiros');
+        $totalAeronaves = $companhia->aeronaves()->count();
+        $totalAeroportos = $companhia->aeroportos()->count();
+        
+        // Médias das notas
+        $notaObj = $companhia->voos()->avg('nota_obj') ?? 0;
+        $notaPontualidade = $companhia->voos()->avg('nota_pontualidade') ?? 0;
+        $notaServicos = $companhia->voos()->avg('nota_servicos') ?? 0;
+        $notaPatio = $companhia->voos()->avg('nota_patio') ?? 0;
+        $mediaGeral = ($notaObj + $notaPontualidade + $notaServicos + $notaPatio) / 4;
+        
+        // Últimos voos (últimos 5) - CORRIGIDO: usando aeroporto() em vez de aeroportoOrigem/Destino
+        $ultimosVoos = $companhia->voos()
+            ->with('aeroporto') // Carrega o aeroporto (que seria o aeroporto de origem/destino conforme sua estrutura)
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+        
+        // Voos por aeroporto (top 5)
+        $voosPorAeroporto = $companhia->aeroportos()
+            ->withCount('voos')
+            ->orderBy('voos_count', 'desc')
+            ->limit(5)
+            ->get();
+        
+        // Aeronaves da frota
+        $aeronaves = $companhia->aeronaves()
+            ->with('fabricante')
+            ->get();
+        
+        // Dados para gráficos (últimos 12 meses)
+        $dadosMensais = $companhia->voos()
+            ->select(
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as mes'),
+                DB::raw('COUNT(*) as total_voos'),
+                DB::raw('SUM(total_passageiros) as total_passageiros')
+            )
+            ->where('created_at', '>=', now()->subMonths(12))
+            ->groupBy('mes')
+            ->orderBy('mes', 'asc')
+            ->get();
+        
+        return view('companhias.dashboard', compact(
+            'companhia',
+            'totalVoos',
+            'totalPassageiros',
+            'totalAeronaves',
+            'totalAeroportos',
+            'notaObj',
+            'notaPontualidade',
+            'notaServicos',
+            'notaPatio',
+            'mediaGeral',
+            'ultimosVoos',
+            'voosPorAeroporto',
+            'aeronaves',
+            'dadosMensais'
+        ));
+    }
 }
