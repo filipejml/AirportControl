@@ -8,6 +8,7 @@ use App\Models\Aeroporto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use DateTime;
 
 class CompanhiaAereaController extends Controller
 {
@@ -344,54 +345,165 @@ class CompanhiaAereaController extends Controller
     /**
      * Display a public dashboard for the airline
      */
-    public function dashboard(CompanhiaAerea $companhia)
+    public function dashboard(Request $request, CompanhiaAerea $companhia)
     {
         // Carregar relacionamentos necessários
         $companhia->load(['aeronaves', 'aeroportos', 'voos']);
         
-        // Estatísticas básicas
-        $totalVoos = $companhia->voos()->count();
-        $totalPassageiros = $companhia->voos()->sum('total_passageiros');
-        $totalAeronaves = $companhia->aeronaves()->count();
-        $totalAeroportos = $companhia->aeroportos()->count();
+        // Filtros
+        $aeroportoSelecionado = $request->get('aeroporto', 'geral');
+        $periodoSelecionado = $request->get('periodo', 'geral');
+        $semanaSelecionada = $request->get('semana');
+        $anoFiltro = $request->get('ano');
+        $mesSelecionado = $request->get('mes');
+        $anoSelecionado = $request->get('ano_selecionado');
         
-        // Médias das notas
-        $notaObj = $companhia->voos()->avg('nota_obj') ?? 0;
-        $notaPontualidade = $companhia->voos()->avg('nota_pontualidade') ?? 0;
-        $notaServicos = $companhia->voos()->avg('nota_servicos') ?? 0;
-        $notaPatio = $companhia->voos()->avg('nota_patio') ?? 0;
+        // Query base para voos com filtros
+        $queryVoos = $companhia->voos()->with('aeroporto');
+        
+        // Aplicar filtro de aeroporto
+        if ($aeroportoSelecionado !== 'geral') {
+            $queryVoos->whereHas('aeroporto', function($q) use ($aeroportoSelecionado) {
+                $q->where('nome_aeroporto', $aeroportoSelecionado);
+            });
+        }
+        
+        // Aplicar filtro de período
+        if ($periodoSelecionado !== 'geral') {
+            switch ($periodoSelecionado) {
+                case 'semanal':
+                    if ($semanaSelecionada) {
+                        list($ano, $semana) = explode('-W', $semanaSelecionada);
+                        $dataInicio = (new DateTime())->setISODate($ano, $semana)->format('Y-m-d 00:00:00');
+                        $dataFim = (new DateTime())->setISODate($ano, $semana)->modify('+6 days')->format('Y-m-d 23:59:59');
+                        $queryVoos->whereBetween('created_at', [$dataInicio, $dataFim]);
+                    }
+                    break;
+                case 'mensal':
+                    if ($anoFiltro && $mesSelecionado) {
+                        $dataInicio = "{$anoFiltro}-{$mesSelecionado}-01 00:00:00";
+                        $dataFim = date('Y-m-t 23:59:59', strtotime($dataInicio));
+                        $queryVoos->whereBetween('created_at', [$dataInicio, $dataFim]);
+                    }
+                    break;
+                case 'anual':
+                    if ($anoSelecionado) {
+                        $dataInicio = "{$anoSelecionado}-01-01 00:00:00";
+                        $dataFim = "{$anoSelecionado}-12-31 23:59:59";
+                        $queryVoos->whereBetween('created_at', [$dataInicio, $dataFim]);
+                    }
+                    break;
+            }
+        }
+        
+        // Obter voos filtrados
+        $voosFiltrados = $queryVoos->get();
+        
+        // Estatísticas básicas com filtros
+        $totalVoos = $voosFiltrados->count();
+        $totalPassageiros = $voosFiltrados->sum('total_passageiros');
+        
+        // Médias das notas com filtros
+        $notaObj = $voosFiltrados->avg('nota_obj') ?? 0;
+        $notaPontualidade = $voosFiltrados->avg('nota_pontualidade') ?? 0;
+        $notaServicos = $voosFiltrados->avg('nota_servicos') ?? 0;
+        $notaPatio = $voosFiltrados->avg('nota_patio') ?? 0;
         $mediaGeral = ($notaObj + $notaPontualidade + $notaServicos + $notaPatio) / 4;
         
-        // Últimos voos (últimos 5) - CORRIGIDO: usando aeroporto() em vez de aeroportoOrigem/Destino
-        $ultimosVoos = $companhia->voos()
-            ->with('aeroporto') // Carrega o aeroporto (que seria o aeroporto de origem/destino conforme sua estrutura)
+        // Últimos voos com filtros (últimos 5)
+        $ultimosVoos = $queryVoos->clone()
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
         
-        // Voos por aeroporto (top 5)
-        $voosPorAeroporto = $companhia->aeroportos()
-            ->withCount('voos')
-            ->orderBy('voos_count', 'desc')
-            ->limit(5)
-            ->get();
+        // TOTAL DE AERONAVES
+        $totalAeronaves = $companhia->aeronaves()->count();
+        
+        // TOTAL DE AEROPORTOS
+        $totalAeroportos = $companhia->aeroportos()->count();
+        
+        // Voos por aeroporto com filtros
+        $voosPorAeroporto = collect();
+        foreach ($companhia->aeroportos as $aeroporto) {
+            $quantidadeVoos = $queryVoos->clone()
+                ->where('aeroporto_id', $aeroporto->id)
+                ->count();
+            
+            if ($quantidadeVoos > 0) {
+                $voosPorAeroporto->put($aeroporto->nome_aeroporto, $quantidadeVoos);
+            }
+        }
+        $voosPorAeroporto = $voosPorAeroporto->sortDesc();
+        
+        // Passageiros por aeroporto com filtros
+        $passageirosPorAeroporto = collect();
+        foreach ($companhia->aeroportos as $aeroporto) {
+            $quantidadePassageiros = $queryVoos->clone()
+                ->where('aeroporto_id', $aeroporto->id)
+                ->sum('total_passageiros');
+            
+            if ($quantidadePassageiros > 0) {
+                $passageirosPorAeroporto->put($aeroporto->nome_aeroporto, $quantidadePassageiros);
+            }
+        }
+        $passageirosPorAeroporto = $passageirosPorAeroporto->sortDesc();
+        
+        // Voos por Horário
+        $voosPorHorario = [
+            'EAM' => 0, // Early Morning (00h-06h)
+            'AM' => 0,  // Morning (06h-12h)
+            'AN' => 0,  // Afternoon (12h-18h)
+            'PM' => 0,  // Evening (18h-00h)
+            'ALL' => 0  // Diário
+        ];
+        
+        foreach ($voosFiltrados as $voo) {
+            if (isset($voosPorHorario[$voo->horario_voo])) {
+                $voosPorHorario[$voo->horario_voo]++;
+            }
+        }
+        
+        // Passageiros por Horário
+        $passageirosPorHorario = [
+            'EAM' => 0,
+            'AM' => 0,
+            'AN' => 0,
+            'PM' => 0,
+            'ALL' => 0
+        ];
+        
+        foreach ($voosFiltrados as $voo) {
+            if (isset($passageirosPorHorario[$voo->horario_voo])) {
+                $passageirosPorHorario[$voo->horario_voo] += $voo->total_passageiros;
+            }
+        }
         
         // Aeronaves da frota
         $aeronaves = $companhia->aeronaves()
             ->with('fabricante')
             ->get();
         
-        // Dados para gráficos (últimos 12 meses)
-        $dadosMensais = $companhia->voos()
-            ->select(
-                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as mes'),
-                DB::raw('COUNT(*) as total_voos'),
-                DB::raw('SUM(total_passageiros) as total_passageiros')
-            )
-            ->where('created_at', '>=', now()->subMonths(12))
-            ->groupBy('mes')
-            ->orderBy('mes', 'asc')
-            ->get();
+        // Dados para os filtros
+        $aeroportosDisponiveis = $companhia->aeroportos->pluck('nome_aeroporto')->unique()->values()->toArray();
+        
+        // Semanas disponíveis para filtro (últimos 52 semanas)
+        $semanasDisponiveis = collect();
+        for ($i = 0; $i < 52; $i++) {
+            $data = now()->subWeeks($i);
+            $semanasDisponiveis->push((object)[
+                'semana' => $data->format('Y-\WW'),
+                'numero_semana' => $data->weekOfYear,
+                'ano' => $data->year
+            ]);
+        }
+        $semanasDisponiveis = $semanasDisponiveis->unique('semana');
+        
+        // Anos disponíveis para filtro
+        $anosDisponiveis = $companhia->voos()
+            ->select(DB::raw('DISTINCT YEAR(created_at) as ano'))
+            ->orderBy('ano', 'desc')
+            ->pluck('ano')
+            ->toArray();
         
         return view('companhias.dashboard', compact(
             'companhia',
@@ -405,9 +517,20 @@ class CompanhiaAereaController extends Controller
             'notaPatio',
             'mediaGeral',
             'ultimosVoos',
-            'voosPorAeroporto',
             'aeronaves',
-            'dadosMensais'
+            'aeroportosDisponiveis',
+            'semanasDisponiveis',
+            'anosDisponiveis',
+            'aeroportoSelecionado',
+            'periodoSelecionado',
+            'semanaSelecionada',
+            'anoFiltro',
+            'mesSelecionado',
+            'anoSelecionado',
+            'voosPorAeroporto',
+            'passageirosPorAeroporto',
+            'voosPorHorario',
+            'passageirosPorHorario'
         ));
     }
 }
