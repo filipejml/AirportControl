@@ -877,7 +877,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         options += `<option value="${aeronave.id}" 
                                          data-capacidade="${aeronave.capacidade}"
                                          data-porte="${aeronave.porte}">
-                                    ${aeronave.modelo} - ${aeronave.fabricante?.nome || 'N/A'} (Cap: ${aeronave.capacidade} pax)
+                                    ${aeronave.modelo} 
                                 </option>`;
                     });
                     aeronaveSelect.innerHTML = options;
