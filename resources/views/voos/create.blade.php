@@ -410,7 +410,7 @@
                                                 required>
                                             <option value="" disabled selected>Selecione uma companhia</option>
                                             @foreach($companhias as $companhia)
-                                                <option value="{{ $companhia->id }}" {{ old('companhia_aerea_id') == $companhia->id ? 'selected' : '' }}>
+                                                <option value="{{ $companhia->id }}" data-codigo="{{ $companhiaCodigos[$companhia->id] ?? '' }}" {{ old('companhia_aerea_id') == $companhia->id ? 'selected' : '' }}>
                                                     {{ $companhia->nome }}
                                                 </option>
                                             @endforeach
@@ -820,6 +820,44 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Buscar a companhia via AJAX
+    function buscarEAtualizarCompanhiaPorCodigo(codigo) {
+        // Fazer requisição AJAX para buscar a companhia pelo código
+        fetch(`/api/buscar-companhia/${codigo}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.valid && data.companhia_id) {
+                    const companhiaSelect = document.getElementById('companhia_aerea_id');
+                    
+                    // Se a companhia existe no select
+                    if (companhiaSelect) {
+                        // Procurar a opção com o ID correspondente
+                        for (let i = 0; i < companhiaSelect.options.length; i++) {
+                            const option = companhiaSelect.options[i];
+                            if (option.value == data.companhia_id) {
+                                companhiaSelect.value = option.value;
+                                
+                                // Disparar evento change para carregar as aeronaves
+                                const changeEvent = new Event('change', { bubbles: true });
+                                companhiaSelect.dispatchEvent(changeEvent);
+                                
+                                // Mostrar feedback de sucesso
+                                const feedbackDiv = document.getElementById('idVooFeedback');
+                                if (feedbackDiv) {
+                                    const existingMsg = feedbackDiv.innerHTML;
+                                    feedbackDiv.innerHTML = existingMsg + `<br><small class="text-success"><i class="bi bi-building me-1"></i> Companhia "${option.text}" selecionada!</small>`;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao buscar companhia:', error);
+            });
+    }
+
     function carregarAeronaves(companhiaId) {
         if (!companhiaId) {
             aeronaveSelect.innerHTML = '<option value="" disabled selected>Selecione uma aeronave</option>';
@@ -993,12 +1031,21 @@ document.addEventListener('DOMContentLoaded', function() {
         let companhiaEncontrada = false;
         
         if (companhiaSelect) {
+            const nomeCompanhiaBusca = nomeCompanhia ? nomeCompanhia.toUpperCase() : '';
+            const codigoBusca = codigoExtraido.toUpperCase();
+
             for (let i = 0; i < companhiaSelect.options.length; i++) {
                 const option = companhiaSelect.options[i];
                 const optionText = option.text.toUpperCase();
-                if (optionText.includes(nomeCompanhia.toUpperCase()) || 
-                    optionText.includes(codigoExtraido)) {
-                    if (preenchimentoAutomaticoAtivo && companhiaSelect.value != option.value) {
+                const optionCodigo = (option.dataset.codigo || '').toUpperCase();
+
+                if (
+                    (nomeCompanhiaBusca && optionText === nomeCompanhiaBusca) ||
+                    (nomeCompanhiaBusca && optionText.includes(nomeCompanhiaBusca)) ||
+                    (codigoBusca && optionCodigo === codigoBusca) ||
+                    (codigoBusca && optionText.includes(codigoBusca))
+                ) {
+                    if (preenchimentoAutomaticoAtivo && companhiaSelect.value !== option.value) {
                         companhiaSelect.value = option.value;
                         const changeEvent = new Event('change', { bubbles: true });
                         companhiaSelect.dispatchEvent(changeEvent);
@@ -1010,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (!companhiaEncontrada && preenchimentoAutomaticoAtivo) {
-                mensagem += `<br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i> Companhia "${nomeCompanhia}" não cadastrada. Cadastre-a primeiro.</small>`;
+                mensagem += `<br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i> Companhia "${nomeCompanhia || codigoExtraido}" não cadastrada. Cadastre-a primeiro.</small>`;
             }
         }
         

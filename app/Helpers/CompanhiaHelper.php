@@ -105,4 +105,24 @@ class CompanhiaHelper
         
         return null;
     }
+
+    /**
+     * Busca código da companhia por nome (case-insensitive)
+     */
+    public static function buscarCodigoPorNome($nome)
+    {
+        if (!$nome) {
+            return null;
+        }
+
+        $nomeUpper = strtoupper(trim($nome));
+
+        foreach (self::$codigos as $codigo => $nomeTabela) {
+            if (strtoupper($nomeTabela) === $nomeUpper) {
+                return $codigo;
+            }
+        }
+
+        return null;
+    }
 }

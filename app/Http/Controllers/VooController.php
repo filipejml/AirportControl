@@ -69,6 +69,10 @@ class VooController extends Controller
     {
         $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
         $companhias = CompanhiaAerea::orderBy('nome')->get();
+
+        $companhiaCodigos = $companhias->mapWithKeys(function ($companhia) {
+            return [$companhia->id => CompanhiaHelper::buscarCodigoPorNome($companhia->nome) ?: ''];
+        })->toArray();
         
         $ultimoVoo = Voo::with([
             'aeroporto' => function($query) {
@@ -91,7 +95,7 @@ class VooController extends Controller
         ->orderBy('created_at', 'desc')
         ->first();
         
-        return view('voos.create', compact('aeroportos', 'companhias', 'ultimoVoo'));
+        return view('voos.create', compact('aeroportos', 'companhias', 'ultimoVoo', 'companhiaCodigos'));
     }
 
     public function store(Request $request)
