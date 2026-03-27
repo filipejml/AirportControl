@@ -257,15 +257,12 @@
                 <div class="rating-card p-3" style="border-left-color: #0d6efd !important;">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div>
-                            <div class="rating-value text-primary">{{ number_format($notaObj, 1) }}</div>
+                            <div class="h5 rating-value text-primary">{{ number_format($notaObj, 1) }}</div>
                             <div class="rating-label mt-1">Objetivo</div>
                         </div>
                         <div class="bg-primary bg-opacity-10 rounded-circle p-2">
                             <i class="bi bi-bullseye text-primary fs-4"></i>
                         </div>
-                    </div>
-                    <div class="progress rating-progress">
-                        <div class="progress-bar bg-primary" style="width: {{ ($notaObj / 10) * 100 }}%"></div>
                     </div>
                 </div>
             </div>
@@ -275,15 +272,12 @@
                 <div class="rating-card p-3" style="border-left-color: #198754 !important;">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div>
-                            <div class="rating-value text-success">{{ number_format($notaPontualidade, 1) }}</div>
+                            <div class="h5 rating-value text-success">{{ number_format($notaPontualidade, 1) }}</div>
                             <div class="rating-label mt-1">Pontualidade</div>
                         </div>
                         <div class="bg-success bg-opacity-10 rounded-circle p-2">
                             <i class="bi bi-clock text-success fs-4"></i>
                         </div>
-                    </div>
-                    <div class="progress rating-progress">
-                        <div class="progress-bar bg-success" style="width: {{ ($notaPontualidade / 10) * 100 }}%"></div>
                     </div>
                 </div>
             </div>
@@ -293,15 +287,12 @@
                 <div class="rating-card p-3" style="border-left-color: #0dcaf0 !important;">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div>
-                            <div class="rating-value text-info">{{ number_format($notaServicos, 1) }}</div>
+                            <div class="h5 rating-value text-info">{{ number_format($notaServicos, 1) }}</div>
                             <div class="rating-label mt-1">Serviços</div>
                         </div>
                         <div class="bg-info bg-opacity-10 rounded-circle p-2">
                             <i class="bi bi-cone-striped text-info fs-4"></i>
                         </div>
-                    </div>
-                    <div class="progress rating-progress">
-                        <div class="progress-bar bg-info" style="width: {{ ($notaServicos / 10) * 100 }}%"></div>
                     </div>
                 </div>
             </div>
@@ -311,16 +302,13 @@
                 <div class="rating-card p-3" style="border-left-color: #6c757d !important;">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div>
-                            <div class="rating-value text-secondary">{{ number_format($notaPatio, 1) }}</div>
+                            <div class="h5 rating-value text-secondary">{{ number_format($notaPatio, 1) }}</div>
                             <div class="rating-label mt-1">Pátio</div>
                         </div>
                         <div class="bg-secondary bg-opacity-10 rounded-circle p-2">
                             <i class="bi bi-building text-secondary fs-4"></i>
                         </div>
-                    </div>
-                    <div class="progress rating-progress">
-                        <div class="progress-bar bg-secondary" style="width: {{ ($notaPatio / 10) * 100 }}%"></div>
-                    </div>
+                    </div> 
                 </div>
             </div>
         </div>
