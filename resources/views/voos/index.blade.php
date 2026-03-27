@@ -182,7 +182,7 @@
                 <div class="table-responsive">
                     <table class="table table-sm table-hover align-middle mb-0" id="voosTable">
                         <thead class="bg-light">
-                             <tr>
+                            <tr>
                                 <th class="px-2 py-2 text-center" style="width: 30px;">#</th>
                                 <th class="px-2 py-2">Aeroporto</th>
                                 <th class="px-2 py-2 text-center">Nº Voo</th>
@@ -199,7 +199,7 @@
                                 <th class="px-2 py-2 text-center">Pátio</th>
                                 <th class="px-2 py-2 text-center">Média</th>
                                 <th class="px-2 py-2 text-center">Ações</th>
-                             </tr>
+                            </tr>
                         </thead>
                         <tbody>
                             @foreach($voos as $index => $voo)
@@ -352,25 +352,139 @@
                     </table>
                 </div>
                 
-                <!-- Paginação -->
+                <!-- Paginação Moderna -->
                 <div class="card-footer bg-light border-0 py-3">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div class="small text-muted">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                        <!-- Informações de registros -->
+                        <div class="small text-muted order-2 order-md-1">
                             <i class="bi bi-info-circle me-1"></i>
-                            Mostrando {{ $voos->firstItem() }} a {{ $voos->lastItem() }} de {{ $voos->total() }} voos
+                            <span id="paginationInfo">
+                                Mostrando <strong>{{ $voos->firstItem() }}</strong> a <strong>{{ $voos->lastItem() }}</strong> 
+                                de <strong>{{ $voos->total() }}</strong> registros
+                            </span>
+                            <span class="mx-2 text-muted">|</span>
+                            <span>
+                                <i class="bi bi-files me-1"></i>
+                                Página <strong>{{ $voos->currentPage() }}</strong> de <strong>{{ $voos->lastPage() }}</strong>
+                            </span>
                         </div>
-                        <div>
-                            {{ $voos->appends(request()->query())->links() }}
+                        
+                        <div class="order-2 order-md-1">
+                            <div class="d-flex gap-3 align-items-center">
+                                <!-- Seletor de itens por página -->
+                                <div class="d-flex align-items-center gap-2">
+                                    <label class="small text-muted mb-0">Itens por página:</label>
+                                    <select id="perPageSelect" class="form-select form-select-sm" style="width: auto;">
+                                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                                        <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                                        <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                                        <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Botões de exportação -->
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-danger" id="btnExportarPDF">
+                                        <i class="bi bi-file-pdf me-1"></i>
+                                        PDF
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" id="btnExportarCSV">
+                                        <i class="bi bi-download me-1"></i>
+                                        CSV
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <button class="btn btn-sm btn-outline-danger" id="btnExportarPDF">
-                                <i class="bi bi-file-pdf me-1"></i>
-                                Exportar PDF
-                            </button>
-                            <button class="btn btn-sm btn-outline-secondary" id="btnExportarCSV">
-                                <i class="bi bi-download me-1"></i>
-                                Exportar CSV
-                            </button>
+                        
+                        <!-- Paginação Links -->
+                        <div class="order-1 order-md-3">
+                            @if($voos->hasPages())
+                                <nav aria-label="Navegação de páginas">
+                                    <ul class="pagination pagination-sm mb-0">
+                                        {{-- Botão Primeira Página --}}
+                                        @if($voos->onFirstPage())
+                                            <li class="page-item disabled">
+                                                <span class="page-link"><i class="bi bi-chevron-double-left"></i></span>
+                                            </li>
+                                        @else
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $voos->url(1) . '&per_page=' . request('per_page', 10) }}" aria-label="Primeira">
+                                                    <i class="bi bi-chevron-double-left"></i>
+                                                </a>
+                                            </li>
+                                        @endif
+                                        
+                                        {{-- Botão Anterior --}}
+                                        @if($voos->onFirstPage())
+                                            <li class="page-item disabled">
+                                                <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+                                            </li>
+                                        @else
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $voos->previousPageUrl() . '&per_page=' . request('per_page', 10) }}" aria-label="Anterior">
+                                                    <i class="bi bi-chevron-left"></i>
+                                                </a>
+                                            </li>
+                                        @endif
+                                        
+                                        {{-- Links de Páginas com Intervalo --}}
+                                        @php
+                                            $currentPage = $voos->currentPage();
+                                            $lastPage = $voos->lastPage();
+                                            $start = max(1, $currentPage - 2);
+                                            $end = min($lastPage, $currentPage + 2);
+                                            
+                                            if ($start > 1) {
+                                                echo '<li class="page-item"><a class="page-link" href="' . $voos->url(1) . '&per_page=' . request('per_page', 10) . '">1</a></li>';
+                                                if ($start > 2) {
+                                                    echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                                                }
+                                            }
+                                            
+                                            for ($i = $start; $i <= $end; $i++) {
+                                                if ($i == $currentPage) {
+                                                    echo '<li class="page-item active"><span class="page-link">' . $i . '</span></li>';
+                                                } else {
+                                                    echo '<li class="page-item"><a class="page-link" href="' . $voos->url($i) . '&per_page=' . request('per_page', 10) . '">' . $i . '</a></li>';
+                                                }
+                                            }
+                                            
+                                            if ($end < $lastPage) {
+                                                if ($end < $lastPage - 1) {
+                                                    echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                                                }
+                                                echo '<li class="page-item"><a class="page-link" href="' . $voos->url($lastPage) . '&per_page=' . request('per_page', 10) . '">' . $lastPage . '</a></li>';
+                                            }
+                                        @endphp
+                                        
+                                        {{-- Botão Próximo --}}
+                                        @if($voos->hasMorePages())
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $voos->nextPageUrl() . '&per_page=' . request('per_page', 10) }}" aria-label="Próximo">
+                                                    <i class="bi bi-chevron-right"></i>
+                                                </a>
+                                            </li>
+                                        @else
+                                            <li class="page-item disabled">
+                                                <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+                                            </li>
+                                        @endif
+                                        
+                                        {{-- Botão Última Página --}}
+                                        @if($voos->hasMorePages())
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $voos->url($voos->lastPage()) . '&per_page=' . request('per_page', 10) }}" aria-label="Última">
+                                                    <i class="bi bi-chevron-double-right"></i>
+                                                </a>
+                                            </li>
+                                        @else
+                                            <li class="page-item disabled">
+                                                <span class="page-link"><i class="bi bi-chevron-double-right"></i></span>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </nav>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -467,7 +581,7 @@
     overflow-x: auto;
 }
 
-/* Estilização da paginação */
+/* Paginação moderna */
 .pagination {
     margin-bottom: 0;
 }
@@ -475,11 +589,72 @@
 .pagination .page-link {
     padding: 0.375rem 0.75rem;
     font-size: 0.875rem;
+    color: #0d5c8b;
+    border: none;
+    background: transparent;
+}
+
+.pagination .page-link:hover {
+    background-color: rgba(13, 92, 139, 0.1);
+    color: #0d5c8b;
 }
 
 .pagination .page-item.active .page-link {
     background-color: #0d5c8b;
     border-color: #0d5c8b;
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #dee2e6;
+    background: transparent;
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.voo-row {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .pagination .page-link {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .card .card-body.py-2 h3 {
+        font-size: 1.2rem;
+    }
+    
+    .d-flex.gap-3 {
+        gap: 0.5rem !important;
+    }
+}
+
+/* Loading spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-left-color: #0d5c8b;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 </style>
 
@@ -528,6 +703,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Seletor de itens por página
+    const perPageSelect = document.getElementById('perPageSelect');
+    if (perPageSelect) {
+        perPageSelect.addEventListener('change', function() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('per_page', this.value);
+            window.location.href = url.toString();
+        });
+    }
+
     // ==========================================
     // EXPORTAÇÃO CSV
     // ==========================================
@@ -562,7 +747,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Feedback visual
             const originalText = btnExportarCSV.innerHTML;
-            btnExportarCSV.innerHTML = '<i class="bi bi-check-circle me-1"></i> Exportando...';
+            btnExportarCSV.innerHTML = '<span class="loading-spinner me-1"></span> Exportando...';
             btnExportarCSV.disabled = true;
             
             setTimeout(() => {
@@ -606,7 +791,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Feedback visual
             const originalText = btnExportarPDF.innerHTML;
-            btnExportarPDF.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Gerando PDF...';
+            btnExportarPDF.innerHTML = '<span class="loading-spinner me-1"></span> Gerando PDF...';
             btnExportarPDF.disabled = true;
             
             setTimeout(() => {
@@ -662,6 +847,20 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('delete-form-' + id).submit();
         };
     };
+    
+    // Adicionar classe active nos links de paginação dinamicamente
+    const paginationLinks = document.querySelectorAll('.pagination .page-link');
+    paginationLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            if (!this.parentElement.classList.contains('active')) {
+                // Adicionar efeito de loading
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'position-fixed top-50 start-50 translate-middle';
+                loadingDiv.innerHTML = '<div class="loading-spinner" style="width: 2rem; height: 2rem;"></div>';
+                document.body.appendChild(loadingDiv);
+            }
+        });
+    });
 });
 </script>
 @endsection

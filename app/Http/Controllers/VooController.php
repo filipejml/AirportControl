@@ -52,7 +52,11 @@ class VooController extends Controller
             $query->where('created_at', '>=', $dataLimite);
         }
         
-        $voos = $query->paginate(10)->withQueryString();
+        // Configurar tamanho da página
+        $perPage = $request->get('per_page', 10);
+        $perPage = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
+        
+        $voos = $query->paginate($perPage)->withQueryString();
         
         $estatisticas = [
             'total_voos' => Voo::count(),
@@ -62,7 +66,7 @@ class VooController extends Controller
             'media_geral_notas' => Voo::whereNotNull('media_notas')->avg('media_notas')
         ];
         
-        return view('voos.index', compact('voos', 'estatisticas'));
+        return view('voos.index', compact('voos', 'estatisticas', 'perPage'));
     }
 
     public function create()
