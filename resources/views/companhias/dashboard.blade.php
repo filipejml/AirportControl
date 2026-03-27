@@ -1510,17 +1510,26 @@
                                         <th class="text-muted small fw-normal">
                                             <i class="bi bi-geo-alt me-1"></i>Aeroporto
                                         </th>
-                                        <th class="text-muted small fw-normal">
-                                            <i class="bi bi-calendar me-1"></i>Data
+                                        <th class="text-muted small fw-normal text-center">
+                                            <i class="bi bi-bullseye me-1"></i>Objetivo
+                                        </th>
+                                        <th class="text-muted small fw-normal text-center">
+                                            <i class="bi bi-clock me-1"></i>Pontualidade
+                                        </th>
+                                        <th class="text-muted small fw-normal text-center">
+                                            <i class="bi bi-cone-striped me-1"></i>Serviços
+                                        </th>
+                                        <th class="text-muted small fw-normal text-center">
+                                            <i class="bi bi-building me-1"></i>Pátio
+                                        </th>
+                                        <th class="text-muted small fw-normal text-end">
+                                            <i class="bi bi-star me-1"></i>Avaliação
                                         </th>
                                         <th class="text-muted small fw-normal text-end">
                                             <i class="bi bi-airplane me-1"></i>Total de Voos
                                         </th>
                                         <th class="text-muted small fw-normal text-end">
                                             <i class="bi bi-people me-1"></i>Passageiros
-                                        </th>
-                                        <th class="text-muted small fw-normal text-end">
-                                            <i class="bi bi-star me-1"></i>Avaliação
                                         </th>
                                     </tr>
                                 </thead>
@@ -1539,18 +1548,85 @@
                                                 @endif
                                             </div>
                                         </td>
-                                        <td>
-                                            <div>
-                                                <span class="text-dark">{{ $voo->created_at->format('d/m/Y') }}</span>
-                                                <br>
-                                                <small class="text-muted">{{ $voo->created_at->format('H:i') }}</small>
-                                            </div>
+                                        <td class="text-center">
+                                            @php
+                                                // Tentar diferentes formas de obter a nota objetivo
+                                                $notaObj = 0;
+                                                if(isset($voo->nota_objetivo)) {
+                                                    $notaObj = $voo->nota_objetivo;
+                                                } elseif(isset($voo->objetivo)) {
+                                                    $notaObj = $voo->objetivo;
+                                                } elseif(isset($voo->nota_obj)) {
+                                                    $notaObj = $voo->nota_obj;
+                                                }
+                                                
+                                                $corObj = $notaObj >= 8 ? 'success' : ($notaObj >= 6 ? 'warning' : ($notaObj >= 4 ? 'info' : 'danger'));
+                                            @endphp
+                                            @if($notaObj > 0)
+                                                <span class="fw-bold text-{{ $corObj }}">{{ number_format($notaObj, 1) }}</span>
+                                            @else
+                                                <span class="text-muted">--</span>
+                                            @endif
                                         </td>
-                                        <td class="text-end">
-                                            <span class="fw-bold text-primary">{{ number_format($totalVoos, 0, ',', '.') }}</span>
+                                        <td class="text-center">
+                                            @php
+                                                // Tentar diferentes formas de obter a nota pontualidade
+                                                $notaPontualidade = 0;
+                                                if(isset($voo->nota_pontualidade)) {
+                                                    $notaPontualidade = $voo->nota_pontualidade;
+                                                } elseif(isset($voo->pontualidade)) {
+                                                    $notaPontualidade = $voo->pontualidade;
+                                                } elseif(isset($voo->nota_pont)) {
+                                                    $notaPontualidade = $voo->nota_pont;
+                                                }
+                                                
+                                                $corPontualidade = $notaPontualidade >= 8 ? 'success' : ($notaPontualidade >= 6 ? 'warning' : ($notaPontualidade >= 4 ? 'info' : 'danger'));
+                                            @endphp
+                                            @if($notaPontualidade > 0)
+                                                <span class="fw-bold text-{{ $corPontualidade }}">{{ number_format($notaPontualidade, 1) }}</span>
+                                            @else
+                                                <span class="text-muted">--</span>
+                                            @endif
                                         </td>
-                                        <td class="text-end">
-                                            <span class="fw-bold text-dark">{{ number_format($voo->total_passageiros, 0, ',', '.') }}</span>
+                                        <td class="text-center">
+                                            @php
+                                                // Tentar diferentes formas de obter a nota serviços
+                                                $notaServicos = 0;
+                                                if(isset($voo->nota_servicos)) {
+                                                    $notaServicos = $voo->nota_servicos;
+                                                } elseif(isset($voo->servicos)) {
+                                                    $notaServicos = $voo->servicos;
+                                                } elseif(isset($voo->nota_serv)) {
+                                                    $notaServicos = $voo->nota_serv;
+                                                }
+                                                
+                                                $corServicos = $notaServicos >= 8 ? 'success' : ($notaServicos >= 6 ? 'warning' : ($notaServicos >= 4 ? 'info' : 'danger'));
+                                            @endphp
+                                            @if($notaServicos > 0)
+                                                <span class="fw-bold text-{{ $corServicos }}">{{ number_format($notaServicos, 1) }}</span>
+                                            @else
+                                                <span class="text-muted">--</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            @php
+                                                // Tentar diferentes formas de obter a nota pátio
+                                                $notaPatio = 0;
+                                                if(isset($voo->nota_patio)) {
+                                                    $notaPatio = $voo->nota_patio;
+                                                } elseif(isset($voo->patio)) {
+                                                    $notaPatio = $voo->patio;
+                                                } elseif(isset($voo->nota_pat)) {
+                                                    $notaPatio = $voo->nota_pat;
+                                                }
+                                                
+                                                $corPatio = $notaPatio >= 8 ? 'success' : ($notaPatio >= 6 ? 'warning' : ($notaPatio >= 4 ? 'info' : 'danger'));
+                                            @endphp
+                                            @if($notaPatio > 0)
+                                                <span class="fw-bold text-{{ $corPatio }}">{{ number_format($notaPatio, 1) }}</span>
+                                            @else
+                                                <span class="text-muted">--</span>
+                                            @endif
                                         </td>
                                         <td class="text-end">
                                             @if($voo->media_notas)
@@ -1562,6 +1638,12 @@
                                             @else
                                                 <span class="fw-bold text-secondary">--</span>
                                             @endif
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="fw-bold text-primary">{{ number_format($totalVoos, 0, ',', '.') }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="fw-bold text-dark">{{ number_format($voo->total_passageiros, 0, ',', '.') }}</span>
                                         </td>
                                     </tr>
                                     @endforeach
