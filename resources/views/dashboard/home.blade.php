@@ -106,7 +106,7 @@
                     <div class="mt-2 pt-2 border-top">
                         <div class="d-flex justify-content-between align-items-center small">
                             <span class="text-muted">Média Geral</span>
-                            <span class="fw-bold text-dark">{{ number_format($mediaGeral, 1) }}</span>
+                            <span class="h5 fw-bold text-dark">{{ number_format($mediaGeral, 1) }}</span>
                         </div>
                     </div>
                 </div>
