@@ -47,6 +47,8 @@ Route::middleware('auth')->group(function () {
     
     // Rota para exibir informações detalhadas de uma aeronave (incluindo fabricante e companhias associadas)
     Route::get('/aeronaves/informacoes', [AeronaveController::class, 'informacoes'])->name('aeronaves.informacoes');
+    // Rota para exibir dashboard de uma aeronave (com gráficos e estatísticas)
+    Route::get('/aeronaves/{aeronave}/dashboard', [AeronaveController::class, 'dashboard'])->name('aeronaves.dashboard');
     // Rotas para aeronaves - CRUD completo
     Route::resource('aeronaves', AeronaveController::class, [
         'parameters' => [

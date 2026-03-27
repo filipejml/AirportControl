@@ -52,26 +52,45 @@
 
         {{-- Estatísticas Gerais --}}
         <div class="row mb-4">
-            <div class="col-12">
-                <div class="card bg-light">
-                    <div class="card-body py-3">
-                        <div class="row text-center">
-                            <div class="col-md-3 col-6">
-                                <h4 class="mb-0 text-primary">{{ count($modelosComDados) }}</h4>
-                                <small class="text-muted">Modelos Cadastrados</small>
-                            </div>
-                            <div class="col-md-3 col-6">
-                                <h4 class="mb-0 text-success">{{ number_format(array_sum(array_column($modelosComDados, 'total_voos'))) }}</h4>
-                                <small class="text-muted">Total de Voos</small>
-                            </div>
-                            <div class="col-md-3 col-6">
-                                <h4 class="mb-0 text-info">{{ number_format(array_sum(array_column($modelosComDados, 'total_passageiros'))) }}</h4>
-                                <small class="text-muted">Total de Passageiros</small>
-                            </div>
-                            <div class="col-md-3 col-6">
-                                <h4 class="mb-0 text-warning">{{ number_format(count(array_unique(array_column($modelosComDados, 'fabricante')))) }}</h4>
-                                <small class="text-muted">Fabricantes</small>
-                            </div>
+            <div class="col-md-3 col-6 mb-3 mb-md-0">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #0d6efd !important;">
+                    <div class="card-body">
+                        <div>
+                            <h6 class="text-muted mb-2">Modelos Cadastrados</h6>
+                            <h3 class="mb-0 fw-bold text-primary">{{ count($modelosComDados) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-6 mb-3 mb-md-0">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #198754 !important;">
+                    <div class="card-body">
+                        <div>
+                            <h6 class="text-muted mb-2">Total de Voos</h6>
+                            <h3 class="mb-0 fw-bold text-success">{{ number_format(array_sum(array_column($modelosComDados, 'total_voos'))) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-6 mb-3 mb-md-0">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #0dcaf0 !important;">
+                    <div class="card-body">
+                        <div>
+                            <h6 class="text-muted mb-2">Total de Passageiros</h6>
+                            <h3 class="mb-0 fw-bold text-info">{{ number_format(array_sum(array_column($modelosComDados, 'total_passageiros'))) }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-6 mb-3 mb-md-0">
+                <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #ffc107 !important;">
+                    <div class="card-body">
+                        <div>
+                            <h6 class="text-muted mb-2">Fabricantes</h6>
+                            <h3 class="mb-0 fw-bold text-warning">{{ number_format(count(array_unique(array_column($modelosComDados, 'fabricante')))) }}</h3>
                         </div>
                     </div>
                 </div>
@@ -220,13 +239,13 @@
                                 </div>
                             </div>
 
-                            {{-- Botão de ação (desabilitado) --}}
+                            {{-- Botão de ação --}}
                             <div class="mt-3">
                                 @if($dados['tem_dados'])
                                     <div class="d-grid">
-                                        <button class="btn btn-primary btn-sm" disabled>
-                                            <i class="bi bi-graph-up me-1"></i> Dashboard em Breve
-                                        </button>
+                                        <a href="{{ route('aeronaves.dashboard', $dados['id']) }}" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-graph-up me-1"></i> Ver Dashboard
+                                        </a>
                                     </div>
                                 @else
                                     <div class="d-grid">
