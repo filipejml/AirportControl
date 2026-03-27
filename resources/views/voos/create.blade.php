@@ -379,7 +379,7 @@
                                         <i class="bi bi-info-circle me-1"></i>
                                         Formato: LL-NNNN ou LLLL-NNNN (ex: AA-1234 ou ASY-5678) - Use letras maiúsculas
                                     </div>
-                                    
+                                    <div id="idVooFeedback" class="form-text mt-1"></div>
                                     @error('id_voo')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
@@ -410,7 +410,7 @@
                                                 required>
                                             <option value="" disabled selected>Selecione uma companhia</option>
                                             @foreach($companhias as $companhia)
-                                                <option value="{{ $companhia->id }}" data-codigo="{{ $companhiaCodigos[$companhia->id] ?? '' }}" {{ old('companhia_aerea_id') == $companhia->id ? 'selected' : '' }}>
+                                                <option value="{{ $companhia->id }}" {{ old('companhia_aerea_id') == $companhia->id ? 'selected' : '' }}>
                                                     {{ $companhia->nome }}
                                                 </option>
                                             @endforeach
@@ -740,10 +740,53 @@
     .alert {
         animation: slideDown 0.3s ease;
     }
+    
+    /* Loading spinner */
+    .loading-spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(13, 92, 139, 0.3);
+        border-left-color: #0d5c8b;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Feedback animations */
+    .feedback-success {
+        color: #198754;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .feedback-error {
+        color: #dc3545;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .feedback-warning {
+        color: #ffc107;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Elementos do DOM
     const companhiaSelect = document.getElementById('companhia_aerea_id');
     const aeronaveSelect = document.getElementById('aeronave_id');
     const tipoAeronaveInput = document.getElementById('tipo_aeronave');
@@ -751,6 +794,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const qtdVoosInput = document.getElementById('qtd_voos');
     const totalPassageirosInput = document.getElementById('total_passageiros');
     const idVooInput = document.getElementById('id_voo');
+    const idVooFeedback = document.getElementById('idVooFeedback');
+    const form = document.getElementById('formVoo');
 
     const porteTexto = {
         'PC': 'Pequeno Porte',
@@ -758,9 +803,8 @@ document.addEventListener('DOMContentLoaded', function() {
         'LC': 'Grande Porte'
     };
 
-    let preenchimentoAutomaticoAtivo = true;
-    let ultimoCodigoProcessado = '';
     let timeoutId = null;
+    let ultimoIdVooValidado = '';
 
     // ============================================
     // FUNCIONALIDADE DE EXPANDIR/RECOLHER DO CARD
@@ -820,42 +864,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Buscar a companhia via AJAX
-    function buscarEAtualizarCompanhiaPorCodigo(codigo) {
-        // Fazer requisição AJAX para buscar a companhia pelo código
-        fetch(`/api/buscar-companhia/${codigo}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.valid && data.companhia_id) {
-                    const companhiaSelect = document.getElementById('companhia_aerea_id');
-                    
-                    // Se a companhia existe no select
-                    if (companhiaSelect) {
-                        // Procurar a opção com o ID correspondente
-                        for (let i = 0; i < companhiaSelect.options.length; i++) {
-                            const option = companhiaSelect.options[i];
-                            if (option.value == data.companhia_id) {
-                                companhiaSelect.value = option.value;
-                                
-                                // Disparar evento change para carregar as aeronaves
-                                const changeEvent = new Event('change', { bubbles: true });
-                                companhiaSelect.dispatchEvent(changeEvent);
-                                
-                                // Mostrar feedback de sucesso
-                                const feedbackDiv = document.getElementById('idVooFeedback');
-                                if (feedbackDiv) {
-                                    const existingMsg = feedbackDiv.innerHTML;
-                                    feedbackDiv.innerHTML = existingMsg + `<br><small class="text-success"><i class="bi bi-building me-1"></i> Companhia "${option.text}" selecionada!</small>`;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Erro ao buscar companhia:', error);
-            });
+    // ============================================
+    // FUNÇÕES AUXILIARES
+    // ============================================
+    function mostrarFeedback(mensagem, tipo) {
+        const tipos = {
+            success: { class: 'feedback-success', icon: 'check-circle-fill' },
+            error: { class: 'feedback-error', icon: 'x-circle-fill' },
+            warning: { class: 'feedback-warning', icon: 'exclamation-triangle-fill' },
+            info: { class: 'text-info', icon: 'info-circle-fill' }
+        };
+        
+        const config = tipos[tipo] || tipos.info;
+        
+        idVooFeedback.innerHTML = `
+            <i class="bi bi-${config.icon} me-1"></i>
+            ${mensagem}
+        `;
+        idVooFeedback.className = `form-text mt-1 ${config.class}`;
+        
+        // Atualizar classe do input
+        if (tipo === 'success') {
+            idVooInput.classList.remove('is-invalid');
+            idVooInput.classList.add('is-valid');
+        } else if (tipo === 'error') {
+            idVooInput.classList.remove('is-valid');
+            idVooInput.classList.add('is-invalid');
+        } else {
+            idVooInput.classList.remove('is-valid', 'is-invalid');
+        }
+    }
+
+    function limparFeedback() {
+        idVooFeedback.innerHTML = '';
+        idVooFeedback.className = 'form-text mt-1';
+        idVooInput.classList.remove('is-valid', 'is-invalid');
     }
 
     function carregarAeronaves(companhiaId) {
@@ -864,6 +907,10 @@ document.addEventListener('DOMContentLoaded', function() {
             limparCamposAeronave();
             return;
         }
+
+        // Mostrar loading
+        aeronaveSelect.innerHTML = '<option value="" disabled selected>Carregando aeronaves...</option>';
+        aeronaveSelect.disabled = true;
 
         fetch(`/api/companhias/${companhiaId}/aeronaves`)
             .then(response => response.json())
@@ -882,10 +929,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     aeronaveSelect.innerHTML = options;
                 }
+                aeronaveSelect.disabled = false;
             })
             .catch(error => {
                 console.error('Erro ao carregar aeronaves:', error);
                 aeronaveSelect.innerHTML = '<option value="" disabled selected>Erro ao carregar aeronaves</option>';
+                aeronaveSelect.disabled = false;
             });
     }
 
@@ -918,204 +967,13 @@ document.addEventListener('DOMContentLoaded', function() {
         totalPassageirosInput.value = total.toLocaleString('pt-BR');
     }
 
-    function mostrarFeedback(mensagem, tipo, container, autoRemover = true) {
-        const tipos = {
-            success: { class: 'alert-success', icon: 'check-circle-fill' },
-            danger: { class: 'alert-danger', icon: 'exclamation-triangle-fill' },
-            warning: { class: 'alert-warning', icon: 'exclamation-triangle-fill' },
-            info: { class: 'alert-info', icon: 'info-circle-fill' }
-        };
-        
-        const config = tipos[tipo] || tipos.info;
-        
-        const feedbackDiv = document.createElement('div');
-        feedbackDiv.className = `alert ${config.class} alert-dismissible fade show mt-2 py-2`;
-        feedbackDiv.style.fontSize = '0.875rem';
-        feedbackDiv.innerHTML = `
-            <i class="bi bi-${config.icon} me-1"></i>
-            ${mensagem}
-            <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
-        `;
-        
-        const existingAlerts = container.querySelectorAll('.alert');
-        existingAlerts.forEach(alert => alert.remove());
-        
-        container.appendChild(feedbackDiv);
-        
-        if (autoRemover) {
-            setTimeout(() => {
-                if (feedbackDiv.parentNode) {
-                    feedbackDiv.remove();
-                }
-            }, 5000);
-        }
-        
-        return feedbackDiv;
-    }
-
     // ============================================
-    // VALIDAÇÃO DO ID DO VOO - CORRIGIDA
+    // FORMATAÇÃO DO ID DO VOO
     // ============================================
-    const idVooGroup = idVooInput.closest('.mb-3');
-    let idVooFeedback = document.getElementById('idVooFeedback');
-    
-    if (!idVooFeedback) {
-        idVooFeedback = document.createElement('div');
-        idVooFeedback.id = 'idVooFeedback';
-        idVooFeedback.className = 'form-text mt-1';
-        idVooGroup.appendChild(idVooFeedback);
-    }
-
-    function validarIdVoo(valor) {
-        if (timeoutId) clearTimeout(timeoutId);
-        
-        if (!valor || valor.trim() === '') {
-            idVooFeedback.innerHTML = '';
-            idVooInput.classList.remove('is-valid', 'is-invalid');
-            return false;
-        }
-        
-        // FORMATO CORRETO: 2-4 letras maiúsculas + hífen + 4 dígitos
-        const formatoValido = /^[A-Z]{2,4}-\d{4}$/.test(valor);
-        
-        if (!formatoValido) {
-            idVooFeedback.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i> Formato inválido. Use LL-NNNN ou LLLL-NNNN (ex: AA-1234 ou ASY-5678)';
-            idVooFeedback.classList.add('text-warning');
-            idVooFeedback.classList.remove('text-success', 'text-danger', 'text-info');
-            idVooInput.classList.remove('is-valid');
-            idVooInput.classList.add('is-invalid');
-            return false;
-        }
-        
-        // EXTRAIR O CÓDIGO DO ID DO VOO
-        const codigoExtraido = valor.split('-')[0];
-        
-        // LISTA DE CÓDIGOS VÁLIDOS (mesma do CompanhiaHelper.php)
-        const codigosValidos = [
-            'PL', 'PP', 'FT', 'GK', 'AO', 'WW', 'AA', 'SK', 'RA', 'ASY', 'OB', 'JP', 
-            'VI', 'PN', 'BV', 'OT', 'SPY', 'AW', 'AK', 'VAII', 'CA', 'WAT', 'TAL', 
-            'HW', 'KW', 'FA', 'MAA', 'EX', 'SCA', 'RBA', 'CN', 'SG', 'AM', 'CZ', 
-            'PF', 'RS', 'RX', 'AS', 'RE'
-        ];
-        
-        // MAPA DE NOMES DAS COMPANHIAS
-        const nomesCompanhias = {
-            'PL': 'Prosperity Lines', 'PP': 'Pop! Airline', 'FT': 'Fast Travel', 'GK': 'Gluck Airlines', 'AO': 'Air Odysseia',
-            'WW': 'World Wide', 'AA': 'Alpha', 'SK': 'Skyways','RA': 'Ryoko Airlines', 'ASY': 'AraSky', 'OB': 'Outback',
-            'JP': 'Jurassic Pax', 'VI': 'Vahana Indonesia', 'PN': 'Península', 'BV': 'Bon Voyage', 'OT': 'Orient', 
-            'SPY': 'Stellar Party', 'AW': 'Aerowings', 'AK': 'Air Kiwi','VAII': 'Vintage Airline II', 'CA': 'ChallengAir',
-            'WAT': 'WAT', 'TAL': 'TAL', 'HW': 'Hallowings', 'KW': 'Air Kiwi','FA': 'Flyair', 'MAA': 'Maasai Airways',
-            'EX': 'Evish Xmas', 'SCA': 'Santa Claus', 'RBA': 'Ryukyu by AJA', 'CN': 'CloudNine','SG': 'Singapura Airlines',
-            'AM': 'American Airways', 'CZ': 'China Southern', 'PF': 'PayrionFestival', 'RS': 'Royal Skyways', 'RX': 'Riyadh Air',
-            'AS': 'Asfar', 'RE': 'Reis'
-        };
-        
-        // VALIDAÇÃO LOCAL IMEDIATA
-        const codigoValidoLocal = codigosValidos.includes(codigoExtraido);
-        
-        if (!codigoValidoLocal) {
-            idVooFeedback.innerHTML = `<i class="bi bi-x-circle-fill me-1 text-danger"></i> Código "${codigoExtraido}" inválido! Use um dos códigos válidos.`;
-            idVooFeedback.classList.remove('text-success', 'text-warning');
-            idVooFeedback.classList.add('text-danger');
-            idVooInput.classList.remove('is-valid');
-            idVooInput.classList.add('is-invalid');
-            return false;
-        }
-        
-        // SE O CÓDIGO É VÁLIDO LOCALMENTE, MOSTRA FEEDBACK IMEDIATO
-        const nomeCompanhia = nomesCompanhias[codigoExtraido];
-        let mensagem = `<i class="bi bi-check-circle-fill me-1 text-success"></i> ✓ Código válido: ${nomeCompanhia}`;
-        
-        // TENTA SELECIONAR A COMPANHIA AUTOMATICAMENTE (se existir no select)
-        const companhiaSelect = document.getElementById('companhia_aerea_id');
-        let companhiaEncontrada = false;
-        
-        if (companhiaSelect) {
-            const nomeCompanhiaBusca = nomeCompanhia ? nomeCompanhia.toUpperCase() : '';
-            const codigoBusca = codigoExtraido.toUpperCase();
-
-            for (let i = 0; i < companhiaSelect.options.length; i++) {
-                const option = companhiaSelect.options[i];
-                const optionText = option.text.toUpperCase();
-                const optionCodigo = (option.dataset.codigo || '').toUpperCase();
-
-                if (
-                    (nomeCompanhiaBusca && optionText === nomeCompanhiaBusca) ||
-                    (nomeCompanhiaBusca && optionText.includes(nomeCompanhiaBusca)) ||
-                    (codigoBusca && optionCodigo === codigoBusca) ||
-                    (codigoBusca && optionText.includes(codigoBusca))
-                ) {
-                    if (preenchimentoAutomaticoAtivo && companhiaSelect.value !== option.value) {
-                        companhiaSelect.value = option.value;
-                        const changeEvent = new Event('change', { bubbles: true });
-                        companhiaSelect.dispatchEvent(changeEvent);
-                        mensagem += `<br><small class="text-success"><i class="bi bi-building me-1"></i> Companhia "${option.text}" selecionada!</small>`;
-                    }
-                    companhiaEncontrada = true;
-                    break;
-                }
-            }
-            
-            if (!companhiaEncontrada && preenchimentoAutomaticoAtivo) {
-                mensagem += `<br><small class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i> Companhia "${nomeCompanhia || codigoExtraido}" não cadastrada. Cadastre-a primeiro.</small>`;
-            }
-        }
-        
-        idVooFeedback.innerHTML = mensagem;
-        idVooFeedback.classList.remove('text-danger', 'text-warning');
-        idVooFeedback.classList.add('text-success');
-        idVooInput.classList.remove('is-invalid');
-        idVooInput.classList.add('is-valid');
-        
-        // FAZ A VALIDAÇÃO AJAX EM BACKGROUND (apenas para verificar duplicidade)
-        timeoutId = setTimeout(() => {
-            fetch('{{ route("verificar.id.voo") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ id_voo: valor })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.valid) {
-                    idVooFeedback.innerHTML = `<i class="bi bi-x-circle-fill me-1 text-danger"></i> ${data.message}`;
-                    idVooFeedback.classList.remove('text-success');
-                    idVooFeedback.classList.add('text-danger');
-                    idVooInput.classList.remove('is-valid');
-                    idVooInput.classList.add('is-invalid');
-                }
-            })
-            .catch(error => {
-                console.error('Erro na validação AJAX:', error);
-                // Não altera o status se o AJAX falhar, pois já validou localmente
-            });
-        }, 300);
-        
-        return true;
-    }
-
-    // MÁSCARA CORRIGIDA PARA O ID DO VOO
-    idVooInput.addEventListener('input', function(e) {
-        let valor = this.value.toUpperCase();
-        
+    function formatarIdVoo(valor) {
         // Remover caracteres que não são letras ou números
-        valor = valor.replace(/[^A-Z0-9]/g, '');
-        
-        // Se o valor está vazio, limpar e retornar
-        if (valor.length === 0) {
-            this.value = '';
-            validarIdVoo('');
-            return;
-        }
-        
-        // Separar a parte das letras e números
-        let matchLetras = valor.match(/^([A-Z]+)/);
-        let matchNumeros = valor.match(/\d+$/);
-        
-        let letras = matchLetras ? matchLetras[1] : '';
-        let numeros = matchNumeros ? matchNumeros[0] : '';
+        let letras = valor.replace(/[^A-Z]/gi, '').toUpperCase();
+        let numeros = valor.replace(/[^0-9]/g, '');
         
         // Limitar letras entre 2 e 4 caracteres
         if (letras.length > 4) {
@@ -1128,62 +986,126 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Construir o valor formatado
-        let novoValor = '';
-        if (letras.length >= 2) {
-            novoValor = letras;
-            
-            // Adicionar hífen se tiver pelo menos 2 letras e números ou se o usuário digitou o hífen
-            if (numeros.length > 0) {
-                novoValor += '-' + numeros;
-            } else if (this.value.includes('-') && letras.length >= 2) {
-                novoValor += '-';
+        if (letras.length >= 2 && numeros.length > 0) {
+            return `${letras}-${numeros}`;
+        } else if (letras.length >= 2) {
+            // Se o usuário já digitou o hífen manualmente
+            if (valor.includes('-')) {
+                return `${letras}-`;
             }
-        } else if (letras.length > 0) {
-            novoValor = letras;
+            return letras;
         }
         
-        // Se ainda não tem letras suficientes, manter o que foi digitado
-        if (novoValor === '' && valor.length > 0) {
-            novoValor = valor;
+        return letras;
+    }
+
+    // ============================================
+    // VALIDAÇÃO VIA API (ÚNICA FONTE DE VERDADE)
+    // ============================================
+    function validarIdVooViaAPI(idVoo) {
+        // Se o ID estiver vazio, limpar feedback
+        if (!idVoo || idVoo.trim() === '') {
+            limparFeedback();
+            return;
         }
         
-        this.value = novoValor;
-        validarIdVoo(novoValor);
+        // Validar formato básico antes de chamar API
+        const formatoBasico = /^[A-Z]{2,4}-?\d{0,4}$/i.test(idVoo);
+        if (!formatoBasico) {
+            mostrarFeedback('Formato inválido. Use LL-NNNN ou LLLL-NNNN (ex: AA-1234 ou ASY-5678)', 'warning');
+            return;
+        }
+        
+        // Extrair apenas a parte antes do hífen para formato completo
+        const partes = idVoo.split('-');
+        if (partes.length === 2 && partes[1].length === 4) {
+            // Formato completo, validar via API
+            fetch('{{ route("verificar.id.voo") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ id_voo: idVoo })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.valid) {
+                    // Código válido
+                    let mensagem = `✓ ${data.message}`;
+                    
+                    if (data.companhia_encontrada && data.companhia_id) {
+                        mensagem += ` Companhia "${data.companhia_nome_completo}" identificada!`;
+                        
+                        // Selecionar automaticamente a companhia
+                        if (companhiaSelect && companhiaSelect.value != data.companhia_id) {
+                            companhiaSelect.value = data.companhia_id;
+                            // Disparar evento change para carregar aeronaves
+                            const changeEvent = new Event('change', { bubbles: true });
+                            companhiaSelect.dispatchEvent(changeEvent);
+                        }
+                    } else if (data.companhia_nome) {
+                        mensagem += ` Companhia "${data.companhia_nome}" não cadastrada no sistema. Cadastre-a primeiro.`;
+                    }
+                    
+                    mostrarFeedback(mensagem, 'success');
+                    ultimoIdVooValidado = idVoo;
+                } else {
+                    mostrarFeedback(data.message, 'error');
+                    ultimoIdVooValidado = '';
+                }
+            })
+            .catch(error => {
+                console.error('Erro na validação AJAX:', error);
+                mostrarFeedback('Erro ao validar ID do voo. Tente novamente.', 'error');
+            });
+        } else if (partes.length === 1 && partes[0].length >= 2) {
+            // Ainda digitando, mostrar apenas que o formato está incompleto
+            mostrarFeedback('Digite o número do voo após o hífen (ex: AA-1234)', 'info');
+        } else if (partes.length === 2 && partes[1].length < 4) {
+            // Tem hífen mas números incompletos
+            mostrarFeedback(`Faltam ${4 - partes[1].length} dígito(s) para completar o ID`, 'info');
+        }
+    }
+
+    // ============================================
+    // EVENTOS DO ID DO VOO
+    // ============================================
+    idVooInput.addEventListener('input', function(e) {
+        let valor = this.value;
+        
+        // Aplicar formatação
+        const valorFormatado = formatarIdVoo(valor);
+        if (valorFormatado !== valor) {
+            this.value = valorFormatado;
+            valor = valorFormatado;
+        }
+        
+        // Debounce para chamar a API
+        if (timeoutId) clearTimeout(timeoutId);
+        
+        // Se o ID está completo (formato LL-NNNN), validar via API
+        if (/^[A-Z]{2,4}-\d{4}$/i.test(valor)) {
+            timeoutId = setTimeout(() => {
+                validarIdVooViaAPI(valor);
+            }, 300);
+        } else {
+            // Limpar feedback enquanto digita
+            limparFeedback();
+        }
     });
 
     idVooInput.addEventListener('blur', function() {
         const valor = this.value;
-        if (valor && !/^[A-Z]{2,4}-\d{4}$/.test(valor)) {
-            idVooFeedback.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i> Formato inválido! Use LL-NNNN ou LLLL-NNNN (ex: AA-1234 ou ASY-5678)';
-            idVooFeedback.classList.remove('text-success', 'text-warning', 'text-info');
-            idVooFeedback.classList.add('text-danger');
-            this.classList.add('is-invalid');
+        if (valor && !/^[A-Z]{2,4}-\d{4}$/i.test(valor)) {
+            mostrarFeedback('Formato inválido! Use LL-NNNN ou LLLL-NNNN (ex: AA-1234 ou ASY-5678)', 'error');
         }
     });
 
-    // Adicionar checkbox para controlar o preenchimento automático
-    const toggleAutoFill = document.createElement('div');
-    toggleAutoFill.className = 'form-check mt-1';
-    toggleAutoFill.innerHTML = `
-        <input class="form-check-input" type="checkbox" id="toggleAutoFill" checked>
-        <label class="form-check-label small text-muted" for="toggleAutoFill">
-            <i class="bi bi-magic"></i> Preencher companhia automaticamente ao digitar o ID
-        </label>
-    `;
-    idVooGroup.appendChild(toggleAutoFill);
-
-    document.getElementById('toggleAutoFill').addEventListener('change', function(e) {
-        preenchimentoAutomaticoAtivo = e.target.checked;
-        const status = e.target.checked ? 'ativado' : 'desativado';
-        mostrarFeedback(
-            `Preenchimento automático ${status}.`,
-            e.target.checked ? 'info' : 'warning',
-            idVooGroup,
-            true
-        );
-    });
-
-    // Eventos dos selects
+    // ============================================
+    // EVENTOS DOS SELECTS
+    // ============================================
     companhiaSelect.addEventListener('change', function() {
         carregarAeronaves(this.value);
     });
@@ -1196,83 +1118,50 @@ document.addEventListener('DOMContentLoaded', function() {
         carregarAeronaves(companhiaSelect.value);
     }
 
-    // Validação do formulário antes do envio
-    const form = document.getElementById('formVoo');
+    // ============================================
+    // VALIDAÇÃO DO FORMULÁRIO ANTES DO ENVIO
+    // ============================================
     form.addEventListener('submit', function(e) {
         const idVoo = idVooInput.value;
         
+        // Verificar se ID está vazio
         if (!idVoo || idVoo.trim() === '') {
             e.preventDefault();
-            idVooFeedback.innerHTML = '<i class="bi bi-x-circle-fill me-1 text-danger"></i> O ID do voo é obrigatório!';
-            idVooFeedback.classList.add('text-danger');
-            idVooInput.classList.add('is-invalid');
+            mostrarFeedback('O ID do voo é obrigatório!', 'error');
             idVooInput.focus();
-            
-            mostrarFeedback(
-                'Por favor, preencha o ID do voo.',
-                'danger',
-                idVooGroup,
-                true
-            );
             return false;
         }
         
+        // Verificar formato
         const isValidFormat = /^[A-Z]{2,4}-\d{4}$/.test(idVoo);
-        
         if (!isValidFormat) {
             e.preventDefault();
-            idVooFeedback.innerHTML = '<i class="bi bi-x-circle-fill me-1 text-danger"></i> Formato inválido! O ID deve estar no formato LL-NNNN ou LLLL-NNNN (ex: AA-1234 ou ASY-5678)';
-            idVooFeedback.classList.remove('text-success', 'text-warning', 'text-info');
-            idVooFeedback.classList.add('text-danger');
-            idVooInput.classList.add('is-invalid');
+            mostrarFeedback('Formato inválido! O ID deve estar no formato LL-NNNN ou LLLL-NNNN (ex: AA-1234 ou ASY-5678)', 'error');
             idVooInput.focus();
-            
-            mostrarFeedback(
-                'Formato de ID inválido. Use o formato correto (ex: AA-1234)',
-                'danger',
-                idVooGroup,
-                true
-            );
             return false;
         }
         
-        if (!idVooInput.classList.contains('is-valid')) {
+        // Verificar se foi validado pela API
+        if (ultimoIdVooValidado !== idVoo) {
             e.preventDefault();
-            
-            if (!idVooFeedback.innerHTML.includes('Código de companhia inválido')) {
-                idVooFeedback.innerHTML = '<i class="bi bi-x-circle-fill me-1 text-danger"></i> Por favor, aguarde a validação do código ou verifique se o código é válido.';
-                idVooFeedback.classList.add('text-danger');
-            }
-            
-            mostrarFeedback(
-                'Aguardando validação do código do voo. Por favor, aguarde.',
-                'warning',
-                idVooGroup,
-                true
-            );
+            mostrarFeedback('Aguardando validação do ID do voo. Por favor, aguarde.', 'warning');
+            // Forçar validação imediata
+            validarIdVooViaAPI(idVoo);
             return false;
         }
         
+        // Verificar se companhia foi selecionada
         if (!companhiaSelect.value) {
             e.preventDefault();
-            mostrarFeedback(
-                'Por favor, selecione uma companhia aérea.',
-                'danger',
-                companhiaSelect.closest('.mb-3'),
-                true
-            );
+            mostrarFeedback('Por favor, selecione uma companhia aérea.', 'error');
             companhiaSelect.focus();
             return false;
         }
         
+        // Verificar se aeronave foi selecionada
         if (!aeronaveSelect.value) {
             e.preventDefault();
-            mostrarFeedback(
-                'Por favor, selecione uma aeronave.',
-                'danger',
-                aeronaveSelect.closest('.mb-3'),
-                true
-            );
+            mostrarFeedback('Por favor, selecione uma aeronave.', 'error');
             aeronaveSelect.focus();
             return false;
         }
@@ -1280,51 +1169,26 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     });
 
+    // ============================================
+    // INICIALIZAÇÃO
+    // ============================================
+    
     // Tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function(tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
     
-    // Feedback de sucesso após cadastro
-    if (sessionStorage.getItem('voo_cadastrado')) {
-        mostrarFeedback(
-            sessionStorage.getItem('voo_mensagem') || 'Voo cadastrado com sucesso!',
-            'success',
-            document.querySelector('.card-body'),
-            true
-        );
-        sessionStorage.removeItem('voo_cadastrado');
-        sessionStorage.removeItem('voo_mensagem');
+    // Validação inicial se houver valor antigo
+    if (idVooInput.value && /^[A-Z]{2,4}-\d{4}$/.test(idVooInput.value)) {
+        validarIdVooViaAPI(idVooInput.value);
     }
     
+    // Garantir que qtd_voos não seja menor que 1
     qtdVoosInput.addEventListener('change', function() {
         if (this.value < 1) this.value = 1;
         calcularTotalPassageiros();
     });
-    
-    // Dica para o usuário sobre os códigos válidos
-    const exibirDicaCodigos = () => {
-        const dicaDiv = document.createElement('div');
-        dicaDiv.className = 'alert alert-info alert-dismissible fade show mt-2 py-2';
-        dicaDiv.style.fontSize = '0.875rem';
-        dicaDiv.innerHTML = `
-            <i class="bi bi-info-circle-fill me-1"></i>
-            <strong>Dica:</strong> Os códigos de companhia válidos são: 
-            PL, PP, FT, GK, AO, WW, AA, SK, RA, ASY, OB, JP, VI, PN, BV, OT, SPY, AW, AK, VAII, CA, WAT, TAL, HW, KW, FA, MAA, EX, SCA, RBA, CN, SG, AM, CZ, PF, RS, RX, AS, RE
-            <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
-        `;
-        idVooGroup.appendChild(dicaDiv);
-        
-        setTimeout(() => {
-            if (dicaDiv.parentNode) dicaDiv.remove();
-        }, 8000);
-    };
-    
-    if (!sessionStorage.getItem('dica_codigos_mostrada')) {
-        setTimeout(exibirDicaCodigos, 1000);
-        sessionStorage.setItem('dica_codigos_mostrada', 'true');
-    }
 });
 </script>
 @endsection

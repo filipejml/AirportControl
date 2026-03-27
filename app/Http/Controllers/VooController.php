@@ -118,6 +118,7 @@ class VooController extends Controller
             'nota_patio' => 'nullable|in:A,B,C,D,E,F'
         ]);
 
+        // Validação do código da companhia
         $codigo = CompanhiaHelper::extrairCodigo($request->id_voo);
         
         if (!$codigo || !CompanhiaHelper::isCodigoValido($codigo)) {
@@ -141,25 +142,30 @@ class VooController extends Controller
                 'F' => 2
             ];
             
-            $voo = Voo::create([
-                'id_voo' => strtoupper($request->id_voo),
-                'aeroporto_id' => $request->aeroporto_id,
-                'companhia_aerea_id' => $request->companhia_aerea_id,
-                'aeronave_id' => $request->aeronave_id,
-                'tipo_voo' => $request->tipo_voo,
-                'tipo_aeronave' => $aeronave->porte,
-                'qtd_voos' => $request->qtd_voos,
-                'horario_voo' => $request->horario_voo,
-                'qtd_passageiros' => $aeronave->capacidade,
-                'nota_obj' => $request->nota_obj ? $mapaNotas[$request->nota_obj] : null,
-                'nota_pontualidade' => $request->nota_pontualidade ? $mapaNotas[$request->nota_pontualidade] : null,
-                'nota_servicos' => $request->nota_servicos ? $mapaNotas[$request->nota_servicos] : null,
-                'nota_patio' => $request->nota_patio ? $mapaNotas[$request->nota_patio] : null
-            ]);
+            // Encontrar o primeiro ID disponível
+            $availableId = Voo::getAvailableId();
+            
+            // Inserir com ID específico
+            $voo = new Voo();
+            $voo->id = $availableId;
+            $voo->id_voo = strtoupper($request->id_voo);
+            $voo->aeroporto_id = $request->aeroporto_id;
+            $voo->companhia_aerea_id = $request->companhia_aerea_id;
+            $voo->aeronave_id = $request->aeronave_id;
+            $voo->tipo_voo = $request->tipo_voo;
+            $voo->tipo_aeronave = $aeronave->porte;
+            $voo->qtd_voos = $request->qtd_voos;
+            $voo->horario_voo = $request->horario_voo;
+            $voo->qtd_passageiros = $aeronave->capacidade;
+            $voo->nota_obj = $request->nota_obj ? $mapaNotas[$request->nota_obj] : null;
+            $voo->nota_pontualidade = $request->nota_pontualidade ? $mapaNotas[$request->nota_pontualidade] : null;
+            $voo->nota_servicos = $request->nota_servicos ? $mapaNotas[$request->nota_servicos] : null;
+            $voo->nota_patio = $request->nota_patio ? $mapaNotas[$request->nota_patio] : null;
+            $voo->save();
 
             DB::commit();
 
-            $mensagem = "Voo {$voo->id_voo} cadastrado com sucesso!";
+            $mensagem = "Voo {$voo->id_voo} cadastrado com sucesso! (ID: {$voo->id})";
             if ($voo->media_notas) {
                 $mensagem .= " Média das notas: " . number_format($voo->media_notas, 1) . " ({$voo->media_notas_letra})";
             }

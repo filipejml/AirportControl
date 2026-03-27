@@ -5,6 +5,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 
 class Voo extends Model
 {
@@ -49,6 +50,35 @@ class Voo extends Model
         });
     }
 
+    /**
+     * Encontra o menor ID disponível (vazio) na tabela
+     * @return int|null
+     */
+    public static function getAvailableId()
+    {
+        // Busca todos os IDs existentes
+        $existingIds = self::pluck('id')->toArray();
+        
+        if (empty($existingIds)) {
+            return 1;
+        }
+        
+        // Ordena os IDs
+        sort($existingIds);
+        
+        // Procura o primeiro gap na sequência
+        $expectedId = 1;
+        foreach ($existingIds as $id) {
+            if ($id > $expectedId) {
+                return $expectedId;
+            }
+            $expectedId++;
+        }
+        
+        // Se não houver gaps, retorna o próximo
+        return max($existingIds) + 1;
+    }
+    
     public function calcularMediaNotas()
     {
         $notas = array_filter([
