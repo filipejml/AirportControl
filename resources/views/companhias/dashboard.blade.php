@@ -1221,13 +1221,13 @@
                         <div class="row g-4">
                             {{-- Voos por Horário --}}
                             <div class="col-md-6">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="card h-100 shadow-sm border-0">
+                                    <div class="card-header bg-white border-bottom-0 pb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
                                             <div>
-                                                <h6 class="fw-bold text-dark mb-1">
+                                                <h5 class="mb-1 fw-bold text-dark">
                                                     <i class="bi bi-airplane text-primary me-2"></i>Voos por Horário
-                                                </h6>
+                                                </h5>
                                                 <p class="text-muted small mb-0">Distribuição de voos ao longo do dia</p>
                                             </div>
                                             <span class="badge bg-primary fs-6 py-2 px-3">
@@ -1235,98 +1235,119 @@
                                                 {{ number_format($totalVoos, 0, ',', '.') }}
                                             </span>
                                         </div>
-
-                                        {{-- Gráfico de Barras --}}
-                                        <div class="mb-4">
-                                            <canvas id="voosHorarioChart" height="150"></canvas>
+                                    </div>
+                                    <div class="card-body pt-0">
+                                        {{-- Gráfico --}}
+                                        <div class="chart-container mb-4" style="position: relative; height: 250px;">
+                                            <canvas id="voosHorarioChart"></canvas>
                                         </div>
-
-                                        {{-- Tabela de Dados --}}
+                                        
+                                        {{-- Tabela Detalhada --}}
                                         <div class="table-responsive">
-                                            <table class="table table-sm table-hover">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Horário</th>
-                                                        <th class="text-end">Voos</th>
-                                                        <th class="text-end" style="width: 100px;">%</th>
+                                            <table class="table table-hover table-borderless">
+                                                <thead>
+                                                    <tr class="border-bottom">
+                                                        <th class="text-muted small fw-normal">Horário</th>
+                                                        <th class="text-muted small fw-normal text-end">Voos</th>
+                                                        <th class="text-muted small fw-normal text-end" style="width: 80px;">%</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     @php
                                                         $totalVoosHorario = array_sum($voosPorHorario);
                                                         $horariosInfo = [
-                                                            'EAM' => ['label' => 'EAM (00h-06h)', 'icon' => '🌙'],
-                                                            'AM' => ['label' => 'AM (06h-12h)', 'icon' => '☀️'],
-                                                            'AN' => ['label' => 'AN (12h-18h)', 'icon' => '🌤️'],
-                                                            'PM' => ['label' => 'PM (18h-00h)', 'icon' => '🌙'],
-                                                            'ALL' => ['label' => 'ALL (Diário)', 'icon' => '📅']
+                                                            'EAM' => ['icon' => 'moon-stars', 'color' => '#4A6A8A', 'label' => 'EAM'],
+                                                            'AM' => ['icon' => 'sunrise', 'color' => '#6c9bcf', 'label' => 'AM'],
+                                                            'AN' => ['icon' => 'sun', 'color' => '#ff8c00', 'label' => 'AN'],
+                                                            'PM' => ['icon' => 'moon', 'color' => '#dc3545', 'label' => 'PM'],
+                                                            'ALL' => ['icon' => 'clock-history', 'color' => '#9b59b6', 'label' => 'ALL'],
                                                         ];
+                                                        
+                                                        // Ordenar na sequência correta
+                                                        $horariosOrdenados = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
                                                     @endphp
-                                                    @foreach($voosPorHorario as $horario => $quantidade)
+                                                    @foreach($horariosOrdenados as $horario)
                                                         @php
+                                                            $quantidade = $voosPorHorario[$horario] ?? 0;
                                                             $percentual = $totalVoosHorario > 0 ? ($quantidade / $totalVoosHorario) * 100 : 0;
-                                                            $info = $horariosInfo[$horario] ?? ['label' => $horario, 'icon' => '✈️'];
+                                                            $horarioInfo = $horariosInfo[$horario] ?? ['icon' => 'clock', 'color' => '#6c757d', 'label' => $horario];
                                                         @endphp
                                                         <tr>
                                                             <td>
                                                                 <div class="d-flex align-items-center">
-                                                                    <span class="me-2">{{ $info['icon'] }}</span>
-                                                                    <strong>{{ $info['label'] }}</strong>
+                                                                    <div class="me-3">
+                                                                        <i class="bi bi-{{ $horarioInfo['icon'] }} fs-5" style="color: {{ $horarioInfo['color'] }};"></i>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span class="fw-bold text-dark">{{ $horarioInfo['label'] }}</span>
+                                                                    </div>
                                                                 </div>
                                                             </td>
-                                                            <td class="text-end">
-                                                                <span class="fw-bold text-primary">
+                                                            <td class="text-end align-middle">
+                                                                <span class="fw-bold text-dark">
                                                                     {{ number_format($quantidade, 0, ',', '.') }}
                                                                 </span>
                                                             </td>
-                                                            <td class="text-end">
-                                                                <div class="d-flex align-items-center justify-content-end">
-                                                                    <span class="text-muted small me-2">{{ number_format($percentual, 1) }}%</span>
-                                                                    <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
-                                                                        <div class="progress-bar bg-primary" 
-                                                                            role="progressbar" 
-                                                                            style="width: {{ $percentual }}%"
-                                                                            aria-valuenow="{{ $percentual }}" 
-                                                                            aria-valuemin="0" 
-                                                                            aria-valuemax="100">
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
+                                                            <td class="text-end align-middle">
+                                                                <span class="fw-bold" style="color: {{ $horarioInfo['color'] }};">
+                                                                    {{ number_format($percentual, 1) }}%
+                                                                </span>
                                                             </td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
-                                                <tfoot class="table-light">
-                                                    <tr class="fw-bold">
-                                                        <td>Total</td>
-                                                        <td class="text-end">{{ number_format($totalVoosHorario, 0, ',', '.') }}</td>
-                                                        <td class="text-end">100%</td>
+                                                <tfoot>
+                                                    <tr class="border-top">
+                                                        <td class="fw-bold text-dark">Total</td>
+                                                        <td class="text-end fw-bold text-dark">
+                                                            {{ number_format($totalVoosHorario, 0, ',', '.') }}
+                                                        </td>
+                                                        <td class="text-end fw-bold" style="color: #4A6A8A;">100%</td>
                                                     </tr>
                                                 </tfoot>
                                             </table>
                                         </div>
-
-                                        {{-- Resumo Estatístico --}}
-                                        <div class="row mt-3 pt-2 border-top">
-                                            <div class="col-12">
-                                                <div class="d-flex justify-content-around">
-                                                    <div class="text-center">
-                                                        <h6 class="text-muted small mb-1">Média de Voos</h6>
-                                                        @php
-                                                            $mediaVoos = count(array_filter($voosPorHorario)) > 0 ? $totalVoosHorario / count(array_filter($voosPorHorario)) : 0;
-                                                        @endphp
-                                                        <h4 class="fw-bold text-primary mb-0">{{ number_format($mediaVoos, 1) }}</h4>
-                                                        <small class="text-muted">voos por horário</small>
+                                        
+                                        {{-- Estatísticas Adicionais --}}
+                                        @php
+                                            $horariosComVoos = collect($voosPorHorario)->filter(fn($value) => $value > 0);
+                                            $horarioMaisMovimentadoVoos = collect($voosPorHorario)->sortDesc()->keys()->first();
+                                            $horarioMaisMovimentadoQuantidadeVoos = $voosPorHorario[$horarioMaisMovimentadoVoos] ?? 0;
+                                            $horarioMaisMovimentadoPercentualVoos = $totalVoosHorario > 0 ? ($horarioMaisMovimentadoQuantidadeVoos / $totalVoosHorario) * 100 : 0;
+                                            $horarioMaisMovimentadoInfo = $horariosInfo[$horarioMaisMovimentadoVoos] ?? ['color' => '#4A6A8A', 'icon' => 'clock'];
+                                            $mediaVoosPorHorarioAtivo = $horariosComVoos->count() > 0 ? $totalVoosHorario / $horariosComVoos->count() : 0;
+                                        @endphp
+                                        
+                                        <div class="row mt-4 pt-3 border-top">
+                                            <div class="col-md-4">
+                                                <div class="text-center">
+                                                    <h6 class="text-muted small mb-1">Horário Mais Movimentado</h6>
+                                                    <div class="d-flex align-items-center justify-content-center mb-1">
+                                                        <i class="bi bi-{{ $horarioMaisMovimentadoInfo['icon'] }} me-2 fs-4" 
+                                                        style="color: {{ $horarioMaisMovimentadoInfo['color'] }};"></i>
+                                                        <h5 class="fw-bold text-dark mb-0">
+                                                            {{ $horariosInfo[$horarioMaisMovimentadoVoos]['label'] ?? $horarioMaisMovimentadoVoos }}
+                                                        </h5>
                                                     </div>
-                                                    <div class="text-center">
-                                                        <h6 class="text-muted small mb-1">Horário com mais voos</h6>
-                                                        @php
-                                                            $maxHorario = array_keys($voosPorHorario, max($voosPorHorario))[0] ?? 'N/A';
-                                                            $maxLabel = $horariosInfo[$maxHorario]['label'] ?? $maxHorario;
-                                                        @endphp
-                                                        <h4 class="fw-bold text-primary mb-0">{{ $maxLabel }}</h4>
-                                                        <small class="text-muted">{{ number_format(max($voosPorHorario), 0, ',', '.') }} voos</small>
-                                                    </div>
+                                                    <small class="text-muted">{{ number_format($horarioMaisMovimentadoPercentualVoos, 1) }}% dos voos</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="text-center">
+                                                    <h6 class="text-muted small mb-1">Horários Ativos</h6>
+                                                    <h4 class="fw-bold" style="color: #4A6A8A;">
+                                                        {{ $horariosComVoos->count() }}
+                                                    </h4>
+                                                    <small class="text-muted">com voos</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="text-center">
+                                                    <h6 class="text-muted small mb-1">Média por Horário</h6>
+                                                    <h4 class="fw-bold" style="color: #ff8c00;">
+                                                        {{ $horariosComVoos->count() > 0 ? number_format($mediaVoosPorHorarioAtivo, 1, ',', '.') : 0 }}
+                                                    </h4>
+                                                    <small class="text-muted">voos por horário ativo</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -1336,13 +1357,13 @@
 
                             {{-- Passageiros por Horário --}}
                             <div class="col-md-6">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="card h-100 shadow-sm border-0">
+                                    <div class="card-header bg-white border-bottom-0 pb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
                                             <div>
-                                                <h6 class="fw-bold text-dark mb-1">
+                                                <h5 class="mb-1 fw-bold text-dark">
                                                     <i class="bi bi-people text-info me-2"></i>Passageiros por Horário
-                                                </h6>
+                                                </h5>
                                                 <p class="text-muted small mb-0">Distribuição de passageiros ao longo do dia</p>
                                             </div>
                                             <span class="badge bg-info fs-6 py-2 px-3">
@@ -1350,91 +1371,109 @@
                                                 {{ number_format($totalPassageiros, 0, ',', '.') }}
                                             </span>
                                         </div>
-
-                                        {{-- Gráfico de Barras --}}
-                                        <div class="mb-4">
-                                            <canvas id="passageirosHorarioChart" height="150"></canvas>
+                                    </div>
+                                    <div class="card-body pt-0">
+                                        {{-- Gráfico --}}
+                                        <div class="chart-container mb-4" style="position: relative; height: 250px;">
+                                            <canvas id="passageirosHorarioChart"></canvas>
                                         </div>
-
-                                        {{-- Tabela de Dados --}}
+                                        
+                                        {{-- Tabela Detalhada --}}
                                         <div class="table-responsive">
-                                            <table class="table table-sm table-hover">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Horário</th>
-                                                        <th class="text-end">Passageiros</th>
-                                                        <th class="text-end" style="width: 100px;">%</th>
+                                            <table class="table table-hover table-borderless">
+                                                <thead>
+                                                    <tr class="border-bottom">
+                                                        <th class="text-muted small fw-normal">Horário</th>
+                                                        <th class="text-muted small fw-normal text-end">Passageiros</th>
+                                                        <th class="text-muted small fw-normal text-end" style="width: 80px;">%</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     @php
                                                         $totalPassageirosHorario = array_sum($passageirosPorHorario);
                                                     @endphp
-                                                    @foreach($passageirosPorHorario as $horario => $quantidade)
+                                                    @foreach($horariosOrdenados as $horario)
                                                         @php
+                                                            $quantidade = $passageirosPorHorario[$horario] ?? 0;
                                                             $percentual = $totalPassageirosHorario > 0 ? ($quantidade / $totalPassageirosHorario) * 100 : 0;
-                                                            $info = $horariosInfo[$horario] ?? ['label' => $horario, 'icon' => '✈️'];
+                                                            $horarioInfo = $horariosInfo[$horario] ?? ['icon' => 'clock', 'color' => '#6c757d', 'label' => $horario];
                                                         @endphp
                                                         <tr>
                                                             <td>
                                                                 <div class="d-flex align-items-center">
-                                                                    <span class="me-2">{{ $info['icon'] }}</span>
-                                                                    <strong>{{ $info['label'] }}</strong>
+                                                                    <div class="me-3">
+                                                                        <i class="bi bi-{{ $horarioInfo['icon'] }} fs-5" style="color: {{ $horarioInfo['color'] }};"></i>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span class="fw-bold text-dark">{{ $horarioInfo['label'] }}</span>
+                                                                    </div>
                                                                 </div>
                                                             </td>
-                                                            <td class="text-end">
-                                                                <span class="fw-bold text-info">
+                                                            <td class="text-end align-middle">
+                                                                <span class="fw-bold text-dark">
                                                                     {{ number_format($quantidade, 0, ',', '.') }}
                                                                 </span>
                                                             </td>
-                                                            <td class="text-end">
-                                                                <div class="d-flex align-items-center justify-content-end">
-                                                                    <span class="text-muted small me-2">{{ number_format($percentual, 1) }}%</span>
-                                                                    <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
-                                                                        <div class="progress-bar bg-info" 
-                                                                            role="progressbar" 
-                                                                            style="width: {{ $percentual }}%"
-                                                                            aria-valuenow="{{ $percentual }}" 
-                                                                            aria-valuemin="0" 
-                                                                            aria-valuemax="100">
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
+                                                            <td class="text-end align-middle">
+                                                                <span class="fw-bold" style="color: {{ $horarioInfo['color'] }};">
+                                                                    {{ number_format($percentual, 1) }}%
+                                                                </span>
                                                             </td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
-                                                <tfoot class="table-light">
-                                                    <tr class="fw-bold">
-                                                        <td>Total</td>
-                                                        <td class="text-end">{{ number_format($totalPassageirosHorario, 0, ',', '.') }}</td>
-                                                        <td class="text-end">100%</td>
+                                                <tfoot>
+                                                    <tr class="border-top">
+                                                        <td class="fw-bold text-dark">Total</td>
+                                                        <td class="text-end fw-bold text-dark">
+                                                            {{ number_format($totalPassageirosHorario, 0, ',', '.') }}
+                                                        </td>
+                                                        <td class="text-end fw-bold" style="color: #4A6A8A;">100%</td>
                                                     </tr>
                                                 </tfoot>
                                             </table>
                                         </div>
-
-                                        {{-- Resumo Estatístico --}}
-                                        <div class="row mt-3 pt-2 border-top">
-                                            <div class="col-12">
-                                                <div class="d-flex justify-content-around">
-                                                    <div class="text-center">
-                                                        <h6 class="text-muted small mb-1">Média de Passageiros</h6>
-                                                        @php
-                                                            $mediaPassageirosHorario = count(array_filter($passageirosPorHorario)) > 0 ? $totalPassageirosHorario / count(array_filter($passageirosPorHorario)) : 0;
-                                                        @endphp
-                                                        <h4 class="fw-bold text-info mb-0">{{ number_format($mediaPassageirosHorario, 0, ',', '.') }}</h4>
-                                                        <small class="text-muted">passageiros por horário</small>
+                                        
+                                        {{-- Estatísticas Adicionais --}}
+                                        @php
+                                            $horariosComPassageiros = collect($passageirosPorHorario)->filter(fn($value) => $value > 0);
+                                            $horarioMaisMovimentadoPassageiros = collect($passageirosPorHorario)->sortDesc()->keys()->first();
+                                            $horarioMaisMovimentadoQuantidadePassageiros = $passageirosPorHorario[$horarioMaisMovimentadoPassageiros] ?? 0;
+                                            $horarioMaisMovimentadoPercentualPassageiros = $totalPassageirosHorario > 0 ? ($horarioMaisMovimentadoQuantidadePassageiros / $totalPassageirosHorario) * 100 : 0;
+                                            $horarioMaisMovimentadoInfoPass = $horariosInfo[$horarioMaisMovimentadoPassageiros] ?? ['color' => '#4A6A8A', 'icon' => 'clock'];
+                                            $mediaPassageirosPorHorarioAtivo = $horariosComPassageiros->count() > 0 ? $totalPassageirosHorario / $horariosComPassageiros->count() : 0;
+                                        @endphp
+                                        
+                                        <div class="row mt-4 pt-3 border-top">
+                                            <div class="col-md-4">
+                                                <div class="text-center">
+                                                    <h6 class="text-muted small mb-1">Horário Mais Movimentado</h6>
+                                                    <div class="d-flex align-items-center justify-content-center mb-1">
+                                                        <i class="bi bi-{{ $horarioMaisMovimentadoInfoPass['icon'] }} me-2 fs-4" 
+                                                        style="color: {{ $horarioMaisMovimentadoInfoPass['color'] }};"></i>
+                                                        <h5 class="fw-bold text-dark mb-0">
+                                                            {{ $horariosInfo[$horarioMaisMovimentadoPassageiros]['label'] ?? $horarioMaisMovimentadoPassageiros }}
+                                                        </h5>
                                                     </div>
-                                                    <div class="text-center">
-                                                        <h6 class="text-muted small mb-1">Horário com mais passageiros</h6>
-                                                        @php
-                                                            $maxHorarioPass = array_keys($passageirosPorHorario, max($passageirosPorHorario))[0] ?? 'N/A';
-                                                            $maxLabelPass = $horariosInfo[$maxHorarioPass]['label'] ?? $maxHorarioPass;
-                                                        @endphp
-                                                        <h4 class="fw-bold text-info mb-0">{{ $maxLabelPass }}</h4>
-                                                        <small class="text-muted">{{ number_format(max($passageirosPorHorario), 0, ',', '.') }} passageiros</small>
-                                                    </div>
+                                                    <small class="text-muted">{{ number_format($horarioMaisMovimentadoPercentualPassageiros, 1) }}% dos passageiros</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="text-center">
+                                                    <h6 class="text-muted small mb-1">Horários Ativos</h6>
+                                                    <h4 class="fw-bold" style="color: #6c9bcf;">
+                                                        {{ $horariosComPassageiros->count() }}
+                                                    </h4>
+                                                    <small class="text-muted">com passageiros</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="text-center">
+                                                    <h6 class="text-muted small mb-1">Média por Horário</h6>
+                                                    <h4 class="fw-bold" style="color: #ff8c00;">
+                                                        {{ $horariosComPassageiros->count() > 0 ? number_format($mediaPassageirosPorHorarioAtivo, 0, ',', '.') : 0 }}
+                                                    </h4>
+                                                    <small class="text-muted">passageiros por horário ativo</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -1451,34 +1490,77 @@
         @if($ultimosVoos->count() > 0)
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card border shadow-sm">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0 fw-semibold"><i class="bi bi-clock-history me-2"></i>Últimos Voos</h5>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1 fw-bold text-dark">
+                                    <i class="bi bi-clock-history me-2 text-primary"></i>Últimos Voos
+                                </h5>
+                                <p class="text-muted small mb-0">Últimos 5 registros de voos da companhia</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body pt-3">
                         <div class="table-responsive">
-                            <table class="table table-sm table-hover">
+                            <table class="table table-hover table-borderless align-middle">
                                 <thead>
-                                    <tr>
-                                        <th>ID Voo</th>
-                                        <th>Aeroporto</th>
-                                        <th>Data</th>
-                                        <th>Passageiros</th>
-                                        <th>Média</th>
+                                    <tr class="border-bottom">
+                                        <th class="text-muted small fw-normal">ID Voo</th>
+                                        <th class="text-muted small fw-normal">
+                                            <i class="bi bi-geo-alt me-1"></i>Aeroporto
+                                        </th>
+                                        <th class="text-muted small fw-normal">
+                                            <i class="bi bi-calendar me-1"></i>Data
+                                        </th>
+                                        <th class="text-muted small fw-normal text-end">
+                                            <i class="bi bi-airplane me-1"></i>Total de Voos
+                                        </th>
+                                        <th class="text-muted small fw-normal text-end">
+                                            <i class="bi bi-people me-1"></i>Passageiros
+                                        </th>
+                                        <th class="text-muted small fw-normal text-end">
+                                            <i class="bi bi-star me-1"></i>Avaliação
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($ultimosVoos as $voo)
-                                    <tr>
-                                        <td><span class="badge bg-secondary">{{ $voo->id_voo }}</span></td>
-                                        <td>{{ $voo->aeroporto->nome_aeroporto ?? 'N/A' }}</td>
-                                        <td>{{ $voo->created_at->format('d/m/Y H:i') }}</td>
-                                        <td>{{ number_format($voo->total_passageiros, 0, ',', '.') }}</td>
+                                    @foreach($ultimosVoos->take(5) as $index => $voo)
+                                    <tr class="border-bottom">
                                         <td>
+                                            <span class="fw-bold text-dark">{{ $voo->id_voo }}</span>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <span class="text-dark">{{ $voo->aeroporto->nome_aeroporto ?? 'N/A' }}</span>
+                                                @if($voo->aeroporto && $voo->aeroporto->codigo_iata)
+                                                    <br>
+                                                    <small class="text-muted">{{ $voo->aeroporto->codigo_iata }}</small>
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <span class="text-dark">{{ $voo->created_at->format('d/m/Y') }}</span>
+                                                <br>
+                                                <small class="text-muted">{{ $voo->created_at->format('H:i') }}</small>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="fw-bold text-primary">{{ number_format($totalVoos, 0, ',', '.') }}</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="fw-bold text-dark">{{ number_format($voo->total_passageiros, 0, ',', '.') }}</span>
+                                        </td>
+                                        <td class="text-end">
                                             @if($voo->media_notas)
-                                                <span class="badge bg-info">{{ number_format($voo->media_notas, 1) }}/10</span>
+                                                @php
+                                                    $nota = $voo->media_notas;
+                                                    $corNota = $nota >= 8 ? 'success' : ($nota >= 6 ? 'warning' : ($nota >= 4 ? 'info' : 'danger'));
+                                                @endphp
+                                                <span class="fw-bold text-{{ $corNota }} fs-5">{{ number_format($nota, 1) }}</span>
                                             @else
-                                                <span class="text-muted">-</span>
+                                                <span class="fw-bold text-secondary">--</span>
                                             @endif
                                         </td>
                                     </tr>
@@ -1496,31 +1578,185 @@
         @if($aeronaves->count() > 0)
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card border shadow-sm">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0 fw-semibold"><i class="bi bi-building me-2"></i>Frota de Aeronaves</h5>
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1 fw-bold text-dark">
+                                    <i class="bi bi-building me-2 text-primary"></i>Frota de Aeronaves
+                                </h5>
+                                <p class="text-muted small mb-0">Aeronaves operadas pela companhia</p>
+                            </div>
+                            <span class="badge bg-primary fs-6 py-2 px-3">
+                                <i class="bi bi-airplane-engines me-1"></i>
+                                {{ number_format($aeronaves->count(), 0, ',', '.') }}
+                            </span>
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body pt-3">
                         <div class="table-responsive">
-                            <table class="table table-sm table-hover">
+                            <table class="table table-hover table-borderless align-middle">
                                 <thead>
-                                    <tr>
-                                        <th>Modelo</th>
-                                        <th>Fabricante</th>
-                                        <th>Capacidade</th>
-                                        <th>Ano</th>
+                                    <tr class="border-bottom">
+                                        <th class="text-muted small fw-normal">
+                                            <i class="bi bi-airplane-engines me-1"></i>Modelo
+                                        </th>
+                                        <th class="text-muted small fw-normal">
+                                            <i class="bi bi-building me-1"></i>Fabricante
+                                        </th>
+                                        <th class="text-muted small fw-normal text-end">
+                                            <i class="bi bi-people me-1"></i>Capacidade
+                                        </th>
+                                        <th class="text-muted small fw-normal text-end">
+                                            <i class="bi bi-graph-up me-1"></i>Total Voos
+                                        </th>
+                                        <th class="text-muted small fw-normal text-end">
+                                            <i class="bi bi-person-check me-1"></i>Passageiros
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($aeronaves as $aeronave)
-                                    <tr>
-                                        <td><strong>{{ $aeronave->modelo }}</strong></td>
-                                        <td>{{ $aeronave->fabricante->nome ?? 'N/A' }}NonNull
-                                        <td>{{ number_format($aeronave->capacidade, 0, ',', '.') }} passageirosNonNull
-                                        <td>{{ $aeronave->ano_fabricacao ?? 'N/A' }}NonNull
-                                    </tr>
+                                    @php
+                                        // Calcular dados para cada aeronave e ordenar por total de passageiros (decrescente)
+                                        $aeronavesComDados = [];
+                                        foreach($aeronaves as $aeronave) {
+                                            $totalVoosAeronave = $companhia->voos()
+                                                ->where('aeronave_id', $aeronave->id)
+                                                ->count();
+                                            $totalPassageirosAeronave = $companhia->voos()
+                                                ->where('aeronave_id', $aeronave->id)
+                                                ->sum('total_passageiros');
+                                            $percentualPassageiros = $totalPassageiros > 0 
+                                                ? ($totalPassageirosAeronave / $totalPassageiros) * 100 
+                                                : 0;
+                                            
+                                            $aeronavesComDados[] = [
+                                                'aeronave' => $aeronave,
+                                                'totalVoos' => $totalVoosAeronave,
+                                                'totalPassageiros' => $totalPassageirosAeronave,
+                                                'percentualPassageiros' => $percentualPassageiros,
+                                            ];
+                                        }
+                                        
+                                        // Ordenar por total de passageiros (decrescente)
+                                        usort($aeronavesComDados, function($a, $b) {
+                                            return $b['totalPassageiros'] <=> $a['totalPassageiros'];
+                                        });
+                                    @endphp
+                                    
+                                    @foreach($aeronavesComDados as $dados)
+                                        @php
+                                            $aeronave = $dados['aeronave'];
+                                            $totalVoosAeronave = $dados['totalVoos'];
+                                            $totalPassageirosAeronave = $dados['totalPassageiros'];
+                                            $percentualPassageiros = $dados['percentualPassageiros'];
+                                        @endphp
+                                        <tr class="border-bottom">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3" style="width: 36px; height: 36px;">
+                                                        <i class="bi bi-airplane-engines text-primary fs-6"></i>
+                                                    </div>
+                                                    <div>
+                                                        <span class="fw-bold text-dark">{{ $aeronave->modelo }}</span>
+                                                        @if($totalVoosAeronave > 0)
+                                                            <br>
+                                                            <small class="text-success">
+                                                                <i class="bi bi-check-circle-fill"></i> em operação
+                                                            </small>
+                                                        @else
+                                                            <br>
+                                                            <small class="text-muted">
+                                                                <i class="bi bi-clock"></i> sem voos
+                                                            </small>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="text-dark">{{ $aeronave->fabricante->nome ?? 'N/A' }}</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="fw-bold text-dark">{{ number_format($aeronave->capacidade, 0, ',', '.') }}</span>
+                                                <br>
+                                                <small class="text-muted">passageiros</small>
+                                            </td>
+                                            <td class="text-end">
+                                                <div>
+                                                    <span class="fw-bold text-primary">{{ number_format($totalVoosAeronave, 0, ',', '.') }}</span>
+                                                    <br>
+                                                    @if($totalVoos > 0)
+                                                        <small class="text-muted">{{ number_format(($totalVoosAeronave / $totalVoos) * 100, 1) }}% do total</small>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td class="text-end">
+                                                <div>
+                                                    <span class="fw-bold text-info">{{ number_format($totalPassageirosAeronave, 0, ',', '.') }}</span>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        @if($percentualPassageiros > 0)
+                                                            {{ number_format($percentualPassageiros, 1) }}% do total
+                                                        @else
+                                                            sem dados
+                                                        @endif
+                                                    </small>
+                                                    <br>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     @endforeach
                                 </tbody>
+                                <tfoot>
+                                    <tr class="border-top">
+                                        <td colspan="5" class="pt-3">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <div class="text-center">
+                                                        <h6 class="text-muted small mb-1">Total de Aeronaves</h6>
+                                                        <h4 class="fw-bold text-primary mb-0">{{ number_format($aeronaves->count(), 0, ',', '.') }}</h4>
+                                                        <small class="text-muted">na frota</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="text-center">
+                                                        <h6 class="text-muted small mb-1">Modelos Utilizados</h6>
+                                                        @php
+                                                            // Contar quantos modelos diferentes têm voos
+                                                            $modelosUtilizados = 0;
+                                                            foreach($aeronaves as $aeronave) {
+                                                                $totalVoosModelo = $companhia->voos()
+                                                                    ->where('aeronave_id', $aeronave->id)
+                                                                    ->count();
+                                                                if($totalVoosModelo > 0) {
+                                                                    $modelosUtilizados++;
+                                                                }
+                                                            }
+                                                            $totalModelosCadastrados = $aeronaves->unique('modelo')->count();
+                                                            $percentualUtilizados = $totalModelosCadastrados > 0 
+                                                                ? ($modelosUtilizados / $totalModelosCadastrados) * 100 
+                                                                : 0;
+                                                        @endphp
+                                                        <h4 class="fw-bold text-info mb-0">
+                                                            {{ number_format($modelosUtilizados, 0, ',', '.') }}/{{ number_format($totalModelosCadastrados, 0, ',', '.') }}
+                                                        </h4>
+                                                        <small class="text-muted">{{ number_format($percentualUtilizados, 1) }}% dos modelos cadastrados</small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="text-center">
+                                                        <h6 class="text-muted small mb-1">Capacidade Total</h6>
+                                                        @php
+                                                            $capacidadeTotal = $aeronaves->sum('capacidade');
+                                                        @endphp
+                                                        <h4 class="fw-bold text-success mb-0">{{ number_format($capacidadeTotal, 0, ',', '.') }}</h4>
+                                                        <small class="text-muted">passageiros</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                     </div>
@@ -1573,135 +1809,328 @@
                 atualizarFiltrosGlobais();
             }
         });
-    </script>
-    
-    <script>
-        // Gráfico de Voos por Horário
-        const voosHorarioCtx = document.getElementById('voosHorarioChart').getContext('2d');
-        const voosHorarioData = @json($voosPorHorario);
-        const horariosLabels = {
-            'EAM': 'EAM (00h-06h)',
-            'AM': 'AM (06h-12h)',
-            'AN': 'AN (12h-18h)',
-            'PM': 'PM (18h-00h)',
-            'ALL': 'ALL (Diário)'
-        };
-        
-        new Chart(voosHorarioCtx, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(voosHorarioData).map(key => horariosLabels[key]),
-                datasets: [{
-                    label: 'Quantidade de Voos',
-                    data: Object.values(voosHorarioData),
-                    backgroundColor: 'rgba(13, 110, 253, 0.7)',
-                    borderColor: 'rgba(13, 110, 253, 1)',
-                    borderWidth: 1,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== null) {
-                                    label += new Intl.NumberFormat('pt-BR').format(context.parsed.y);
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Quantidade de Voos'
-                        },
-                        ticks: {
-                            stepSize: 1
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Horário do Voo'
-                        }
-                    }
+
+        // ========== GRÁFICO DE VOOS POR HORÁRIO ==========
+        const ctxVoosHorario = document.getElementById('voosHorarioChart');
+        if (ctxVoosHorario) {
+            const dadosVoosPorHorario = @json($voosPorHorario);
+            
+            // Ordenar os dados na sequência correta
+            const horariosOrdenados = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
+            const dadosVoosOrdenados = horariosOrdenados.map(horario => {
+                return dadosVoosPorHorario[horario] || 0;
+            });
+
+            // Calcular a MEDIANA de voos por horário
+            const valoresVoosOrdenados = [...dadosVoosOrdenados].filter(v => v > 0).sort((a, b) => a - b);
+            const countVoos = valoresVoosOrdenados.length;
+            let medianaVoos = 0;
+            
+            if (countVoos > 0) {
+                if (countVoos % 2 === 1) {
+                    medianaVoos = valoresVoosOrdenados[Math.floor(countVoos / 2)];
+                } else {
+                    medianaVoos = (valoresVoosOrdenados[countVoos / 2 - 1] + valoresVoosOrdenados[countVoos / 2]) / 2;
                 }
             }
-        });
-        
-        // Gráfico de Passageiros por Horário
-        const passageirosHorarioCtx = document.getElementById('passageirosHorarioChart').getContext('2d');
-        const passageirosHorarioData = @json($passageirosPorHorario);
-        
-        new Chart(passageirosHorarioCtx, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(passageirosHorarioData).map(key => horariosLabels[key]),
-                datasets: [{
-                    label: 'Quantidade de Passageiros',
-                    data: Object.values(passageirosHorarioData),
-                    backgroundColor: 'rgba(13, 202, 240, 0.7)',
-                    borderColor: 'rgba(13, 202, 240, 1)',
-                    borderWidth: 1,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
+            
+            // Plugin para desenhar a linha da mediana com caixa de texto
+            const medianLinePluginVoos = {
+                id: 'medianLinePluginVoos',
+                afterDraw(chart) {
+                    const ctx = chart.ctx;
+                    const yScale = chart.scales.y;
+                    const xScale = chart.scales.x;
+
+                    if (!yScale || !xScale || medianaVoos === 0) {
+                        return;
+                    }
+
+                    const y = yScale.getPixelForValue(medianaVoos);
+
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(220, 20, 60, 0.85)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([6, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(xScale.left, y);
+                    ctx.lineTo(xScale.right, y);
+                    ctx.stroke();
+
+                    const label = `Mediana: ${medianaVoos.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`;
+                    ctx.font = '12px sans-serif';
+                    ctx.textBaseline = 'middle';
+
+                    const textWidth = ctx.measureText(label).width;
+                    const padding = 6;
+                    const rectHeight = 20;
+                    
+                    // Posicionar no lado direito
+                    const rectX = xScale.right - textWidth - 2 * padding - 8;
+                    const rectY = y - 12;
+
+                    ctx.fillStyle = 'rgba(220, 20, 60, 0.8)';
+                    ctx.fillRect(rectX, rectY, textWidth + 2 * padding, rectHeight);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(label, rectX + padding, y);
+
+                    ctx.restore();
+                }
+            };
+            
+            // Cores específicas para cada horário
+            const coresHorario = {
+                'EAM': 'rgba(74, 106, 138, 0.8)',   // Azul médio/escuro
+                'AM': 'rgba(108, 155, 207, 0.8)',    // Azul claro
+                'AN': 'rgba(255, 140, 0, 0.8)',      // Laranja
+                'PM': 'rgba(220, 53, 69, 0.8)',      // Vermelho
+                'ALL': 'rgba(155, 89, 182, 0.8)'     // Roxo
+            };
+            
+            const coresVoosOrdenadas = horariosOrdenados.map(horario => coresHorario[horario]);
+
+            new Chart(ctxVoosHorario, {
+                type: 'bar',
+                plugins: [medianLinePluginVoos],
+                data: {
+                    labels: horariosOrdenados,
+                    datasets: [
+                        {
+                            label: 'Voos por Horário',
+                            data: dadosVoosOrdenados,
+                            backgroundColor: coresVoosOrdenadas,
+                            borderColor: coresVoosOrdenadas.map(cor => cor.replace('0.8', '1')),
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            order: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'rectRounded'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = {{ $totalVoos }};
+                                    const percentual = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
+                                    
+                                    const diferencaMediana = (context.parsed.y - medianaVoos).toFixed(1);
+                                    const sinal = diferencaMediana >= 0 ? '+' : '';
+                                    
+                                    return [
+                                        `Voos: ${context.parsed.y.toLocaleString('pt-BR')}`,
+                                        `${percentual}% do total`,
+                                        `${sinal}${diferencaMediana} em relação à mediana (${medianaVoos.toFixed(1)})`
+                                    ];
                                 }
-                                if (context.parsed.y !== null) {
-                                    label += new Intl.NumberFormat('pt-BR').format(context.parsed.y);
-                                }
-                                return label;
                             }
                         }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Quantidade de Passageiros'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Quantidade de Voos'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('pt-BR');
+                                }
+                            },
+                            grid: {
+                                drawBorder: true
+                            }
                         },
-                        ticks: {
-                            stepSize: 1
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Horário do Voo'
+                            },
+                            grid: {
+                                display: false
+                            }
                         }
                     },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Horário do Voo'
-                        }
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
                     }
                 }
+            });
+        }
+
+        // ========== GRÁFICO DE PASSAGEIROS POR HORÁRIO ==========
+        const ctxPassageirosHorario = document.getElementById('passageirosHorarioChart');
+        if (ctxPassageirosHorario) {
+            const dadosPassageirosPorHorario = @json($passageirosPorHorario);
+            
+            const horariosOrdenados = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
+            const dadosPassageirosOrdenados = horariosOrdenados.map(horario => {
+                return dadosPassageirosPorHorario[horario] || 0;
+            });
+
+            // Calcular a MEDIANA de passageiros por horário
+            const valoresPassageirosOrdenados = [...dadosPassageirosOrdenados].filter(v => v > 0).sort((a, b) => a - b);
+            const countPassageiros = valoresPassageirosOrdenados.length;
+            let medianaPassageiros = 0;
+            
+            if (countPassageiros > 0) {
+                if (countPassageiros % 2 === 1) {
+                    medianaPassageiros = valoresPassageirosOrdenados[Math.floor(countPassageiros / 2)];
+                } else {
+                    medianaPassageiros = (valoresPassageirosOrdenados[countPassageiros / 2 - 1] + valoresPassageirosOrdenados[countPassageiros / 2]) / 2;
+                }
             }
-        });
+            
+            // Plugin para desenhar a linha da mediana com caixa de texto
+            const medianLinePluginPassageiros = {
+                id: 'medianLinePluginPassageiros',
+                afterDraw(chart) {
+                    const ctx = chart.ctx;
+                    const yScale = chart.scales.y;
+                    const xScale = chart.scales.x;
+
+                    if (!yScale || !xScale || medianaPassageiros === 0) {
+                        return;
+                    }
+
+                    const y = yScale.getPixelForValue(medianaPassageiros);
+
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(220, 20, 60, 0.85)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([6, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(xScale.left, y);
+                    ctx.lineTo(xScale.right, y);
+                    ctx.stroke();
+
+                    const label = `Mediana: ${medianaPassageiros.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}`;
+                    ctx.font = '12px sans-serif';
+                    ctx.textBaseline = 'middle';
+
+                    const textWidth = ctx.measureText(label).width;
+                    const padding = 6;
+                    const rectHeight = 20;
+                    
+                    // Posicionar no lado direito
+                    const rectX = xScale.right - textWidth - 2 * padding - 8;
+                    const rectY = y - 12;
+
+                    ctx.fillStyle = 'rgba(220, 20, 60, 0.8)';
+                    ctx.fillRect(rectX, rectY, textWidth + 2 * padding, rectHeight);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(label, rectX + padding, y);
+
+                    ctx.restore();
+                }
+            };
+            
+            const coresHorario = {
+                'EAM': 'rgba(74, 106, 138, 0.8)',
+                'AM': 'rgba(108, 155, 207, 0.8)',
+                'AN': 'rgba(255, 140, 0, 0.8)',
+                'PM': 'rgba(220, 53, 69, 0.8)',
+                'ALL': 'rgba(155, 89, 182, 0.8)'
+            };
+            
+            const coresPassageirosOrdenadas = horariosOrdenados.map(horario => coresHorario[horario]);
+
+            new Chart(ctxPassageirosHorario, {
+                type: 'bar',
+                plugins: [medianLinePluginPassageiros],
+                data: {
+                    labels: horariosOrdenados,
+                    datasets: [
+                        {
+                            label: 'Passageiros por Horário',
+                            data: dadosPassageirosOrdenados,
+                            backgroundColor: coresPassageirosOrdenadas,
+                            borderColor: coresPassageirosOrdenadas.map(cor => cor.replace('0.8', '1')),
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false,
+                            order: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'rectRounded'
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = {{ $totalPassageiros }};
+                                    const percentual = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
+                                    
+                                    const diferencaMediana = (context.parsed.y - medianaPassageiros).toFixed(1);
+                                    const sinal = diferencaMediana >= 0 ? '+' : '';
+                                    
+                                    return [
+                                        `Passageiros: ${context.parsed.y.toLocaleString('pt-BR')}`,
+                                        `${percentual}% do total`,
+                                        `${sinal}${diferencaMediana} em relação à mediana (${medianaPassageiros.toFixed(1)})`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Quantidade de Passageiros'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString('pt-BR');
+                                }
+                            },
+                            grid: {
+                                drawBorder: true
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Horário do Voo'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>
