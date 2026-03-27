@@ -90,14 +90,7 @@
                         <div class="text-muted small">
                             <i class="bi bi-geo-alt me-1"></i>{{ $ultimoVoo->aeroporto->nome_aeroporto ?? 'N/A' }} 
                             • 
-                            <i class="bi bi-clock me-1"></i>
-                            @switch($ultimoVoo->horario_voo)
-                                @case('EAM') Early Morning @break
-                                @case('AM') Morning @break
-                                @case('AN') Afternoon @break
-                                @case('PM') Evening @break
-                                @default {{ $ultimoVoo->horario_voo }}
-                            @endswitch
+                            <i class="bi bi-clock me-1"></i>{{ $ultimoVoo->horario_voo }}
                         </div>
                     </div>
                 </div>
@@ -180,13 +173,6 @@
                                 </strong>
                                 <span class="badge bg-warning text-dark">
                                     {{ $ultimoVoo->horario_voo }}
-                                    @switch($ultimoVoo->horario_voo)
-                                        @case('EAM') (00h-06h) @break
-                                        @case('AM') (06h-12h) @break
-                                        @case('AN') (12h-18h) @break
-                                        @case('PM') (18h-00h) @break
-                                        @case('ALL') (Diário) @break
-                                    @endswitch
                                 </span>
                             </div>
                             <div class="col-md-3 mb-3">
@@ -344,65 +330,10 @@
                                 <i class="bi bi-info-circle me-2 text-primary"></i>
                                 Informações Básicas
                             </h5>
-                            
-                            <div class="row mt-3">
-                                <!-- ID do Voo -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="id_voo" class="form-label fw-semibold">
-                                        ID do Voo <span class="text-danger">*</span>
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light">
-                                            <i class="bi bi-tag"></i>
-                                        </span>
-                                        <input type="text" 
-                                            class="form-control @error('id_voo') is-invalid @enderror" 
-                                            id="id_voo" 
-                                            name="id_voo" 
-                                            value="{{ old('id_voo') }}" 
-                                            required
-                                            placeholder="Ex: AA-1234 ou ASY-5678"
-                                            maxlength="9">
-                                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#codigosValidos" title="Ver códigos válidos">
-                                            <i class="bi bi-info-circle"></i>
-                                        </button>
-                                    </div>
-                                    <div class="form-text">
-                                        <i class="bi bi-info-circle me-1"></i>
-                                        Formato: LL-NNNN ou LLLL-NNNN (ex: AA-1234 ou ASY-5678) - Use letras maiúsculas
-                                    </div>
-                                    
-                                    <!-- Lista de códigos válidos (colapsável) -->
-                                    <div class="collapse mt-2" id="codigosValidos">
-                                        <div class="card card-body bg-light">
-                                            <small class="text-muted mb-2 fw-semibold">📋 Códigos de companhia válidos:</small>
-                                            <div class="row">
-                                                @php
-                                                    $codigos = \App\Helpers\CompanhiaHelper::getCodigosValidos();
-                                                    $chunks = array_chunk($codigos, ceil(count($codigos) / 4));
-                                                @endphp
-                                                @foreach($chunks as $chunk)
-                                                    <div class="col-md-3">
-                                                        @foreach($chunk as $codigo)
-                                                            <small class="d-block mb-1">
-                                                                <strong class="text-primary">{{ $codigo }}</strong> 
-                                                                <span class="text-muted">-</span> 
-                                                                {{ \App\Helpers\CompanhiaHelper::getNomeCompanhia($codigo) }}
-                                                            </small>
-                                                        @endforeach
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    @error('id_voo')
-                                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                                    @enderror
-                                </div>
 
-                                <!-- Aeroporto -->
-                                <div class="col-md-4 mb-3">
+                            <div class="row mt-3">
+                                <!-- Aeroporto e ID do Voo na mesma linha -->
+                                <div class="col-md-6 mb-3">
                                     <label for="aeroporto_id" class="form-label fw-semibold">
                                         Aeroporto <span class="text-danger">*</span>
                                     </label>
@@ -427,24 +358,29 @@
                                     @enderror
                                 </div>
 
-                                <!-- Tipo de Voo -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="tipo_voo" class="form-label fw-semibold">
-                                        Tipo de Voo <span class="text-danger">*</span>
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_voo" class="form-label fw-semibold">
+                                        ID do Voo <span class="text-danger">*</span>
                                     </label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light">
-                                            <i class="bi bi-airplane"></i>
+                                            <i class="bi bi-tag"></i>
                                         </span>
-                                        <select class="form-select @error('tipo_voo') is-invalid @enderror" 
-                                                id="tipo_voo" 
-                                                name="tipo_voo" 
-                                                required>
-                                            <option value="Regular" {{ old('tipo_voo') == 'Regular' ? 'selected' : '' }}>Regular</option>
-                                            <option value="Charter" {{ old('tipo_voo') == 'Charter' ? 'selected' : '' }}>Charter</option>
-                                        </select>
+                                        <input type="text" 
+                                            class="form-control @error('id_voo') is-invalid @enderror" 
+                                            id="id_voo" 
+                                            name="id_voo" 
+                                            value="{{ old('id_voo') }}" 
+                                            required
+                                            placeholder="Ex: AA-1234 ou ASY-5678"
+                                            maxlength="9">
                                     </div>
-                                    @error('tipo_voo')
+                                    <div class="form-text">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Formato: LL-NNNN ou LLLL-NNNN (ex: AA-1234 ou ASY-5678) - Use letras maiúsculas
+                                    </div>
+                                    
+                                    @error('id_voo')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -460,7 +396,7 @@
                             
                             <div class="row mt-3">
                                 <!-- Companhia Aérea -->
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-6 mb-3">
                                     <label for="companhia_aerea_id" class="form-label fw-semibold">
                                         Companhia Aérea <span class="text-danger">*</span>
                                     </label>
@@ -486,7 +422,7 @@
                                 </div>
 
                                 <!-- Modelo da Aeronave -->
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-6 mb-3">
                                     <label for="aeronave_id" class="form-label fw-semibold">
                                         Modelo da Aeronave <span class="text-danger">*</span>
                                     </label>
@@ -505,9 +441,32 @@
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
+                            </div>
+                            
+                            <div class="row">
+                                <!-- Tipo de Voo e Tipo de Aeronave na mesma linha -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="tipo_voo" class="form-label fw-semibold">
+                                        Tipo de Voo <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">
+                                            <i class="bi bi-airplane"></i>
+                                        </span>
+                                        <select class="form-select @error('tipo_voo') is-invalid @enderror" 
+                                                id="tipo_voo" 
+                                                name="tipo_voo" 
+                                                required>
+                                            <option value="Regular" {{ old('tipo_voo') == 'Regular' ? 'selected' : '' }}>Regular</option>
+                                            <option value="Charter" {{ old('tipo_voo') == 'Charter' ? 'selected' : '' }}>Charter</option>
+                                        </select>
+                                    </div>
+                                    @error('tipo_voo')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
+                                </div>
 
-                                <!-- Tipo de Aeronave -->
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-6 mb-3">
                                     <label for="tipo_aeronave" class="form-label fw-semibold">
                                         Tipo de Aeronave <span class="text-danger">*</span>
                                     </label>
@@ -571,11 +530,11 @@
                                                 id="horario_voo" 
                                                 name="horario_voo" 
                                                 required>
-                                            <option value="EAM" {{ old('horario_voo') == 'EAM' ? 'selected' : '' }}>EAM (00h-06h)</option>
-                                            <option value="AM" {{ old('horario_voo') == 'AM' ? 'selected' : '' }}>AM (06h-12h)</option>
-                                            <option value="AN" {{ old('horario_voo') == 'AN' ? 'selected' : '' }}>AN (12h-18h)</option>
-                                            <option value="PM" {{ old('horario_voo') == 'PM' ? 'selected' : '' }}>PM (18h-00h)</option>
-                                            <option value="ALL" {{ old('horario_voo') == 'ALL' ? 'selected' : '' }}>ALL (Diário)</option>
+                                            <option value="EAM" {{ old('horario_voo') == 'EAM' ? 'selected' : '' }}>EAM</option>
+                                            <option value="AM" {{ old('horario_voo') == 'AM' ? 'selected' : '' }}>AM</option>
+                                            <option value="AN" {{ old('horario_voo') == 'AN' ? 'selected' : '' }}>AN</option>
+                                            <option value="PM" {{ old('horario_voo') == 'PM' ? 'selected' : '' }}>PM</option>
+                                            <option value="ALL" {{ old('horario_voo') == 'ALL' ? 'selected' : '' }}>ALL</option>
                                         </select>
                                     </div>
                                     @error('horario_voo')
@@ -639,12 +598,12 @@
                                     <label for="nota_obj" class="form-label fw-semibold">Nota Objetivo</label>
                                     <select class="form-select" id="nota_obj" name="nota_obj">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_obj') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
-                                        <option value="B" {{ old('nota_obj') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
-                                        <option value="C" {{ old('nota_obj') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
-                                        <option value="D" {{ old('nota_obj') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
-                                        <option value="E" {{ old('nota_obj') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
-                                        <option value="F" {{ old('nota_obj') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
+                                        <option value="A" {{ old('nota_obj') == 'A' ? 'selected' : '' }}>A</option>
+                                        <option value="B" {{ old('nota_obj') == 'B' ? 'selected' : '' }}>B</option>
+                                        <option value="C" {{ old('nota_obj') == 'C' ? 'selected' : '' }}>C</option>
+                                        <option value="D" {{ old('nota_obj') == 'D' ? 'selected' : '' }}>D</option>
+                                        <option value="E" {{ old('nota_obj') == 'E' ? 'selected' : '' }}>E</option>
+                                        <option value="F" {{ old('nota_obj') == 'F' ? 'selected' : '' }}>F</option>
                                     </select>
                                 </div>
 
@@ -652,12 +611,12 @@
                                     <label for="nota_pontualidade" class="form-label fw-semibold">Nota Pontualidade</label>
                                     <select class="form-select" id="nota_pontualidade" name="nota_pontualidade">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_pontualidade') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
-                                        <option value="B" {{ old('nota_pontualidade') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
-                                        <option value="C" {{ old('nota_pontualidade') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
-                                        <option value="D" {{ old('nota_pontualidade') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
-                                        <option value="E" {{ old('nota_pontualidade') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
-                                        <option value="F" {{ old('nota_pontualidade') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
+                                        <option value="A" {{ old('nota_pontualidade') == 'A' ? 'selected' : '' }}>A</option>
+                                        <option value="B" {{ old('nota_pontualidade') == 'B' ? 'selected' : '' }}>B</option>
+                                        <option value="C" {{ old('nota_pontualidade') == 'C' ? 'selected' : '' }}>C</option>
+                                        <option value="D" {{ old('nota_pontualidade') == 'D' ? 'selected' : '' }}>D</option>
+                                        <option value="E" {{ old('nota_pontualidade') == 'E' ? 'selected' : '' }}>E</option>
+                                        <option value="F" {{ old('nota_pontualidade') == 'F' ? 'selected' : '' }}>F</option>
                                     </select>
                                 </div>
 
@@ -665,12 +624,12 @@
                                     <label for="nota_servicos" class="form-label fw-semibold">Nota Serviços</label>
                                     <select class="form-select" id="nota_servicos" name="nota_servicos">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_servicos') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
-                                        <option value="B" {{ old('nota_servicos') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
-                                        <option value="C" {{ old('nota_servicos') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
-                                        <option value="D" {{ old('nota_servicos') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
-                                        <option value="E" {{ old('nota_servicos') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
-                                        <option value="F" {{ old('nota_servicos') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
+                                        <option value="A" {{ old('nota_servicos') == 'A' ? 'selected' : '' }}>A</option>
+                                        <option value="B" {{ old('nota_servicos') == 'B' ? 'selected' : '' }}>B</option>
+                                        <option value="C" {{ old('nota_servicos') == 'C' ? 'selected' : '' }}>C</option>
+                                        <option value="D" {{ old('nota_servicos') == 'D' ? 'selected' : '' }}>D</option>
+                                        <option value="E" {{ old('nota_servicos') == 'E' ? 'selected' : '' }}>E</option>
+                                        <option value="F" {{ old('nota_servicos') == 'F' ? 'selected' : '' }}>F</option>
                                     </select>
                                 </div>
 
@@ -678,12 +637,12 @@
                                     <label for="nota_patio" class="form-label fw-semibold">Nota Pátio</label>
                                     <select class="form-select" id="nota_patio" name="nota_patio">
                                         <option value="">Não avaliado</option>
-                                        <option value="A" {{ old('nota_patio') == 'A' ? 'selected' : '' }}>A (Excelente - 10)</option>
-                                        <option value="B" {{ old('nota_patio') == 'B' ? 'selected' : '' }}>B (Muito Bom - 9)</option>
-                                        <option value="C" {{ old('nota_patio') == 'C' ? 'selected' : '' }}>C (Bom - 8)</option>
-                                        <option value="D" {{ old('nota_patio') == 'D' ? 'selected' : '' }}>D (Regular - 6)</option>
-                                        <option value="E" {{ old('nota_patio') == 'E' ? 'selected' : '' }}>E (Ruim - 4)</option>
-                                        <option value="F" {{ old('nota_patio') == 'F' ? 'selected' : '' }}>F (Péssimo - 2)</option>
+                                        <option value="A" {{ old('nota_patio') == 'A' ? 'selected' : '' }}>A</option>
+                                        <option value="B" {{ old('nota_patio') == 'B' ? 'selected' : '' }}>B</option>
+                                        <option value="C" {{ old('nota_patio') == 'C' ? 'selected' : '' }}>C</option>
+                                        <option value="D" {{ old('nota_patio') == 'D' ? 'selected' : '' }}>D</option>
+                                        <option value="E" {{ old('nota_patio') == 'E' ? 'selected' : '' }}>E</option>
+                                        <option value="F" {{ old('nota_patio') == 'F' ? 'selected' : '' }}>F</option>
                                     </select>
                                 </div>
                             </div>
@@ -691,10 +650,6 @@
 
                         <!-- Botões -->
                         <div class="d-flex justify-content-center gap-3 align-items-center">
-                            <button type="button" class="btn btn-secondary px-4 py-2" id="btnLimpar">
-                                <i class="bi bi-eraser me-2"></i>
-                                Limpar Formulário
-                            </button>
                             <button type="submit" class="btn btn-primary px-5 py-2">
                                 <i class="bi bi-check-circle me-2"></i>
                                 Cadastrar Voo
@@ -1188,38 +1143,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     aeronaveSelect.addEventListener('change', atualizarInfoAeronave);
     qtdVoosInput.addEventListener('input', calcularTotalPassageiros);
-
-    // Botão limpar
-    const btnLimpar = document.getElementById('btnLimpar');
-    if (btnLimpar) {
-        btnLimpar.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            document.getElementById('formVoo').reset();
-            
-            limparCamposAeronave();
-            aeronaveSelect.innerHTML = '<option value="" disabled selected>Selecione uma aeronave</option>';
-            totalPassageirosInput.value = '0';
-            
-            idVooFeedback.innerHTML = '';
-            idVooInput.classList.remove('is-valid', 'is-invalid');
-            
-            ultimoCodigoProcessado = '';
-            preenchimentoAutomaticoAtivo = true;
-            
-            const toggleCheckbox = document.getElementById('toggleAutoFill');
-            if (toggleCheckbox) toggleCheckbox.checked = true;
-            
-            document.querySelectorAll('.alert').forEach(alert => alert.remove());
-            
-            mostrarFeedback(
-                'Formulário limpo com sucesso!',
-                'info',
-                document.querySelector('.card-body'),
-                true
-            );
-        });
-    }
 
     // Carregar aeronaves iniciais se houver companhia selecionada
     if (companhiaSelect.value) {
