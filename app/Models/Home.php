@@ -13,7 +13,8 @@ class Home extends Model
      */
     public function getTotalPassageiros()
     {
-        return DB::table('voos')->sum('qtd_passageiros') ?? 0;
+        // Usar a coluna virtual que já calcula qtd_voos * qtd_passageiros
+        return DB::table('voos')->sum('total_passageiros') ?? 0;
     }
     
     /**
@@ -23,7 +24,7 @@ class Home extends Model
     {
         $passageiros = DB::table('voos')
             ->join('aeroportos', 'voos.aeroporto_id', '=', 'aeroportos.id')
-            ->select('aeroportos.nome_aeroporto as aeroporto', DB::raw('SUM(voos.qtd_passageiros) as total_passageiros'))
+            ->select('aeroportos.nome_aeroporto as aeroporto', DB::raw('SUM(voos.total_passageiros) as total_passageiros'))
             ->groupBy('aeroportos.id', 'aeroportos.nome_aeroporto')
             ->orderByDesc('total_passageiros')
             ->pluck('total_passageiros', 'aeroporto')
@@ -37,23 +38,19 @@ class Home extends Model
      */
     public function getPassageirosPorHorario()
     {
-        // Definir todos os horários possíveis
         $horarios = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
         
-        // Buscar dados do banco
         $dados = DB::table('voos')
-            ->select('horario_voo', DB::raw('SUM(qtd_passageiros) as total_passageiros'))
+            ->select('horario_voo', DB::raw('SUM(total_passageiros) as total_passageiros'))
             ->whereNotNull('horario_voo')
             ->groupBy('horario_voo')
             ->get();
         
-        // Inicializar array com todos os horários zerados
         $passageirosPorHorario = [];
         foreach ($horarios as $horario) {
             $passageirosPorHorario[$horario] = 0;
         }
         
-        // Preencher com os dados reais
         foreach ($dados as $item) {
             if (isset($passageirosPorHorario[$item->horario_voo])) {
                 $passageirosPorHorario[$item->horario_voo] = (int) $item->total_passageiros;
