@@ -26,7 +26,7 @@ class CompanhiaHelper
         'SPY' => 'Stellar Party',
         'AW' => 'Aerowings',
         'AK' => 'Air Kiwi',
-        'VAII' => 'Vintage Airline II',
+        'VAII' => 'Vintage Airlines II',
         'CA' => 'ChallengAir',
         'WAT' => 'WAT',
         'TAL' => 'TAL',
@@ -72,6 +72,15 @@ class CompanhiaHelper
     public static function getCodigosValidos()
     {
         return array_keys(self::$codigos);
+    }
+
+    /**
+     * Retorna o mapa completo de códigos => nomes
+     * NOVO MÉTODO
+     */
+    public static function getCodigosMap()
+    {
+        return self::$codigos;
     }
 
     /**
