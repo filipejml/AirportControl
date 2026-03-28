@@ -37,7 +37,7 @@ class CompanhiaHelper
         'EX' => 'Evish Xmas',
         'SCA' => 'Santa Claus',
         'RBA' => 'Ryukyu by AJA',
-        'CN' => 'CloudNine',
+        'CN' => 'CloudG',
         
         // NOVOS CÓDIGOS ADICIONADOS
         'SG' => 'Singapura Airlines',      // Código para Singapura Airlines
