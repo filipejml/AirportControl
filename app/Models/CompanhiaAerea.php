@@ -9,7 +9,7 @@ class CompanhiaAerea extends Model
 {
     protected $table = 'companhias_aereas';
 
-    protected $fillable = ['nome'];
+    protected $fillable = ['nome','codigo'];
 
     // Relacionamento com Aeronaves (muitos-para-muitos)
     public function aeronaves()

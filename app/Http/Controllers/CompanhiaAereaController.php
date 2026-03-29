@@ -47,7 +47,7 @@ class CompanhiaAereaController extends Controller
                 })
             ],
             'codigo' => [
-                'nullable',
+                'required', // TORNAR OBRIGATÓRIO
                 'string',
                 'max:10',
                 Rule::unique('companhias_aereas', 'codigo')
@@ -55,6 +55,7 @@ class CompanhiaAereaController extends Controller
             'aeronaves' => 'nullable|array'
         ], [
             'nome.unique' => 'Esta companhia aérea já está cadastrada no sistema.',
+            'codigo.required' => 'O código da companhia é obrigatório.',
             'codigo.unique' => 'Este código já está sendo utilizado por outra companhia aérea.'
         ]);
 
@@ -65,7 +66,7 @@ class CompanhiaAereaController extends Controller
             // Se houver ID disponível, criar com ID específico
             $companhia = new CompanhiaAerea([
                 'nome' => $request->nome,
-                'codigo' => $request->codigo
+                'codigo' => strtoupper($request->codigo) // Converter para maiúsculo
             ]);
             $companhia->id = $availableId;
             $companhia->save();
@@ -73,7 +74,7 @@ class CompanhiaAereaController extends Controller
             // Se não houver IDs disponíveis, criar normalmente
             $companhia = CompanhiaAerea::create([
                 'nome' => $request->nome,
-                'codigo' => $request->codigo
+                'codigo' => strtoupper($request->codigo) // Converter para maiúsculo
             ]);
         }
 
@@ -117,7 +118,7 @@ class CompanhiaAereaController extends Controller
                 Rule::unique('companhias_aereas', 'nome')->ignore($companhia->id)
             ],
             'codigo' => [
-                'nullable',
+                'required', // TORNAR OBRIGATÓRIO
                 'string',
                 'max:10',
                 Rule::unique('companhias_aereas', 'codigo')->ignore($companhia->id)
@@ -125,12 +126,13 @@ class CompanhiaAereaController extends Controller
             'aeronaves' => 'nullable|array'
         ], [
             'nome.unique' => 'Esta companhia aérea já está cadastrada no sistema.',
+            'codigo.required' => 'O código da companhia é obrigatório.',
             'codigo.unique' => 'Este código já está sendo utilizado por outra companhia aérea.'
         ]);
 
         $companhia->update([
             'nome' => $request->nome,
-            'codigo' => $request->codigo
+            'codigo' => strtoupper($request->codigo) // Converter para maiúsculo
         ]);
 
         if ($request->has('aeronaves')) {

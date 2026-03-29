@@ -43,17 +43,20 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label for="codigo" class="form-label fw-semibold">Código da Companhia</label>
+                        <label for="codigo" class="form-label fw-semibold">
+                            Código da Companhia <span class="text-danger">*</span>
+                        </label>
                         <input type="text" 
-                               class="form-control @error('codigo') is-invalid @enderror" 
-                               id="codigo" 
-                               name="codigo" 
-                               value="{{ old('codigo') }}"
-                               placeholder="Ex: LA, G3, AD, AA..."
-                               maxlength="10"
-                               autocomplete="off">
+                            class="form-control @error('codigo') is-invalid @enderror" 
+                            id="codigo" 
+                            name="codigo" 
+                            value="{{ old('codigo') }}"
+                            placeholder="Ex: LA, G3, AD, AA..."
+                            maxlength="10"
+                            required
+                            autocomplete="off">
                         <div class="form-text text-muted">
-                            <i class="bi bi-info-circle"></i> Código identificador (máx. 10 caracteres). Ex: LA, G3, AD
+                            <i class="bi bi-info-circle"></i> Código identificador obrigatório (máx. 10 caracteres). Ex: LA, G3, AD, AA
                         </div>
                         @error('codigo')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
