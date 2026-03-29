@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+
 class CompanhiaAerea extends Model
 {
     protected $table = 'companhias_aereas';

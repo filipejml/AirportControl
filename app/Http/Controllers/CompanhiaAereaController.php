@@ -8,6 +8,8 @@ use App\Models\Aeroporto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Carbon;
 use DateTime;
 
 class CompanhiaAereaController extends Controller
@@ -532,5 +534,74 @@ class CompanhiaAereaController extends Controller
             'voosPorHorario',
             'passageirosPorHorario'
         ));
+    }
+
+    /**
+     * Export all flights of the airline to PDF
+     */
+    public function exportVoosPdf(CompanhiaAerea $companhia)
+    {
+        // Carregar todos os voos da companhia com seus relacionamentos
+        $voos = $companhia->voos()
+            ->with(['aeroporto', 'aeronave.fabricante'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // Estatísticas para o relatório
+        $totalVoos = $voos->count();
+        $totalPassageiros = $voos->sum('total_passageiros');
+        $totalAeronaves = $companhia->aeronaves()->count();
+        $totalAeroportos = $companhia->aeroportos()->count();
+        
+        // Notas médias
+        $notaObj = $voos->avg('nota_obj') ?? 0;
+        $notaPontualidade = $voos->avg('nota_pontualidade') ?? 0;
+        $notaServicos = $voos->avg('nota_servicos') ?? 0;
+        $notaPatio = $voos->avg('nota_patio') ?? 0;
+        $mediaGeral = ($notaObj + $notaPontualidade + $notaServicos + $notaPatio) / 4;
+        
+        // Data de geração do relatório
+        $dataGeracao = Carbon::now()->format('d/m/Y H:i:s');
+        
+        // Dados para o gráfico de voos por aeroporto (top 5)
+        $voosPorAeroporto = $voos->groupBy('aeroporto.nome_aeroporto')
+            ->map(function($grupo) {
+                return $grupo->count();
+            })
+            ->sortDesc()
+            ->take(5);
+        
+        // Dados para o gráfico de voos por horário
+        $horarios = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
+        $voosPorHorario = [];
+        foreach ($horarios as $horario) {
+            $voosPorHorario[$horario] = $voos->where('horario_voo', $horario)->count();
+        }
+        
+        // Gerar o PDF
+        $pdf = Pdf::loadView('pdf.voos_companhia', compact(
+            'companhia',
+            'voos',
+            'totalVoos',
+            'totalPassageiros',
+            'totalAeronaves',
+            'totalAeroportos',
+            'notaObj',
+            'notaPontualidade',
+            'notaServicos',
+            'notaPatio',
+            'mediaGeral',
+            'dataGeracao',
+            'voosPorAeroporto',
+            'voosPorHorario'
+        ));
+        
+        // Configurar o PDF
+        $pdf->setPaper('A4', 'landscape');
+        
+        // Nome do arquivo
+        $nomeArquivo = 'voos_' . preg_replace('/[^a-z0-9]/i', '_', $companhia->nome) . '.pdf';
+        
+        return $pdf->download($nomeArquivo);
     }
 }
