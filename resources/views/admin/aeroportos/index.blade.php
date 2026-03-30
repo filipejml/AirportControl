@@ -62,9 +62,7 @@
                                 </td>
                                 <td>
                                     @if($aeroporto->companhias->count() > 0)
-                                        @foreach($aeroporto->companhias as $companhia)
-                                            <span class="badge bg-info text-dark mb-1">{{ $companhia->nome }}</span>
-                                        @endforeach
+                                        <span class="badge bg-primary">{{ $aeroporto->companhias->count() }} companhia(s)</span>
                                     @else
                                         <span class="badge bg-secondary">Nenhuma companhia</span>
                                     @endif
