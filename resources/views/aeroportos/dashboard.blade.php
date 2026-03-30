@@ -14,6 +14,9 @@
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Plugin para exibir valores nos gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
     <style>
         body {
@@ -34,6 +37,16 @@
             transform: translateY(-5px);
         }
         
+        .rating-card {
+            transition: transform 0.2s;
+            border: none;
+            border-radius: 10px;
+        }
+        
+        .rating-card:hover {
+            transform: translateY(-5px);
+        }
+        
         .chart-container {
             background: white;
             border-radius: 10px;
@@ -43,7 +56,7 @@
         }
         
         .chart-container canvas {
-            max-height: 300px;
+            max-height: 400px;
         }
         
         .rating-badge {
@@ -151,44 +164,70 @@
             </div>
         </div>
 
-        <!-- Notas de Avaliação -->
+        <!-- Cards de Avaliação (mesmo estilo dos cards de estatística) -->
         <div class="row mb-4">
-            <div class="col-12">
-                <div class="chart-container">
-                    <h5 class="mb-3">
-                        <i class="bi bi-star-fill text-warning"></i> Avaliações do Aeroporto
-                    </h5>
-                    <div class="row text-center">
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="bi bi-flag-fill text-primary fs-3"></i>
-                                <h6 class="mt-2 text-muted">Objetivo</h6>
-                                <h4 class="mb-0 fw-bold">{{ number_format($notaObj, 1) }}</h4>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card rating-card shadow-sm" style="border-left: 4px solid #0d6efd;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">Nota Objetivo</h6>
+                                <h3 class="mb-0 fw-bold text-primary">{{ number_format($notaObj, 1) }}</h3>
                                 <small class="text-muted">/ 10</small>
                             </div>
-                        </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="bi bi-clock-fill text-success fs-3"></i>
-                                <h6 class="mt-2 text-muted">Pontualidade</h6>
-                                <h4 class="mb-0 fw-bold">{{ number_format($notaPontualidade, 1) }}</h4>
-                                <small class="text-muted">/ 10</small>
+                            <div class="bg-primary bg-opacity-10 p-3 rounded-circle">
+                                <i class="bi bi-flag-fill text-primary fs-4"></i>
                             </div>
                         </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="bi bi-gear-fill text-info fs-3"></i>
-                                <h6 class="mt-2 text-muted">Serviços</h6>
-                                <h4 class="mb-0 fw-bold">{{ number_format($notaServicos, 1) }}</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card rating-card shadow-sm" style="border-left: 4px solid #198754;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">Nota Pontualidade</h6>
+                                <h3 class="mb-0 fw-bold text-success">{{ number_format($notaPontualidade, 1) }}</h3>
                                 <small class="text-muted">/ 10</small>
                             </div>
+                            <div class="bg-success bg-opacity-10 p-3 rounded-circle">
+                                <i class="bi bi-clock-fill text-success fs-4"></i>
+                            </div>
                         </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="p-3 border rounded bg-light">
-                                <i class="bi bi-pin-fill text-warning fs-3"></i>
-                                <h6 class="mt-2 text-muted">Pátio</h6>
-                                <h4 class="mb-0 fw-bold">{{ number_format($notaPatio, 1) }}</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card rating-card shadow-sm" style="border-left: 4px solid #0dcaf0;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">Nota Serviços</h6>
+                                <h3 class="mb-0 fw-bold text-info">{{ number_format($notaServicos, 1) }}</h3>
                                 <small class="text-muted">/ 10</small>
+                            </div>
+                            <div class="bg-info bg-opacity-10 p-3 rounded-circle">
+                                <i class="bi bi-gear-fill text-info fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card rating-card shadow-sm" style="border-left: 4px solid #ffc107;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-2">Nota Pátio</h6>
+                                <h3 class="mb-0 fw-bold text-warning">{{ number_format($notaPatio, 1) }}</h3>
+                                <small class="text-muted">/ 10</small>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 p-3 rounded-circle">
+                                <i class="bi bi-pin-fill text-warning fs-4"></i>
                             </div>
                         </div>
                     </div>
@@ -196,9 +235,9 @@
             </div>
         </div>
 
-        <!-- Gráficos -->
+        <!-- Gráfico: Voos por Companhia (linha inteira) -->
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-12">
                 <div class="chart-container">
                     <h5 class="mb-3">
                         <i class="bi bi-building"></i> Voos por Companhia
@@ -206,8 +245,11 @@
                     <canvas id="voosPorCompanhiaChart"></canvas>
                 </div>
             </div>
-            
-            <div class="col-md-6">
+        </div>
+
+        <!-- Gráfico: Passageiros por Companhia (linha inteira) -->
+        <div class="row">
+            <div class="col-12">
                 <div class="chart-container">
                     <h5 class="mb-3">
                         <i class="bi bi-people-fill"></i> Passageiros por Companhia
@@ -217,6 +259,7 @@
             </div>
         </div>
 
+        <!-- Gráficos: Voos por Horário e Voos por Tipo (lado a lado) -->
         <div class="row">
             <div class="col-md-6">
                 <div class="chart-container">
@@ -309,15 +352,37 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
+        // Registrar o plugin de datalabels
+        Chart.register(ChartDataLabels);
+        
+        // Configuração padrão para os datalabels
+        Chart.defaults.set('plugins.datalabels', {
+            color: '#333',
+            anchor: 'end',
+            align: 'top',
+            offset: 4,
+            font: {
+                weight: 'bold',
+                size: 11
+            },
+            formatter: function(value, context) {
+                if (value === 0) return '';
+                // Formatar números grandes
+                if (value >= 1000) {
+                    return (value / 1000).toFixed(1) + 'k';
+                }
+                return value.toString();
+            }
+        });
+
         // Dados para os gráficos
         const voosPorCompanhiaData = @json($voosPorCompanhia);
         const passageirosPorCompanhiaData = @json($passageirosPorCompanhia);
         const horariosData = @json($horariosData);
         const tiposData = @json($tiposData);
         const evolucaoMensalData = @json($evolucaoMensal);
-        const topCompanhiasNotas = @json($topCompanhiasNotas);
 
-        // Gráfico: Voos por Companhia
+        // Gráfico: Voos por Companhia (com valores nas colunas)
         if (voosPorCompanhiaData.length > 0) {
             const ctx1 = document.getElementById('voosPorCompanhiaChart').getContext('2d');
             new Chart(ctx1, {
@@ -336,13 +401,19 @@
                     responsive: true,
                     maintainAspectRatio: true,
                     plugins: {
-                        legend: { position: 'top' }
+                        legend: { position: 'top' },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#0d6efd',
+                            font: { weight: 'bold', size: 12 }
+                        }
                     }
                 }
             });
         }
 
-        // Gráfico: Passageiros por Companhia
+        // Gráfico: Passageiros por Companhia (com valores nas colunas)
         if (passageirosPorCompanhiaData.length > 0) {
             const ctx2 = document.getElementById('passageirosPorCompanhiaChart').getContext('2d');
             new Chart(ctx2, {
@@ -361,13 +432,26 @@
                     responsive: true,
                     maintainAspectRatio: true,
                     plugins: {
-                        legend: { position: 'top' }
+                        legend: { position: 'top' },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#198754',
+                            font: { weight: 'bold', size: 12 },
+                            formatter: function(value) {
+                                if (value === 0) return '';
+                                if (value >= 1000) {
+                                    return (value / 1000).toFixed(1) + 'k';
+                                }
+                                return value.toString();
+                            }
+                        }
                     }
                 }
             });
         }
 
-        // Gráfico: Voos por Horário
+        // Gráfico: Voos por Horário (com valores nas fatias)
         const ctx3 = document.getElementById('voosPorHorarioChart').getContext('2d');
         new Chart(ctx3, {
             type: 'pie',
@@ -388,12 +472,24 @@
                 responsive: true,
                 maintainAspectRatio: true,
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: { position: 'bottom' },
+                    datalabels: {
+                        color: '#fff',
+                        anchor: 'center',
+                        align: 'center',
+                        font: { weight: 'bold', size: 14 },
+                        formatter: function(value, context) {
+                            if (value === 0) return '';
+                            const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return value + '\n(' + percentage + '%)';
+                        }
+                    }
                 }
             }
         });
 
-        // Gráfico: Voos por Tipo
+        // Gráfico: Voos por Tipo (com valores nas fatias)
         const ctx4 = document.getElementById('voosPorTipoChart').getContext('2d');
         new Chart(ctx4, {
             type: 'doughnut',
@@ -411,12 +507,24 @@
                 responsive: true,
                 maintainAspectRatio: true,
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: { position: 'bottom' },
+                    datalabels: {
+                        color: '#fff',
+                        anchor: 'center',
+                        align: 'center',
+                        font: { weight: 'bold', size: 14 },
+                        formatter: function(value, context) {
+                            if (value === 0) return '';
+                            const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return value + '\n(' + percentage + '%)';
+                        }
+                    }
                 }
             }
         });
 
-        // Gráfico: Evolução Mensal
+        // Gráfico: Evolução Mensal (com valores nos pontos)
         if (evolucaoMensalData.length > 0) {
             const ctx5 = document.getElementById('evolucaoMensalChart').getContext('2d');
             new Chart(ctx5, {
@@ -446,7 +554,20 @@
                     responsive: true,
                     maintainAspectRatio: true,
                     plugins: {
-                        legend: { position: 'top' }
+                        legend: { position: 'top' },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#333',
+                            font: { weight: 'bold', size: 10 },
+                            formatter: function(value) {
+                                if (value === 0) return '';
+                                if (value >= 1000) {
+                                    return (value / 1000).toFixed(1) + 'k';
+                                }
+                                return value.toString();
+                            }
+                        }
                     }
                 }
             });
