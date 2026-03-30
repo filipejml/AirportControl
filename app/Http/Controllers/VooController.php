@@ -58,10 +58,20 @@ class VooController extends Controller
         
         $voos = $query->paginate($perPage)->withQueryString();
         
+        // CORRIGIDO: Calcular estatísticas com soma de qtd_voos
+        $totalVoosRegistros = Voo::count(); // Quantidade de registros de voos
+        $totalVoosQuantidade = Voo::sum('qtd_voos'); // SOMA da quantidade de voos
+        
+        // Para estatísticas com filtros (se houver filtros aplicados)
+        $queryStats = clone $query;
+        $totalVoosFiltrados = $queryStats->sum('qtd_voos');
+        $totalPassageirosFiltrados = $queryStats->sum('total_passageiros');
+        
         $estatisticas = [
-            'total_voos' => Voo::count(),
+            'total_voos_registros' => $totalVoosRegistros, // Quantos cadastros
+            'total_voos' => $totalVoosQuantidade, // SOMA dos voos (ex: 514)
             'total_passageiros' => Voo::sum('total_passageiros'),
-            'media_pax_voo' => Voo::count() > 0 ? round(Voo::sum('total_passageiros') / Voo::count(), 0) : 0,
+            'media_pax_voo' => $totalVoosQuantidade > 0 ? round(Voo::sum('total_passageiros') / $totalVoosQuantidade, 0) : 0,
             'voos_com_notas' => Voo::whereNotNull('media_notas')->count(),
             'media_geral_notas' => Voo::whereNotNull('media_notas')->avg('media_notas')
         ];
