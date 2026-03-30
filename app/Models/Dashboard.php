@@ -14,23 +14,15 @@ class Dashboard extends Model
     {
         $stats = [];
         
-        // Total de companhias (corrigido: companhias_aereas)
         $stats['companhias'] = DB::table('companhias_aereas')->count();
-        
-        // Total de modelos (considerando aeronaves com modelos distintos)
-        $stats['modelos'] = DB::table('aeronaves')
-            ->select('modelo')
-            ->distinct()
-            ->count();
-        
-        // Total de aeroportos (corrigido: aeroportos)
+        $stats['modelos'] = DB::table('aeronaves')->distinct('modelo')->count('modelo');
         $stats['aeroportos'] = DB::table('aeroportos')->count();
         
-        // Total de voos (corrigido: voos)
-        $stats['voos'] = DB::table('voos')->count();
+        // ALTERAR: somar qtd_voos em vez de contar registros
+        $stats['voos'] = DB::table('voos')->sum('qtd_voos') ?? 0;
         
-        // Total de passageiros (soma de todos os voos)
-        $stats['passageiros_total'] = DB::table('voos')->sum('qtd_passageiros');
+        // ALTERAR: usar total_passageiros
+        $stats['passageiros_total'] = DB::table('voos')->sum('total_passageiros') ?? 0;
         
         return $stats;
     }
@@ -171,7 +163,7 @@ class Dashboard extends Model
     public function getVoosPorHorario()
     {
         $voos = DB::table('voos')
-            ->select('horario_voo', DB::raw('COUNT(*) as total_voos'))
+            ->select('horario_voo', DB::raw('SUM(qtd_voos) as total_voos'))  // ALTERADO: COUNT para SUM
             ->groupBy('horario_voo')
             ->pluck('total_voos', 'horario_voo')
             ->toArray();
@@ -193,7 +185,7 @@ class Dashboard extends Model
     public function getPassageirosPorHorario()
     {
         $passageiros = DB::table('voos')
-            ->select('horario_voo', DB::raw('SUM(qtd_passageiros) as total_passageiros'))
+            ->select('horario_voo', DB::raw('SUM(total_passageiros) as total_passageiros'))  // ALTERADO: qtd_passageiros para total_passageiros
             ->groupBy('horario_voo')
             ->pluck('total_passageiros', 'horario_voo')
             ->toArray();
@@ -215,7 +207,7 @@ class Dashboard extends Model
     public function getVoosPorTipo()
     {
         $voos = DB::table('voos')
-            ->select('tipo_voo', DB::raw('COUNT(*) as total_voos'))
+            ->select('tipo_voo', DB::raw('SUM(qtd_voos) as total_voos'))  
             ->groupBy('tipo_voo')
             ->pluck('total_voos', 'tipo_voo')
             ->toArray();
@@ -237,7 +229,7 @@ class Dashboard extends Model
     public function getPassageirosPorTipo()
     {
         $passageiros = DB::table('voos')
-            ->select('tipo_voo', DB::raw('SUM(qtd_passageiros) as total_passageiros'))
+            ->select('tipo_voo', DB::raw('SUM(total_passageiros) as total_passageiros'))  // ALTERADO: qtd_passageiros para total_passageiros
             ->groupBy('tipo_voo')
             ->pluck('total_passageiros', 'tipo_voo')
             ->toArray();
@@ -259,7 +251,7 @@ class Dashboard extends Model
     public function getVoosPorTipoAeronave()
     {
         $voos = DB::table('voos')
-            ->select('tipo_aeronave', DB::raw('COUNT(*) as total_voos'))
+            ->select('tipo_aeronave', DB::raw('SUM(qtd_voos) as total_voos'))  // ALTERADO: COUNT para SUM
             ->whereNotNull('tipo_aeronave')
             ->groupBy('tipo_aeronave')
             ->pluck('total_voos', 'tipo_aeronave')
@@ -282,8 +274,8 @@ class Dashboard extends Model
     public function getPassageirosPorTipoAeronave()
     {
         $passageiros = DB::table('voos')
-            ->select('tipo_aeronave', DB::raw('SUM(qtd_passageiros) as total_passageiros'))
-            ->whereNotNull('tipo_aeronave')
+            ->select('tipo_aeronave', DB::raw('SUM(total_passageiros) as total_passageiros'))  // ALTERADO: qtd_passageiros para total_passageiros
+            ->whereNotNull('tipo_aeronave')  // Mantenha ou remova conforme necessidade
             ->groupBy('tipo_aeronave')
             ->pluck('total_passageiros', 'tipo_aeronave')
             ->toArray();
