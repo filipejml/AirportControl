@@ -7,7 +7,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <h1 class="h2 text-dark mb-0">
-                <i class="bi bi-speedometer2 me-2"></i>Dashboard - relatórios
+                <i class="bi bi-speedometer2 me-2"></i>Dashboard - Painel
             </h1>
             <hr class="mt-3">
         </div>
