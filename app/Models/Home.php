@@ -201,8 +201,11 @@ class Home extends Model
         $stats['companhias'] = DB::table('companhias_aereas')->count();
         $stats['modelos'] = DB::table('aeronaves')->distinct('modelo')->count('modelo');
         $stats['aeroportos'] = DB::table('aeroportos')->count();
-        $stats['voos'] = DB::table('voos')->count();
-        $stats['passageiros_total'] = $this->getTotalPassageiros();
+        
+        // ALTERAR: somar qtd_voos em vez de contar registros
+        $stats['voos'] = DB::table('voos')->sum('qtd_voos') ?? 0;
+        
+        $stats['passageiros_total'] = DB::table('voos')->sum('total_passageiros') ?? 0;
         
         return $stats;
     }
