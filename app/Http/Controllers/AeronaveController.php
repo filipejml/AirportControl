@@ -7,6 +7,7 @@ use App\Models\Aeronave;
 use App\Models\Fabricante;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use DateTime;
 
 class AeronaveController extends Controller
 {
@@ -174,13 +175,34 @@ class AeronaveController extends Controller
         foreach ($aeronaves as $aeronave) {
             $modelo = $aeronave->modelo;
             
-            // Calcular médias das notas dos voos
-            $totalVoos = $aeronave->voos->count();
-            $totalPassageiros = $aeronave->voos->sum('qtd_passageiros');
-            $mediaObjetivo = $aeronave->voos->avg('nota_obj');
-            $mediaPontualidade = $aeronave->voos->avg('nota_pontualidade');
-            $mediaServicos = $aeronave->voos->avg('nota_servicos');
-            $mediaPatio = $aeronave->voos->avg('nota_patio');
+            // CORRIGIDO: Usar sum('qtd_voos') ao invés de count()
+            $totalVoos = $aeronave->voos()->sum('qtd_voos');
+            $totalPassageiros = $aeronave->voos()->sum('total_passageiros');
+            
+            // CORRIGIDO: Calcular médias ponderadas por quantidade de voos
+            $mediaObjetivo = DB::table('voos')
+                ->where('aeronave_id', $aeronave->id)
+                ->whereNotNull('nota_obj')
+                ->select(DB::raw('SUM(qtd_voos * nota_obj) / SUM(qtd_voos) as media'))
+                ->value('media') ?? 0;
+                
+            $mediaPontualidade = DB::table('voos')
+                ->where('aeronave_id', $aeronave->id)
+                ->whereNotNull('nota_pontualidade')
+                ->select(DB::raw('SUM(qtd_voos * nota_pontualidade) / SUM(qtd_voos) as media'))
+                ->value('media') ?? 0;
+                
+            $mediaServicos = DB::table('voos')
+                ->where('aeronave_id', $aeronave->id)
+                ->whereNotNull('nota_servicos')
+                ->select(DB::raw('SUM(qtd_voos * nota_servicos) / SUM(qtd_voos) as media'))
+                ->value('media') ?? 0;
+                
+            $mediaPatio = DB::table('voos')
+                ->where('aeronave_id', $aeronave->id)
+                ->whereNotNull('nota_patio')
+                ->select(DB::raw('SUM(qtd_voos * nota_patio) / SUM(qtd_voos) as media'))
+                ->value('media') ?? 0;
             
             $modelosComDados[$modelo] = [
                 'id' => $aeronave->id,
@@ -193,7 +215,7 @@ class AeronaveController extends Controller
                 'media_pontualidade' => $mediaPontualidade ? round($mediaPontualidade, 1) : 0,
                 'media_servicos' => $mediaServicos ? round($mediaServicos, 1) : 0,
                 'media_patio' => $mediaPatio ? round($mediaPatio, 1) : 0,
-                'tem_dados' => $totalVoos > 0 // Campo corrigido para 'tem_dados'
+                'tem_dados' => $totalVoos > 0
             ];
         }
         
