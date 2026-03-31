@@ -68,18 +68,17 @@
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
-                        <tr>
+                         <tr>
                             <th>ID</th>
                             <th>Companhia</th>
-                            <th>Código</th> <!-- NOVA COLUNA ADICIONADA -->
+                            <th>Código</th>
                             <th>Qtd. Aeronaves</th>
-                            <th>Data de Cadastro</th>
                             <th width="180">Ações</th>
-                        </tr>
+                         </tr>
                     </thead>
                     <tbody>
                         @forelse($companhias as $companhia)
-                            <tr>
+                             <tr>
                                 <td><span class="fw-semibold">#{{ $companhia->id }}</span></td>
                                 <td>
                                     <a href="{{ route('companhias.show', $companhia->id) }}" 
@@ -87,7 +86,6 @@
                                         {{ $companhia->nome }}
                                     </a>
                                 </td>
-                                <!-- NOVA CÉLULA PARA O CÓDIGO -->
                                 <td>
                                     @if($companhia->codigo)
                                         <span class="badge bg-secondary rounded-pill px-3 py-2">
@@ -102,7 +100,6 @@
                                         {{ $companhia->aeronaves_count ?? 0 }} aeronaves
                                     </span>
                                 </td>
-                                <td>{{ $companhia->created_at?->format('d/m/Y H:i') ?? 'Data não disponível' }}</td>
                                 <td>
                                     <div class="d-flex gap-2">
                                         <a href="{{ route('companhias.edit', $companhia->id) }}" 
@@ -128,10 +125,10 @@
                                         </form>
                                     </div>
                                 </td>
-                            </tr>
+                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="6" class="text-center py-5"> <!-- Alterado de 5 para 6 colunas -->
+                             <tr>
+                                <td colspan="5" class="text-center py-5">
                                     <i class="bi bi-exclamation-circle text-muted" style="font-size: 3rem;"></i>
                                     <h5 class="text-muted mt-3">Nenhuma companhia aérea cadastrada ainda</h5>
                                     <p class="text-muted mb-3">Comece cadastrando a primeira companhia aérea.</p>
@@ -139,7 +136,7 @@
                                         <i class="bi bi-plus-circle"></i> Cadastrar Primeira Companhia
                                     </a>
                                 </td>
-                            </tr>
+                             </tr>
                         @endforelse
                     </tbody>
                 </table>

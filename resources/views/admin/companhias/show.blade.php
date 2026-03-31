@@ -56,6 +56,45 @@
     opacity: 1;
 }
 
+/* Estilo para card de informações adicionais */
+.info-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: none;
+    border-radius: 16px;
+}
+.info-card .card-body {
+    padding: 1.25rem;
+}
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+}
+.info-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 10px;
+    color: #3b82f6;
+}
+.info-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    margin-bottom: 2px;
+}
+.info-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #212529;
+}
+
 /* Ajustes responsivos */
 @media (max-width: 768px) {
     .btn-action span {
@@ -78,16 +117,16 @@
             <a href="{{ route('companhias.informacoes') }}" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> Voltar
             </a>
-                        <a href="{{ route('companhias.edit', ['companhia' => $companhia, 'from' => 'show']) }}" class="btn btn-primary btn-action">
+            <a href="{{ route('companhias.edit', ['companhia' => $companhia, 'from' => 'show']) }}" class="btn btn-primary btn-action">
                 <i class="bi bi-pencil"></i>
                 <span>Editar</span>
             </a>
         </div>
     </div>
 
-    <!-- Card com estatísticas -->
+    <!-- Linha com estatísticas principais -->
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card shadow-sm bg-primary text-white">
                 <div class="card-body">
                     <h5 class="card-title">Total de Aeronaves</h5>
@@ -96,7 +135,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card shadow-sm bg-success text-white">
                 <div class="card-body">
                     <h5 class="card-title">Capacidade Total</h5>
@@ -105,12 +144,50 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card shadow-sm bg-info text-white">
                 <div class="card-body">
                     <h5 class="card-title">Média de Capacidade</h5>
                     <h2 class="display-4">{{ $companhia->aeronaves->avg('capacidade') ? round($companhia->aeronaves->avg('capacidade')) : 0 }}</h2>
                     <small>passageiros por aeronave</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm bg-secondary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Código</h5>
+                    <h2 class="display-4">{{ $companhia->codigo ?? '—' }}</h2>
+                    <small>código identificador</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card com informações adicionais (data de cadastro) -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card info-card shadow-sm">
+                <div class="card-body">
+                    <h6 class="mb-3 text-muted">📋 Informações do Cadastro</h6>
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="bi bi-calendar-plus"></i>
+                        </div>
+                        <div>
+                            <div class="info-label">Data de Cadastro</div>
+                            <div class="info-value">{{ $companhia->created_at ? $companhia->created_at->format('d/m/Y \à\s H:i') : 'Data não disponível' }}</div>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <div>
+                            <div class="info-label">Última Atualização</div>
+                            <div class="info-value">{{ $companhia->updated_at ? $companhia->updated_at->format('d/m/Y \à\s H:i') : 'Data não disponível' }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -131,18 +208,18 @@
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
-                            <tr>
+                             <tr>
                                 <th>ID</th>
                                 <th>Modelo</th>
                                 <th>Fabricante</th>
                                 <th>Capacidade</th>
                                 <th>Porte</th>
                                 <th width="180">Ações</th>
-                            </tr>
+                             </tr>
                         </thead>
                         <tbody>
                             @foreach($companhia->aeronaves as $aeronave)
-                                <tr>
+                                 <tr>
                                     <td><span class="fw-semibold">#{{ $aeronave->id }}</span></td>
                                     <td>
                                         <a href="{{ route('aeronaves.show', $aeronave) }}" 
@@ -196,7 +273,7 @@
                                             </form>
                                         </div>
                                     </td>
-                                </tr>
+                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
