@@ -11,6 +11,7 @@ use App\Http\Controllers\FabricanteController;
 use App\Http\Controllers\VooController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -123,6 +124,9 @@ Route::middleware('auth')->group(function () {
                 ->name('relatorios.update');
             Route::delete('/relatorios/{relatorio}', [RelatorioController::class, 'destroy'])
                 ->name('relatorios.destroy');
+
+            // Rotas de usuários
+            Route::resource('users', UserController::class);
         });
 
         Route::resource('fabricantes', FabricanteController::class);

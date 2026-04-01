@@ -12,6 +12,22 @@
 
 <div class="row g-4">
 
+    <!-- Usuários -->
+    <div class="col-md-4">
+        <div class="card shadow-sm p-3 h-100">
+            <h5>👥 Usuários</h5>
+            <p class="text-muted">Gerenciar usuários do sistema</p>
+
+            <a href="{{ route('admin.users.index') }}" class="btn btn-outline-primary btn-sm mb-2">
+                Ver lista
+            </a>
+
+            <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
+                + Novo Usuário
+            </a>
+        </div>
+    </div>
+
     <!-- Aeronaves -->
     <div class="col-md-4">
         <div class="card shadow-sm p-3 h-100">
