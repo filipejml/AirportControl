@@ -29,6 +29,17 @@
         .progress {
             background-color: #e9ecef;
         }
+        
+        /* Estilo para cards sem dados */
+        .card-sem-dados {
+            opacity: 0.7;
+            filter: grayscale(0.1);
+        }
+        
+        .card-sem-dados:hover {
+            opacity: 0.85;
+            filter: grayscale(0.05);
+        }
     </style>
 </head>
 <body>
@@ -159,9 +170,28 @@
         </div>
         @endif
 
-        {{-- Cards das Companhias --}}
+        {{-- Separador visual entre companhias com e sem dados --}}
+        @php
+            $hasDataCompanies = $companhias->filter(fn($c) => $c->voos_count > 0);
+            $noDataCompanies = $companhias->filter(fn($c) => $c->voos_count == 0);
+        @endphp
+
+        {{-- Companhias com dados --}}
+        @if($hasDataCompanies->count() > 0)
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex align-items-center">
+                    <div class="bg-success rounded-circle p-2 me-2" style="width: 8px; height: 8px;"></div>
+                    <h5 class="mb-0 fw-semibold text-success">Companhias Ativas</h5>
+                    <span class="badge bg-success ms-2">{{ $hasDataCompanies->count() }}</span>
+                    <small class="text-muted ms-3">Companhias com registros de voos</small>
+                </div>
+                <hr class="mt-2 mb-0">
+            </div>
+        </div>
+
         <div class="row">
-            @foreach($companhias as $companhia)
+            @foreach($hasDataCompanies as $companhia)
                 @php
                     $temRegistros = $companhia->voos_count > 0;
                     $notaMedia = $companhia->media_notas ?? 0;
@@ -172,21 +202,18 @@
 
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 shadow-sm hover-shadow" 
-                        style="border-left: 5px solid {{ $borderColor }}; transition: transform 0.3s; {{ !$temRegistros ? 'opacity: 0.7;' : '' }}">
+                        style="border-left: 5px solid {{ $borderColor }}; transition: transform 0.3s;">
                         
                         {{-- Cabeçalho com nome da companhia --}}
                         <div class="card-header bg-white border-bottom-0 pb-0">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <h5 class="card-title mb-1 fw-bold">{{ $companhia->nome }}</h5>
-                                    @if(!$temRegistros)
-                                        <span class="badge bg-secondary">Sem registros</span>
-                                    @endif
                                     @if($companhia->codigo)
                                         <small class="text-muted d-block">{{ $companhia->codigo }}</small>
                                     @endif
                                 </div>
-                                <span class="badge {{ $temRegistros ? 'bg-primary' : 'bg-light text-dark' }}">
+                                <span class="badge bg-primary">
                                     {{ $companhia->aeronaves_count }} aeronaves
                                 </span>
                             </div>
@@ -210,14 +237,14 @@
                             {{-- Estatísticas principais --}}
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
-                                    <div class="p-2 border rounded text-center {{ !$temRegistros ? 'bg-light' : '' }}">
+                                    <div class="p-2 border rounded text-center">
                                         <i class="bi bi-airplane-fill text-primary fs-5"></i>
                                         <h6 class="mb-0 mt-1 fw-bold">{{ number_format($companhia->voos_count, 0, ',', '.') }}</h6>
                                         <small class="text-muted">Voos</small>
                                     </div>
                                 </div>
                                 <div class="col-6">
-                                    <div class="p-2 border rounded text-center {{ !$temRegistros ? 'bg-light' : '' }}">
+                                    <div class="p-2 border rounded text-center">
                                         <i class="bi bi-people-fill text-success fs-5"></i>
                                         <h6 class="mb-0 mt-1 fw-bold">{{ number_format($companhia->total_passageiros, 0, ',', '.') }}</h6>
                                         <small class="text-muted">Passageiros</small>
@@ -225,8 +252,7 @@
                                 </div>
                             </div>
 
-                            {{-- Médias das notas (só mostra se tiver registros) --}}
-                            @if($temRegistros)
+                            {{-- Médias das notas --}}
                             <div class="border-top pt-3">
                                 <h6 class="mb-2 fw-semibold">
                                     <i class="bi bi-star-fill me-1 text-warning"></i>Desempenho
@@ -301,7 +327,90 @@
                                     </span>
                                 </div>
                             </div>
-                            @else
+                        </div>
+
+                        {{-- Rodapé com botões de ação --}}
+                        <div class="card-footer bg-white border-top-0 pt-0">
+                            <a href="{{ route('companhias.dashboard', $companhia->id) }}" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="bi bi-graph-up me-1"></i> Ver Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        @endif
+
+        {{-- Companhias sem dados --}}
+        @if($noDataCompanies->count() > 0)
+        <div class="row mb-3 mt-4">
+            <div class="col-12">
+                <div class="d-flex align-items-center">
+                    <div class="bg-secondary rounded-circle p-2 me-2" style="width: 8px; height: 8px;"></div>
+                    <h5 class="mb-0 fw-semibold text-secondary">Companhias sem Registros</h5>
+                    <span class="badge bg-secondary ms-2">{{ $noDataCompanies->count() }}</span>
+                    <small class="text-muted ms-3">Companhias cadastradas sem voos realizados</small>
+                </div>
+                <hr class="mt-2 mb-0">
+            </div>
+        </div>
+
+        <div class="row">
+            @foreach($noDataCompanies as $companhia)
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm hover-shadow card-sem-dados" 
+                        style="border-left: 5px solid #6c757d; transition: transform 0.3s;">
+                        
+                        {{-- Cabeçalho com nome da companhia --}}
+                        <div class="card-header bg-white border-bottom-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title mb-1 fw-bold">{{ $companhia->nome }}</h5>
+                                    <span class="badge bg-secondary">Sem registros</span>
+                                    @if($companhia->codigo)
+                                        <small class="text-muted d-block mt-1">{{ $companhia->codigo }}</small>
+                                    @endif
+                                </div>
+                                <span class="badge bg-light text-dark">
+                                    {{ $companhia->aeronaves_count }} aeronaves
+                                </span>
+                            </div>
+                            @if(request('aeroporto'))
+                                <small class="text-muted">
+                                    <i class="bi bi-geo-alt me-1"></i>Aeroporto: {{ request('aeroporto') }}
+                                </small>
+                            @endif
+                        </div>
+
+                        {{-- Corpo do card --}}
+                        <div class="card-body pt-0">
+                            {{-- Descrição/Metadados --}}
+                            <div class="mb-3">
+                                <p class="text-muted small mb-2">
+                                    <i class="bi bi-geo-alt me-1"></i>
+                                    {{ $companhia->aeroportos->count() }} aeroportos operados
+                                </p>
+                            </div>
+
+                            {{-- Estatísticas principais (vazias) --}}
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="p-2 border rounded text-center bg-light">
+                                        <i class="bi bi-airplane-fill text-secondary fs-5"></i>
+                                        <h6 class="mb-0 mt-1 fw-bold text-secondary">0</h6>
+                                        <small class="text-muted">Voos</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-2 border rounded text-center bg-light">
+                                        <i class="bi bi-people-fill text-secondary fs-5"></i>
+                                        <h6 class="mb-0 mt-1 fw-bold text-secondary">0</h6>
+                                        <small class="text-muted">Passageiros</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Mensagem de sem dados --}}
                             <div class="border-top pt-3 text-center">
                                 <div class="p-3">
                                     <i class="bi bi-database-slash text-muted fs-1 mb-2"></i>
@@ -309,35 +418,29 @@
                                     <small class="text-muted">Esta companhia não possui voos cadastrados</small>
                                 </div>
                             </div>
-                            @endif
                         </div>
 
-                        {{-- Rodapé com botões de ação --}}
+                        {{-- Rodapé com botão desabilitado --}}
                         <div class="card-footer bg-white border-top-0 pt-0">
-                            @if($temRegistros)
-                                <a href="{{ route('companhias.dashboard', $companhia->id) }}" class="btn btn-outline-primary btn-sm w-100">
-                                    <i class="bi bi-graph-up me-1"></i> Ver Dashboard
-                                </a>
-                            @else
-                                <button class="btn btn-outline-secondary btn-sm w-100" disabled>
-                                    <i class="bi bi-eye-slash me-1"></i> Sem dados disponíveis
-                                </button>
-                            @endif
+                            <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                <i class="bi bi-eye-slash me-1"></i> Sem dados disponíveis
+                            </button>
                         </div>
                     </div>
                 </div>
             @endforeach
-
-            {{-- Mensagem quando não há resultados --}}
-            @if(count($companhias) === 0)
-            <div class="col-12">
-                <div class="alert alert-warning text-center">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    Nenhuma companhia encontrada com os filtros selecionados.
-                </div>
-            </div>
-            @endif
         </div>
+        @endif
+
+        {{-- Mensagem quando não há resultados --}}
+        @if(count($companhias) === 0)
+        <div class="col-12">
+            <div class="alert alert-warning text-center">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Nenhuma companhia encontrada com os filtros selecionados.
+            </div>
+        </div>
+        @endif
     </div>
 
     <!-- Scripts -->

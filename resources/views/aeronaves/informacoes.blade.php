@@ -36,6 +36,39 @@
         .card:hover {
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
         }
+        
+        /* Estilo para cards sem dados */
+        .card-sem-dados {
+            opacity: 0.7;
+            filter: grayscale(0.1);
+        }
+        
+        .card-sem-dados:hover {
+            opacity: 0.85;
+            filter: grayscale(0.05);
+        }
+        
+        .separator-section {
+            position: relative;
+            margin-top: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .separator-section:first-of-type {
+            margin-top: 0;
+        }
+        
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .section-badge {
+            font-size: 0.875rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+        }
     </style>
 </head>
 <body>
@@ -133,13 +166,38 @@
             </div>
         </div>
 
-        {{-- Cards dos Modelos --}}
+        {{-- Separar modelos com e sem dados --}}
+        @php
+            $modelosComDadosArray = [];
+            $modelosSemDadosArray = [];
+            
+            foreach($modelosComDados as $modelo => $dados) {
+                if ($dados['tem_dados']) {
+                    $modelosComDadosArray[$modelo] = $dados;
+                } else {
+                    $modelosSemDadosArray[$modelo] = $dados;
+                }
+            }
+        @endphp
+
+        {{-- Modelos com dados --}}
+        @if(count($modelosComDadosArray) > 0)
+        <div class="separator-section">
+            <div class="section-header mb-3">
+                <div class="bg-success rounded-circle p-2" style="width: 8px; height: 8px;"></div>
+                <h5 class="mb-0 fw-semibold text-success">Aeronaves com Dados</h5>
+                <span class="badge bg-success section-badge">{{ count($modelosComDadosArray) }}</span>
+                <small class="text-muted ms-2">Modelos com registros de voos</small>
+            </div>
+            <hr class="mt-0 mb-4">
+        </div>
+
         <div class="row" id="modelosContainer">
-            @foreach($modelosComDados as $modelo => $dados)
+            @foreach($modelosComDadosArray as $modelo => $dados)
                 @php
                     // Determinar cor da borda baseada na disponibilidade de dados
-                    $borderColor = $dados['tem_dados'] ? '#0d6efd' : '#6c757d';
-                    $textColor = $dados['tem_dados'] ? 'text-primary' : 'text-muted';
+                    $borderColor = '#0d6efd';
+                    $textColor = 'text-primary';
                 @endphp
                 
                 <div class="col-md-6 col-lg-4 mb-4 modelo-card" 
@@ -151,7 +209,7 @@
                      data-pontualidade="{{ $dados['media_pontualidade'] }}"
                      data-servicos="{{ $dados['media_servicos'] }}"
                      data-patio="{{ $dados['media_patio'] }}"
-                     data-tem-dados="{{ $dados['tem_dados'] ? 'true' : 'false' }}">
+                     data-tem-dados="true">
                     <div class="card h-100 shadow-sm" style="border-left:5px solid {{ $borderColor }};">
                         
                         {{-- Cabeçalho --}}
@@ -171,15 +229,9 @@
                         <div class="card-body pt-3">
                             {{-- Status dos dados --}}
                             <div class="mb-3">
-                                @if($dados['tem_dados'])
-                                    <span class="badge bg-success">
-                                        <i class="bi bi-check-circle-fill"></i> Com dados disponíveis
-                                    </span>
-                                @else
-                                    <span class="badge bg-secondary">
-                                        <i class="bi bi-dash-circle"></i> Sem dados disponíveis
-                                    </span>
-                                @endif
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle-fill"></i> Com dados disponíveis
+                                </span>
                             </div>
 
                             {{-- Informações principais --}}
@@ -188,7 +240,7 @@
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-airplane-fill text-primary me-2"></i>
                                         <div>
-                                            <p class="mb-0 fw-bold">{{ $dados['total_voos'] }}</p>
+                                            <p class="mb-0 fw-bold">{{ number_format($dados['total_voos']) }}</p>
                                             <small class="text-muted">Voos</small>
                                         </div>
                                     </div>
@@ -241,25 +293,146 @@
 
                             {{-- Botão de ação --}}
                             <div class="mt-3">
-                                @if($dados['tem_dados'])
-                                    <div class="d-grid">
-                                        <a href="{{ route('aeronaves.dashboard', $dados['id']) }}" class="btn btn-primary btn-sm">
-                                            <i class="bi bi-graph-up me-1"></i> Ver Dashboard
-                                        </a>
-                                    </div>
-                                @else
-                                    <div class="d-grid">
-                                        <button class="btn btn-outline-secondary btn-sm" disabled>
-                                            <i class="bi bi-eye-slash me-1"></i> Dashboard Indisponível
-                                        </button>
-                                    </div>
-                                @endif
+                                <div class="d-grid">
+                                    <a href="{{ route('aeronaves.dashboard', $dados['id']) }}" class="btn btn-primary btn-sm">
+                                        <i class="bi bi-graph-up me-1"></i> Ver Dashboard
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             @endforeach
         </div>
+        @endif
+
+        {{-- Modelos sem dados --}}
+        @if(count($modelosSemDadosArray) > 0)
+        <div class="separator-section mt-4">
+            <div class="section-header mb-3">
+                <div class="bg-secondary rounded-circle p-2" style="width: 8px; height: 8px;"></div>
+                <h5 class="mb-0 fw-semibold text-secondary">Aeronaves sem Registros</h5>
+                <span class="badge bg-secondary section-badge">{{ count($modelosSemDadosArray) }}</span>
+                <small class="text-muted ms-2">Modelos cadastrados sem voos realizados</small>
+            </div>
+            <hr class="mt-0 mb-4">
+        </div>
+
+        <div class="row">
+            @foreach($modelosSemDadosArray as $modelo => $dados)
+                <div class="col-md-6 col-lg-4 mb-4 modelo-card" 
+                     data-modelo="{{ strtolower($modelo) }}"
+                     data-fabricante="{{ strtolower($dados['fabricante']) }}"
+                     data-voos="0"
+                     data-passageiros="0"
+                     data-objetivo="0"
+                     data-pontualidade="0"
+                     data-servicos="0"
+                     data-patio="0"
+                     data-tem-dados="false">
+                    <div class="card h-100 shadow-sm card-sem-dados" style="border-left:5px solid #6c757d;">
+                        
+                        {{-- Cabeçalho --}}
+                        <div class="card-header bg-transparent border-0 pb-0 pt-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title mb-1 text-muted">
+                                        <i class="bi bi-airplane me-2"></i>{{ $modelo }}
+                                    </h5>
+                                    <p class="card-text text-muted small mb-0">{{ $dados['fabricante'] }}</p>
+                                </div>
+                                <span class="badge bg-light text-dark">{{ $dados['capacidade'] }} assentos</span>
+                            </div>
+                        </div>
+
+                        {{-- Corpo do card --}}
+                        <div class="card-body pt-3">
+                            {{-- Status dos dados --}}
+                            <div class="mb-3">
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-dash-circle"></i> Sem dados disponíveis
+                                </span>
+                            </div>
+
+                            {{-- Informações principais (vazias) --}}
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-airplane-fill text-secondary me-2"></i>
+                                        <div>
+                                            <p class="mb-0 fw-bold text-secondary">0</p>
+                                            <small class="text-muted">Voos</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-people-fill text-secondary me-2"></i>
+                                        <div>
+                                            <p class="mb-0 fw-bold text-secondary">0</p>
+                                            <small class="text-muted">Passageiros</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Médias das notas (vazias) --}}
+                            <div class="border-top pt-3">
+                                <p class="small text-muted mb-2">Médias de Avaliação:</p>
+                                <div class="row text-center">
+                                    <div class="col-3">
+                                        <div class="border rounded p-2 bg-light">
+                                            <i class="bi bi-flag-fill text-secondary d-block mb-1"></i>
+                                            <p class="mb-0 fw-bold small text-secondary">0.0</p>
+                                            <small class="text-muted">Obj</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="border rounded p-2 bg-light">
+                                            <i class="bi bi-clock-fill text-secondary d-block mb-1"></i>
+                                            <p class="mb-0 fw-bold small text-secondary">0.0</p>
+                                            <small class="text-muted">Pont</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="border rounded p-2 bg-light">
+                                            <i class="bi bi-gear-fill text-secondary d-block mb-1"></i>
+                                            <p class="mb-0 fw-bold small text-secondary">0.0</p>
+                                            <small class="text-muted">Serv</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="border rounded p-2 bg-light">
+                                            <i class="bi bi-pin-fill text-secondary d-block mb-1"></i>
+                                            <p class="mb-0 fw-bold small text-secondary">0.0</p>
+                                            <small class="text-muted">Pátio</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Mensagem de sem dados --}}
+                            <div class="mt-3 text-center">
+                                <div class="p-2 bg-light rounded">
+                                    <i class="bi bi-database-slash text-muted me-1"></i>
+                                    <small class="text-muted">Nenhum voo registrado com este modelo</small>
+                                </div>
+                            </div>
+
+                            {{-- Botão desabilitado --}}
+                            <div class="mt-3">
+                                <div class="d-grid">
+                                    <button class="btn btn-outline-secondary btn-sm" disabled>
+                                        <i class="bi bi-eye-slash me-1"></i> Dashboard Indisponível
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        @endif
 
         @if(count($modelosComDados) === 0)
             <div class="text-center py-5">
@@ -330,6 +503,9 @@
             const container = document.getElementById('modelosContainer');
             const cards = Array.from(document.querySelectorAll('.modelo-card'));
             
+            // Verificar se existe container (para modelos com dados)
+            if (!container) return;
+            
             cards.sort((a, b) => {
                 switch(sortType) {
                     case 'modelo':
@@ -364,6 +540,14 @@
                 container.appendChild(card);
             });
         }
+        
+        // Aplicar ordenação inicial (com dados primeiro)
+        document.addEventListener('DOMContentLoaded', function() {
+            const sortSelect = document.getElementById('sortSelect');
+            if (sortSelect && sortSelect.value === 'dados') {
+                sortCards('dados');
+            }
+        });
     </script>
 </body>
 </html>
