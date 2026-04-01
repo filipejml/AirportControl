@@ -60,7 +60,8 @@ class Aeronave extends Model
     public function companhias()
     {
         return $this->belongsToMany(CompanhiaAerea::class, 'companhia_aeronave', 'aeronave_id', 'companhia_aerea_id')
-                    ->withTimestamps();
+            ->withPivot('disponivel')
+            ->withTimestamps();
     }
 
     // NOVO: Relacionamento com Voos

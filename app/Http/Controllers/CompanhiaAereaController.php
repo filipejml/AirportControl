@@ -91,7 +91,11 @@ class CompanhiaAereaController extends Controller
      */
     public function show(CompanhiaAerea $companhia)
     {
-        $companhia->load('aeronaves.fabricante');
+        // Carregar aeronaves com o pivot incluindo o campo disponivel
+        $companhia->load(['aeronaves' => function($query) {
+            $query->withPivot('disponivel');
+        }, 'aeronaves.fabricante']);
+        
         return view('admin.companhias.show', compact('companhia'));
     }
 
@@ -606,4 +610,27 @@ class CompanhiaAereaController extends Controller
         
         return $pdf->download($nomeArquivo);
     }
+
+    /**
+     * Update the availability of an aircraft for the airline
+     */
+    public function atualizarDisponibilidade(Request $request, CompanhiaAerea $companhia, Aeronave $aeronave)
+    {
+        try {
+            $disponivel = $request->input('disponivel', false);
+            
+            $companhia->atualizarDisponibilidadeAeronave($aeronave->id, $disponivel);
+            
+            return response()->json([
+                'success' => true,
+                'message' => $disponivel ? 'Aeronave disponível para voos!' : 'Aeronave indisponível para voos.',
+                'disponivel' => $disponivel
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao atualizar disponibilidade: ' . $e->getMessage()
+            ], 500);
+        }
+    }   
 }

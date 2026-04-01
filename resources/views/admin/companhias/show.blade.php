@@ -1,3 +1,4 @@
+{{-- resources/views/admin/companhias/show.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Detalhes da Companhia Aérea')
@@ -105,6 +106,80 @@
         padding: 0.5rem;
     }
 }
+
+/* Estilos para o toggle de disponibilidade */
+.form-check.form-switch {
+    padding-left: 2.5em;
+}
+
+.form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.form-check-input:not(:checked) {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.form-check-label {
+    cursor: pointer;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    transition: all 0.3s ease;
+}
+
+/* Estilo para linhas de aeronaves indisponíveis */
+tr.aeronave-indisponivel td:not(:last-child) {
+    opacity: 0.7;
+    background-color: #fff3f3;
+}
+
+tr.aeronave-indisponivel .modelo-link {
+    text-decoration: line-through;
+    color: #6c757d !important;
+}
+
+/* Estilo para linhas com alterações pendentes */
+.status-badge.opacity-50 {
+    opacity: 0.5 !important;
+}
+
+/* Botão de salvar flutuante */
+.floating-save-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    animation: pulse 1s ease-in-out;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Animação para fadeOut */
+@keyframes fadeOut {
+    0% { opacity: 1; transform: translateY(0); }
+    70% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-10px); visibility: hidden; }
+}
+
+.temporary-feedback {
+    animation: fadeOut 2s ease-in-out forwards;
+}
 </style>
 
 <div class="container mt-4">
@@ -117,7 +192,7 @@
             <a href="{{ route('companhias.informacoes') }}" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> Voltar
             </a>
-            <a href="{{ route('companhias.edit', ['companhia' => $companhia, 'from' => 'show']) }}" class="btn btn-primary btn-action">
+            <a href="{{ route('companhias.edit', $companhia) }}" class="btn btn-primary btn-action">
                 <i class="bi bi-pencil"></i>
                 <span>Editar</span>
             </a>
@@ -206,20 +281,26 @@
         <div class="card-body">
             @if($companhia->aeronaves->count() > 0)
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle">
+                    <table class="table table-hover align-middle" id="aeronavesTable">
                         <thead class="table-light">
-                             <tr>
+                            周末
                                 <th>ID</th>
                                 <th>Modelo</th>
                                 <th>Fabricante</th>
                                 <th>Capacidade</th>
                                 <th>Porte</th>
+                                <th width="120">Disponível</th>
                                 <th width="180">Ações</th>
-                             </tr>
+                            </tr>
                         </thead>
                         <tbody>
                             @foreach($companhia->aeronaves as $aeronave)
-                                 <tr>
+                                @php
+                                    // Buscar o valor do pivot corretamente
+                                    $disponivel = isset($aeronave->pivot->disponivel) ? (bool)$aeronave->pivot->disponivel : true;
+                                @endphp
+                                <tr data-aeronave-id="{{ $aeronave->id }}" 
+                                    data-disponivel-original="{{ $disponivel ? 'true' : 'false' }}">
                                     <td><span class="fw-semibold">#{{ $aeronave->id }}</span></td>
                                     <td>
                                         <a href="{{ route('aeronaves.show', $aeronave) }}" 
@@ -251,6 +332,21 @@
                                         @endif
                                     </td>
                                     <td>
+                                        <div class="form-check form-switch">
+                                            <input type="checkbox" 
+                                                   class="form-check-input disponivel-toggle" 
+                                                   id="disponivel_{{ $aeronave->id }}"
+                                                   data-aeronave-id="{{ $aeronave->id }}"
+                                                   data-companhia-id="{{ $companhia->id }}"
+                                                   {{ $disponivel ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="disponivel_{{ $aeronave->id }}">
+                                                <span class="badge {{ $disponivel ? 'bg-success' : 'bg-secondary' }} status-badge">
+                                                    {{ $disponivel ? 'Disponível' : 'Indisponível' }}
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
                                         <div class="d-flex gap-2 btn-action-group">
                                             <a href="{{ route('aeronaves.edit', $aeronave) }}" 
                                                class="btn btn-primary btn-action"
@@ -273,7 +369,7 @@
                                             </form>
                                         </div>
                                     </td>
-                                 </tr>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -291,4 +387,267 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Armazenar alterações pendentes
+    let pendingChanges = new Map();
+    let isSaving = false;
+    
+    // Criar botão de salvar flutuante
+    const saveButton = document.createElement('button');
+    saveButton.id = 'floatingSaveBtn';
+    saveButton.className = 'btn btn-success floating-save-btn d-none';
+    saveButton.innerHTML = '<i class="bi bi-check-circle me-2"></i> Salvar Alterações <span id="pendingCount">0</span>';
+    document.body.appendChild(saveButton);
+    
+    // Função para atualizar o contador de pendências
+    function updatePendingCount() {
+        const count = pendingChanges.size;
+        const countSpan = document.getElementById('pendingCount');
+        const saveBtn = document.getElementById('floatingSaveBtn');
+        
+        if (countSpan) countSpan.textContent = count;
+        
+        if (count > 0) {
+            saveBtn.classList.remove('d-none');
+            if (count === 1) {
+                saveBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i> Salvar Alteração (1 pendente)';
+            } else {
+                saveBtn.innerHTML = `<i class="bi bi-check-circle me-2"></i> Salvar Alterações (${count} pendentes)`;
+            }
+        } else {
+            saveBtn.classList.add('d-none');
+        }
+    }
+    
+    // Função para atualizar o status visual da linha
+    function updateRowStatus(row, disponivel) {
+        const statusBadge = row.querySelector('.status-badge');
+        const toggleInput = row.querySelector('.disponivel-toggle');
+        
+        // Atualizar o texto e classe do badge
+        if (statusBadge) {
+            statusBadge.textContent = disponivel ? 'Disponível' : 'Indisponível';
+            statusBadge.className = `badge ${disponivel ? 'bg-success' : 'bg-secondary'} status-badge`;
+        }
+        
+        // Atualizar o checkbox
+        if (toggleInput) {
+            toggleInput.checked = disponivel;
+        }
+        
+        // Atualizar a classe da linha
+        if (disponivel) {
+            row.classList.remove('aeronave-indisponivel');
+        } else {
+            row.classList.add('aeronave-indisponivel');
+        }
+    }
+    
+    // Função para salvar todas as alterações pendentes
+    async function savePendingChanges() {
+        if (isSaving || pendingChanges.size === 0) return;
+        
+        isSaving = true;
+        const saveBtn = document.getElementById('floatingSaveBtn');
+        const originalHtml = saveBtn.innerHTML;
+        saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i> Salvando...';
+        saveBtn.disabled = true;
+        
+        const changes = Array.from(pendingChanges.entries());
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const [key, data] of changes) {
+            const [companhiaId, aeronaveId] = key.split('_');
+            const disponivel = data.disponivel;
+            
+            try {
+                const response = await fetch(`/companhias/${companhiaId}/aeronaves/${aeronaveId}/disponibilidade`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ disponivel: disponivel })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    successCount++;
+                    pendingChanges.delete(key);
+                    
+                    // Atualizar status visual da linha com o valor que foi salvo
+                    const row = document.querySelector(`tr[data-aeronave-id="${aeronaveId}"]`);
+                    if (row) {
+                        // Atualizar visualmente com o status salvo
+                        updateRowStatus(row, disponivel);
+                        
+                        // Atualizar o estado original
+                        row.setAttribute('data-disponivel-original', disponivel);
+                        
+                        // Remover opacidade do badge
+                        const badge = row.querySelector('.status-badge');
+                        if (badge) {
+                            badge.classList.remove('opacity-50');
+                        }
+                        
+                        // Mostrar feedback temporário na linha
+                        showTemporaryFeedback(row, result.message, 'success');
+                    }
+                } else {
+                    errorCount++;
+                    // Reverter o toggle visualmente para o estado original
+                    const row = document.querySelector(`tr[data-aeronave-id="${aeronaveId}"]`);
+                    if (row) {
+                        const originalDisponivel = row.getAttribute('data-disponivel-original') === 'true';
+                        updateRowStatus(row, originalDisponivel);
+                        showTemporaryFeedback(row, result.message || 'Erro ao salvar', 'error');
+                    }
+                }
+            } catch (error) {
+                errorCount++;
+                console.error('Erro ao salvar:', error);
+                
+                // Reverter o toggle visualmente para o estado original
+                const row = document.querySelector(`tr[data-aeronave-id="${aeronaveId}"]`);
+                if (row) {
+                    const originalDisponivel = row.getAttribute('data-disponivel-original') === 'true';
+                    updateRowStatus(row, originalDisponivel);
+                    showTemporaryFeedback(row, 'Erro de conexão com o servidor', 'error');
+                }
+            }
+        }
+        
+        // Mostrar mensagem final
+        if (successCount > 0) {
+            showGlobalMessage(`✅ ${successCount} alteração(ões) salva(s) com sucesso!`, 'success');
+        }
+        if (errorCount > 0) {
+            showGlobalMessage(`⚠️ ${errorCount} erro(s) ao salvar alterações.`, 'error');
+        }
+        
+        // Resetar estado
+        pendingChanges.clear();
+        updatePendingCount();
+        
+        saveBtn.innerHTML = originalHtml;
+        saveBtn.disabled = false;
+        isSaving = false;
+        
+        // Esconder botão se não houver mais pendências
+        if (pendingChanges.size === 0) {
+            saveBtn.classList.add('d-none');
+        }
+    }
+    
+    // Função para mostrar feedback temporário na linha
+    function showTemporaryFeedback(row, message, type) {
+        // Remover feedbacks anteriores
+        const oldFeedback = row.querySelector('.temporary-feedback');
+        if (oldFeedback) oldFeedback.remove();
+        
+        const feedbackDiv = document.createElement('div');
+        feedbackDiv.className = `temporary-feedback position-absolute end-0 top-0 mt-2 me-2 badge ${type === 'success' ? 'bg-success' : 'bg-danger'}`;
+        feedbackDiv.style.zIndex = '10';
+        feedbackDiv.style.fontSize = '0.7rem';
+        feedbackDiv.style.padding = '0.25rem 0.5rem';
+        feedbackDiv.innerHTML = message;
+        
+        // Garantir que a linha tenha position relative
+        if (getComputedStyle(row).position === 'static') {
+            row.style.position = 'relative';
+        }
+        
+        row.appendChild(feedbackDiv);
+        
+        setTimeout(() => {
+            if (feedbackDiv.parentNode) {
+                feedbackDiv.remove();
+            }
+        }, 2000);
+    }
+    
+    // Função para mostrar mensagem global
+    function showGlobalMessage(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+        alertDiv.style.zIndex = '9999';
+        alertDiv.style.minWidth = '300px';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+    
+    // Adicionar evento de clique nos toggles
+    document.querySelectorAll('.disponivel-toggle').forEach(toggle => {
+        // Remover event listeners antigos para evitar duplicação
+        const newToggle = toggle.cloneNode(true);
+        toggle.parentNode.replaceChild(newToggle, toggle);
+        
+        newToggle.addEventListener('change', function(e) {
+            e.stopPropagation();
+            
+            const aeronaveId = this.dataset.aeronaveId;
+            const companhiaId = this.dataset.companhiaId;
+            const disponivel = this.checked;
+            const row = this.closest('tr');
+            
+            // Obter o estado original do servidor
+            const originalDisponivel = row.getAttribute('data-disponivel-original') === 'true';
+            
+            // Atualizar visualmente
+            updateRowStatus(row, disponivel);
+            
+            // Armazenar alteração pendente
+            const key = `${companhiaId}_${aeronaveId}`;
+            pendingChanges.set(key, { 
+                disponivel: disponivel, 
+                originalDisponivel: originalDisponivel 
+            });
+            
+            updatePendingCount();
+            
+            // Mostrar feedback visual de que a alteração está pendente
+            const badge = row.querySelector('.status-badge');
+            if (badge) {
+                badge.classList.add('opacity-50');
+            }
+        });
+    });
+    
+    // Adicionar evento de clique no botão de salvar
+    saveButton.addEventListener('click', savePendingChanges);
+    
+    // Salvar ao sair da página se houver pendências
+    window.addEventListener('beforeunload', function(e) {
+        if (pendingChanges.size > 0) {
+            e.preventDefault();
+            e.returnValue = 'Você tem alterações pendentes. Tem certeza que deseja sair?';
+            return 'Você tem alterações pendentes. Tem certeza que deseja sair?';
+        }
+    });
+    
+    // Inicializar o estado visual das linhas baseado no valor do banco
+    document.querySelectorAll('#aeronavesTable tbody tr').forEach(row => {
+        const toggle = row.querySelector('.disponivel-toggle');
+        if (toggle) {
+            const disponivelOriginal = row.getAttribute('data-disponivel-original') === 'true';
+            // Garantir que o visual está correto
+            updateRowStatus(row, disponivelOriginal);
+            // Garantir que o checkbox está correto
+            toggle.checked = disponivelOriginal;
+        }
+    });
+});
+</script>
 @endsection

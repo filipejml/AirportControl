@@ -301,11 +301,12 @@ class VooController extends Controller
 
     public function getAeronavesByCompanhia($companhiaId)
     {
-        $aeronaves = Aeronave::whereHas('companhias', function($query) use ($companhiaId) {
-            $query->where('companhias_aereas.id', $companhiaId);
-        })
-        ->with('fabricante')
-        ->get();
+        $companhia = CompanhiaAerea::findOrFail($companhiaId);
+        
+        $aeronaves = $companhia->aeronaves()
+            ->wherePivot('disponivel', true)  // Filtra apenas aeronaves disponíveis
+            ->with('fabricante')
+            ->get();
         
         return response()->json($aeronaves->map(function($aeronave) {
             return [

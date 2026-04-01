@@ -139,4 +139,29 @@ class CompanhiaAerea extends Model
             $companhia->aeroportos()->detach();
         });
     }
+
+    // NOVO: Atualizar disponibilidade da aeronave para esta companhia
+    public function atualizarDisponibilidadeAeronave($aeronaveId, $disponivel)
+    {
+        return $this->aeronaves()->updateExistingPivot($aeronaveId, [
+            'disponivel' => $disponivel
+        ]);
+    }
+
+    // NOVO: Obter aeronaves disponíveis para esta companhia
+    public function aeronavesDisponiveis()
+    {
+        return $this->belongsToMany(Aeronave::class, 'companhia_aeronave', 'companhia_aerea_id', 'aeronave_id')
+            ->withPivot('disponivel')
+            ->wherePivot('disponivel', true)
+            ->withTimestamps();
+    }
+
+    // NOVO: Obter todas as aeronaves com status de disponibilidade
+    public function aeronavesComDisponibilidade()
+    {
+        return $this->belongsToMany(Aeronave::class, 'companhia_aeronave', 'companhia_aerea_id', 'aeronave_id')
+            ->withPivot('disponivel')
+            ->withTimestamps();
+    }
 }
