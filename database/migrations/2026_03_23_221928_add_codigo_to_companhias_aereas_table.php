@@ -1,5 +1,4 @@
 <?php
-// database/migrations/2026_03_23_221928_add_codigo_to_companhias_aereas_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -7,19 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::table('companhias_aereas', function (Blueprint $table) {
-            // Alterar para NOT NULL e remover nullable
-            $table->string('codigo', 10)->nullable(false)->change();
+            // First add the column if it doesn't exist
+            if (!Schema::hasColumn('companhias_aereas', 'codigo')) {
+                $table->string('codigo', 10)->nullable()->after('nome');
+            }
+            
+            // Then add the index
             $table->index('codigo');
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::table('companhias_aereas', function (Blueprint $table) {
-            $table->string('codigo', 10)->nullable()->change();
+            $table->dropIndex(['codigo']);
+            $table->dropColumn('codigo');
         });
     }
 };
