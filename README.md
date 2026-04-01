@@ -27,6 +27,90 @@ Laravel has the most extensive and thorough [documentation](https://laravel.com/
 
 If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
+## Setup and Installation for AirportControl
+
+Follow these steps to set up and run the AirportControl application on your local machine.
+
+### Prerequisites
+- PHP 8.1 or higher
+- Composer (PHP dependency manager)
+- Node.js and npm (for frontend assets)
+- XAMPP (or similar stack with Apache and MySQL) for local server and database
+
+### Installation Steps
+1. **Clone or Download the Project**  
+   Place the project folder in your XAMPP's `htdocs` directory (e.g., `C:\xampp\htdocs\AirportControl`).
+
+2. **Install PHP Dependencies**  
+   Open a terminal in the project root and run:  
+   ```
+   composer install
+   ```
+
+3. **Install Node.js Dependencies**  
+   Run:  
+   ```
+   npm install
+   ```
+
+4. **Environment Configuration**  
+   - Copy the `.env.example` file to `.env`:  
+     ```
+     cp .env.example .env
+     ```
+   - Edit `.env` to configure your database settings. For XAMPP, use:  
+     ```
+     DB_CONNECTION=mysql
+     DB_HOST=127.0.0.1
+     DB_PORT=3306
+     DB_DATABASE=yourdatabase
+     DB_USERNAME=root
+     DB_PASSWORD=
+     ```
+     (Adjust username/password if different in your XAMPP setup.)
+
+5. **Generate Application Key**  
+   Run:  
+   ```
+   php artisan key:generate
+   ```
+
+6. **Database Setup**  
+   - Ensure MySQL is running in XAMPP.  
+   - Create a database named `airportcontrol` in phpMyAdmin (accessible at `http://localhost/phpmyadmin`).  
+   - Run migrations:  
+     ```
+     php artisan migrate
+     ```
+   - (Optional) Seed the database with sample data:  
+     ```
+     php artisan db:seed
+     ```
+
+7. **Build Frontend Assets**  
+   For production:  
+   ```
+   npm run build
+   ```  
+   For development (with hot reload):  
+   ```
+   npm run dev
+   ```
+
+8. **Run the Application**  
+   - Start Apache and MySQL in XAMPP Control Panel.  
+   - Access the application at `http://localhost/AirportControl/public`.  
+   - Alternatively, for development, you can use Laravel's built-in server:  
+     ```
+     php artisan serve
+     ```  
+     Then access at `http://localhost:8000`.
+
+### Additional Notes
+- If you encounter permission issues, ensure XAMPP is run as administrator.
+- For production deployment, follow Laravel's deployment guidelines.
+- If you need to clear cache: `php artisan cache:clear`, `php artisan config:clear`.
+
 ## Laravel Sponsors
 
 We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
