@@ -194,6 +194,29 @@ class CompanhiaAereaController extends Controller
         ]);
     }
 
+    // Verificar se o código da companhia aérea já existe (AJAX endpoint)
+    public function checkCode(Request $request)
+    {
+        $request->validate([
+            'codigo' => 'required|string|max:10',
+            'id' => 'nullable|integer' // Para edição, ignorar o próprio registro
+        ]);
+
+        $query = CompanhiaAerea::where('codigo', strtoupper($request->codigo));
+        
+        // Se for edição, ignorar o registro atual
+        if ($request->has('id') && $request->id) {
+            $query->where('id', '!=', $request->id);
+        }
+        
+        $exists = $query->exists();
+        
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists ? 'Este código já está sendo utilizado por outra companhia aérea' : 'Código disponível'
+        ]);
+    }
+
     /**
      * Get the smallest available ID that is not in use
      */

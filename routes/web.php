@@ -43,6 +43,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/companhias/informacoes', [CompanhiaAereaController::class, 'informacoes'])->name('companhias.informacoes');
     // Rota para exibir dashboard de uma companhia aérea (com gráficos e estatísticas)
     Route::get('/companhias/{companhia}/dashboard', [CompanhiaAereaController::class, 'dashboard'])->name('companhias.dashboard');
+    // Rota AJAX para verificar código da companhia aérea
+    Route::post('/companhias/check-code', [CompanhiaAereaController::class, 'checkCode'])->name('companhias.check-code');
     // Rota para atualizar disponibilidade da aeronave na companhia
     Route::post('/companhias/{companhia}/aeronaves/{aeronave}/disponibilidade', 
         [CompanhiaAereaController::class, 'atualizarDisponibilidade'])

@@ -46,18 +46,25 @@
                         <label for="codigo" class="form-label fw-semibold">
                             Código da Companhia <span class="text-danger">*</span>
                         </label>
-                        <input type="text" 
-                            class="form-control @error('codigo') is-invalid @enderror" 
-                            id="codigo" 
-                            name="codigo" 
-                            value="{{ old('codigo') }}"
-                            placeholder="Ex: LA, G3, AD, AA..."
-                            maxlength="10"
-                            required
-                            autocomplete="off">
-                        <div class="form-text text-muted">
-                            <i class="bi bi-info-circle"></i> Código identificador obrigatório (máx. 10 caracteres). Ex: LA, G3, AD, AA
+                        <div class="position-relative">
+                            <input type="text" 
+                                class="form-control @error('codigo') is-invalid @enderror" 
+                                id="codigo" 
+                                name="codigo" 
+                                value="{{ old('codigo') }}"
+                                placeholder="Ex: LA, G3, AD, AA..."
+                                maxlength="10"
+                                required
+                                autocomplete="off">
+                            <div class="position-absolute end-0 top-50 translate-middle-y me-3">
+                                <div class="spinner-border spinner-border-sm text-primary d-none" id="codigoSpinner" role="status">
+                                    <span class="visually-hidden">Verificando...</span>
+                                </div>
+                                <i class="bi bi-check-circle-fill text-success d-none" id="codigoCheckIcon"></i>
+                                <i class="bi bi-x-circle-fill text-danger d-none" id="codigoXIcon"></i>
+                            </div>
                         </div>
+                        <div id="codigoFeedback" class="form-text"></div>
                         @error('codigo')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
@@ -318,6 +325,10 @@
     background-image: none;
 }
 
+.position-relative .position-absolute {
+    pointer-events: none;
+}
+
 /* Contador */
 #selectedCount {
     font-size: 0.85rem;
@@ -334,6 +345,10 @@
 let checkNameTimeout = null;
 let isNameValid = false;
 let isChecking = false;
+
+let checkCodeTimeout = null;
+let isCodeValid = false;
+let isCheckingCode = false;
 
 function toggleCard(card) {
     card.classList.toggle('selected');
@@ -481,20 +496,118 @@ function resetNameValidation() {
     updateSubmitButton();
 }
 
+function checkCompanyCode(codigo, companyId = null) {
+    if (!codigo || codigo.trim() === '') {
+        resetCodeValidation();
+        return;
+    }
+    
+    // Limpar timeout anterior
+    if (checkCodeTimeout) {
+        clearTimeout(checkCodeTimeout);
+    }
+    
+    // Mostrar spinner
+    const spinner = document.getElementById('codigoSpinner');
+    const checkIcon = document.getElementById('codigoCheckIcon');
+    const xIcon = document.getElementById('codigoXIcon');
+    const codigoInput = document.getElementById('codigo');
+    const feedbackDiv = document.getElementById('codigoFeedback');
+    
+    spinner.classList.remove('d-none');
+    checkIcon.classList.add('d-none');
+    xIcon.classList.add('d-none');
+    feedbackDiv.innerHTML = '<span class="text-muted">Verificando disponibilidade do código...</span>';
+    codigoInput.classList.remove('is-valid', 'is-invalid');
+    isCheckingCode = true;
+    
+    // Preparar dados para enviar
+    const formData = new FormData();
+    formData.append('codigo', codigo);
+    if (companyId) {
+        formData.append('id', companyId);
+    }
+    
+    checkCodeTimeout = setTimeout(() => {
+        fetch('{{ route("companhias.check-code") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            spinner.classList.add('d-none');
+            isCheckingCode = false;
+            
+            if (data.exists) {
+                // Código já existe
+                codigoInput.classList.add('is-invalid');
+                codigoInput.classList.remove('is-valid');
+                checkIcon.classList.add('d-none');
+                xIcon.classList.remove('d-none');
+                feedbackDiv.innerHTML = `<span class="text-danger">⚠️ ${data.message}</span>`;
+                isCodeValid = false;
+            } else {
+                // Código disponível
+                codigoInput.classList.add('is-valid');
+                codigoInput.classList.remove('is-invalid');
+                checkIcon.classList.remove('d-none');
+                xIcon.classList.add('d-none');
+                feedbackDiv.innerHTML = '<span class="text-success">✓ Código disponível</span>';
+                isCodeValid = true;
+            }
+            
+            // Atualizar estado do botão de submit
+            updateSubmitButton();
+        })
+        .catch(error => {
+            console.error('Erro ao verificar código:', error);
+            spinner.classList.add('d-none');
+            isCheckingCode = false;
+            feedbackDiv.innerHTML = '<span class="text-warning">⚠️ Não foi possível verificar disponibilidade</span>';
+            // Em caso de erro, permitir submit (a validação do backend vai pegar)
+            isCodeValid = true;
+            updateSubmitButton();
+        });
+    }, 500); // Delay de 500ms para não fazer muitas requisições
+}
+
+function resetCodeValidation() {
+    const codigoInput = document.getElementById('codigo');
+    const spinner = document.getElementById('codigoSpinner');
+    const checkIcon = document.getElementById('codigoCheckIcon');
+    const xIcon = document.getElementById('codigoXIcon');
+    const feedbackDiv = document.getElementById('codigoFeedback');
+    
+    spinner.classList.add('d-none');
+    checkIcon.classList.add('d-none');
+    xIcon.classList.add('d-none');
+    codigoInput.classList.remove('is-valid', 'is-invalid');
+    feedbackDiv.innerHTML = '';
+    isCodeValid = false;
+    isCheckingCode = false;
+    updateSubmitButton();
+}
+
 function updateSubmitButton() {
     const submitBtn = document.getElementById('submitBtn');
     const nomeInput = document.getElementById('nome');
+    const codigoInput = document.getElementById('codigo');
     const nomeValue = nomeInput.value.trim();
+    const codigoValue = codigoInput.value.trim();
     
-    if (nomeValue === '') {
+    if (nomeValue === '' || codigoValue === '') {
         submitBtn.disabled = true;
-        submitBtn.title = 'Digite o nome da companhia';
-    } else if (isChecking) {
+        submitBtn.title = nomeValue === '' ? 'Digite o nome da companhia' : 'Digite o código da companhia';
+    } else if (isChecking || isCheckingCode) {
         submitBtn.disabled = true;
-        submitBtn.title = 'Verificando disponibilidade do nome...';
-    } else if (!isNameValid) {
+        submitBtn.title = isChecking ? 'Verificando disponibilidade do nome...' : 'Verificando disponibilidade do código...';
+    } else if (!isNameValid || !isCodeValid) {
         submitBtn.disabled = true;
-        submitBtn.title = 'Este nome não está disponível';
+        submitBtn.title = !isNameValid ? 'Este nome não está disponível' : 'Este código não está disponível';
     } else {
         submitBtn.disabled = false;
         submitBtn.title = '';
@@ -505,6 +618,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectAllBtn = document.getElementById('selectAllBtn');
     const deselectAllBtn = document.getElementById('deselectAllBtn');
     const nomeInput = document.getElementById('nome');
+    const codigoInput = document.getElementById('codigo');
     
     if (selectAllBtn) {
         selectAllBtn.onclick = selectAll;
@@ -524,17 +638,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 checkCompanyName(nome);
             }
         });
-        
-        // Prevenir submit se o nome for inválido
-        const form = document.getElementById('companhiaForm');
-        form.addEventListener('submit', function(e) {
-            if (!isNameValid && nomeInput.value.trim() !== '') {
-                e.preventDefault();
-                alert('Por favor, aguarde a verificação do nome ou corrija o nome da companhia.');
-                return false;
+    }
+    
+    // Adicionar evento de input para verificar código em tempo real
+    if (codigoInput) {
+        codigoInput.addEventListener('input', function(e) {
+            let codigo = e.target.value.trim().toUpperCase();
+            // Atualizar o valor do campo com letras maiúsculas
+            if (codigoInput.value !== codigo) {
+                codigoInput.value = codigo;
+            }
+            if (codigo === '') {
+                resetCodeValidation();
+            } else {
+                checkCompanyCode(codigo);
             }
         });
     }
+    
+    // Prevenir submit se o nome ou código for inválido
+    const form = document.getElementById('companhiaForm');
+    form.addEventListener('submit', function(e) {
+        if ((!isNameValid && nomeInput.value.trim() !== '') || 
+            (!isCodeValid && codigoInput.value.trim() !== '')) {
+            e.preventDefault();
+            alert('Por favor, aguarde a verificação dos dados ou corrija o nome/código da companhia.');
+            return false;
+        }
+    });
     
     // Garantir que os cards estejam sincronizados com os checkboxes (para old values)
     const cards = document.querySelectorAll('.aeronave-card');
@@ -552,7 +683,6 @@ document.addEventListener('DOMContentLoaded', function() {
     updateSubmitButton();
     
     // Debug: verificar envio
-    const form = document.getElementById('companhiaForm');
     if (form) {
         form.addEventListener('submit', function() {
             const selectedValues = [];

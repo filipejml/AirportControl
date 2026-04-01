@@ -189,12 +189,11 @@ tr.aeronave-indisponivel .modelo-link {
             <p class="text-muted">Detalhes da companhia aérea</p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{{ route('companhias.informacoes') }}" class="btn btn-secondary">
+            <a href="{{ route('companhias.index') }}" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> Voltar
             </a>
-            <a href="{{ route('companhias.edit', $companhia) }}" class="btn btn-primary btn-action">
-                <i class="bi bi-pencil"></i>
-                <span>Editar</span>
+            <a href="{{ route('companhias.edit', $companhia) }}" class="btn btn-primary">
+                <i class="bi bi-pencil"></i> Editar
             </a>
         </div>
     </div>
