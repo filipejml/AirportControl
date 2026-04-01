@@ -45,7 +45,6 @@
                 <div class="alert alert-info text-center">
                     @if(auth()->user()->tipo == 0)
                         Nenhum relatório cadastrado no sistema.
-                        <a href="{{ route('relatorios.create') }}" class="alert-link">Criar o primeiro relatório</a>
                     @else
                         Nenhum relatório disponível no momento.
                     @endif
