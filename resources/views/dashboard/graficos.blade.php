@@ -134,20 +134,9 @@
     // Registrar o plugin de datalabels
     Chart.register(ChartDataLabels);
     
-    // Configuração global para os datalabels
+    // Configuração global para os datalabels - desabilitado por padrão
     Chart.defaults.set('plugins.datalabels', {
-        color: '#333',
-        anchor: 'end',
-        align: 'top',
-        offset: 4,
-        font: {
-            weight: 'bold',
-            size: 11
-        },
-        formatter: function(value, context) {
-            if (value === 0 || value === null) return '';
-            return value.toLocaleString('pt-BR');
-        }
+        display: false  // Desabilita todos os datalabels globalmente
     });
 
     // Helper para arredondamento no JavaScript
@@ -181,16 +170,7 @@
                         borderWidth: 2,
                         borderRadius: 8,
                         borderSkipped: false,
-                        yAxisID: 'y',
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 4,
-                            formatter: function(value) {
-                                if (value === 0 || value === null) return '';
-                                return value.toLocaleString('pt-BR');
-                            }
-                        }
+                        yAxisID: 'y'
                     },
                     {
                         label: 'Mediana Geral de Voos',
@@ -202,10 +182,7 @@
                         borderDash: [5, 5],
                         pointRadius: 0,
                         fill: false,
-                        yAxisID: 'y',
-                        datalabels: {
-                            display: false
-                        }
+                        yAxisID: 'y'
                     }
                 ]
             },
@@ -226,9 +203,6 @@
                                 return 'Voos: ' + totalVoos.toLocaleString('pt-BR') + ' / ' + totalGeralVoos.toLocaleString('pt-BR') + '\nPercentual: ' + percentual + '%\nMediana Geral: ' + medianaGeralVoos.toLocaleString('pt-BR') + ' voos';
                             }
                         }
-                    },
-                    datalabels: {
-                        display: true
                     }
                 },
                 scales: {
@@ -273,10 +247,7 @@
             fill: false,
             yAxisID: 'y',
             tension: 0,
-            spanGaps: true,
-            datalabels: {
-                display: false
-            }
+            spanGaps: true
         };
 
         new Chart(document.getElementById('passageirosPorCompanhiaChart').getContext('2d'), {
@@ -292,16 +263,7 @@
                         borderWidth: 2,
                         borderRadius: 8,
                         borderSkipped: false,
-                        yAxisID: 'y',
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            offset: 4,
-                            formatter: function(value) {
-                                if (value === 0 || value === null) return '';
-                                return value.toLocaleString('pt-BR');
-                            }
-                        }
+                        yAxisID: 'y'
                     },
                     medianaPassageirosDataset
                 ]
@@ -327,9 +289,6 @@
                                 return context.dataset.label + ': ' + context.parsed.y;
                             }
                         }
-                    },
-                    datalabels: {
-                        display: true
                     }
                 },
                 scales: {
@@ -391,16 +350,7 @@
                     borderWidth: 2,
                     borderRadius: 8,
                     borderSkipped: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        offset: 4,
-                        formatter: function(value) {
-                            if (value === 0 || value === null) return '';
-                            return value.toLocaleString('pt-BR');
-                        }
-                    }
+                    yAxisID: 'y'
                 },
                 {
                     label: 'Mediana',
@@ -412,10 +362,7 @@
                     borderDash: [5, 5],
                     pointRadius: 0,
                     fill: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        display: false
-                    }
+                    yAxisID: 'y'
                 }
             ]
         },
@@ -438,9 +385,6 @@
                             return context.dataset.label + ': ' + context.parsed.y;
                         }
                     }
-                },
-                datalabels: {
-                    display: true
                 }
             },
             scales: {
@@ -485,16 +429,7 @@
                     borderWidth: 2,
                     borderRadius: 8,
                     borderSkipped: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        offset: 4,
-                        formatter: function(value) {
-                            if (value === 0 || value === null) return '';
-                            return value.toLocaleString('pt-BR');
-                        }
-                    }
+                    yAxisID: 'y'
                 },
                 {
                     label: 'Mediana',
@@ -506,10 +441,7 @@
                     borderDash: [5, 5],
                     pointRadius: 0,
                     fill: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        display: false
-                    }
+                    yAxisID: 'y'
                 }
             ]
         },
@@ -532,9 +464,6 @@
                             return context.dataset.label + ': ' + context.parsed.y;
                         }
                     }
-                },
-                datalabels: {
-                    display: true
                 }
             },
             scales: {
@@ -570,16 +499,7 @@
                     borderWidth: 2,
                     borderRadius: 8,
                     borderSkipped: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        offset: 4,
-                        formatter: function(value) {
-                            if (value === 0 || value === null) return '';
-                            return value.toLocaleString('pt-BR');
-                        }
-                    }
+                    yAxisID: 'y'
                 },
                 {
                     label: 'Mediana',
@@ -591,10 +511,7 @@
                     borderDash: [5, 5],
                     pointRadius: 0,
                     fill: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        display: false
-                    }
+                    yAxisID: 'y'
                 }
             ]
         },
@@ -618,9 +535,6 @@
                             return context.dataset.label + ': ' + context.parsed.y;
                         }
                     }
-                },
-                datalabels: {
-                    display: true
                 }
             },
             scales: {
@@ -656,16 +570,7 @@
                     borderWidth: 2,
                     borderRadius: 8,
                     borderSkipped: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        offset: 4,
-                        formatter: function(value) {
-                            if (value === 0 || value === null) return '';
-                            return value.toLocaleString('pt-BR');
-                        }
-                    }
+                    yAxisID: 'y'
                 },
                 {
                     label: 'Mediana',
@@ -677,10 +582,7 @@
                     borderDash: [5, 5],
                     pointRadius: 0,
                     fill: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        display: false
-                    }
+                    yAxisID: 'y'
                 }
             ]
         },
@@ -704,9 +606,6 @@
                             return context.dataset.label + ': ' + context.parsed.y;
                         }
                     }
-                },
-                datalabels: {
-                    display: true
                 }
             },
             scales: {
@@ -742,16 +641,7 @@
                     borderWidth: 2,
                     borderRadius: 8,
                     borderSkipped: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        offset: 4,
-                        formatter: function(value) {
-                            if (value === 0 || value === null) return '';
-                            return value.toLocaleString('pt-BR');
-                        }
-                    }
+                    yAxisID: 'y'
                 },
                 {
                     label: 'Mediana',
@@ -763,10 +653,7 @@
                     borderDash: [5, 5],
                     pointRadius: 0,
                     fill: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        display: false
-                    }
+                    yAxisID: 'y'
                 }
             ]
         },
@@ -790,9 +677,6 @@
                             return context.dataset.label + ': ' + context.parsed.y;
                         }
                     }
-                },
-                datalabels: {
-                    display: true
                 }
             },
             scales: {
@@ -828,16 +712,7 @@
                     borderWidth: 2,
                     borderRadius: 8,
                     borderSkipped: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        anchor: 'end',
-                        align: 'top',
-                        offset: 4,
-                        formatter: function(value) {
-                            if (value === 0 || value === null) return '';
-                            return value.toLocaleString('pt-BR');
-                        }
-                    }
+                    yAxisID: 'y'
                 },
                 {
                     label: 'Mediana',
@@ -849,10 +724,7 @@
                     borderDash: [5, 5],
                     pointRadius: 0,
                     fill: false,
-                    yAxisID: 'y',
-                    datalabels: {
-                        display: false
-                    }
+                    yAxisID: 'y'
                 }
             ]
         },
@@ -876,9 +748,6 @@
                             return context.dataset.label + ': ' + context.parsed.y;
                         }
                     }
-                },
-                datalabels: {
-                    display: true
                 }
             },
             scales: {

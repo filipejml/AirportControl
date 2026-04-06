@@ -84,12 +84,16 @@ class DashboardController extends Controller
      */
     public function graficos()
     {
-        // Dados para Voos por Companhia
-        $companhias = DB::table('companhias_aereas')->get();
+        // Buscar apenas companhias que têm voos registrados
+        $companhiasComDados = DB::table('voos')
+            ->join('companhias_aereas', 'voos.companhia_aerea_id', '=', 'companhias_aereas.id')
+            ->select('companhias_aereas.id', 'companhias_aereas.nome')
+            ->distinct()
+            ->get();
         
-        $labelsCompanhia = [];
-        $dataCompanhia = [];
-        $coresCompanhia = [];
+        // Array para armazenar os dados antes da ordenação
+        $dadosVoos = [];
+        $dadosPassageiros = [];
         
         // Cores pré-definidas para as companhias
         $colorPalette = [
@@ -105,43 +109,70 @@ class DashboardController extends Controller
             'rgba(99, 255, 132, 0.8)',
         ];
         
-        $totalVoosPorCompanhia = [];
-        $totalGeralVoos = 0;
-        $valoresVoos = []; // Para calcular mediana
-        
-        foreach ($companhias as $index => $companhia) {
+        // Coletar dados de voos por companhia
+        foreach ($companhiasComDados as $companhia) {
             $totalVoos = DB::table('voos')
                 ->where('companhia_aerea_id', $companhia->id)
                 ->sum('qtd_voos') ?? 0;
             
-            $labelsCompanhia[] = $companhia->nome;
-            $dataCompanhia[] = $totalVoos;
+            $totalPassageiros = DB::table('voos')
+                ->where('companhia_aerea_id', $companhia->id)
+                ->sum('total_passageiros') ?? 0;
+            
+            $dadosVoos[] = [
+                'id' => $companhia->id,
+                'nome' => $companhia->nome,
+                'total' => $totalVoos
+            ];
+            
+            $dadosPassageiros[] = [
+                'id' => $companhia->id,
+                'nome' => $companhia->nome,
+                'total' => $totalPassageiros
+            ];
+        }
+        
+        // ALTERADO: Ordenar os dados de voos de forma decrescente (maior para o menor)
+        usort($dadosVoos, function($a, $b) {
+            return $b['total'] - $a['total'];
+        });
+        
+        // ALTERADO: Ordenar os dados de passageiros de forma decrescente (maior para o menor)
+        usort($dadosPassageiros, function($a, $b) {
+            return $b['total'] - $a['total'];
+        });
+        
+        // Preparar arrays para o gráfico de voos
+        $labelsCompanhia = [];
+        $dataCompanhia = [];
+        $coresCompanhia = [];
+        $totalGeralVoos = 0;
+        $valoresVoos = [];
+        
+        foreach ($dadosVoos as $index => $dado) {
+            $labelsCompanhia[] = $dado['nome'];
+            $dataCompanhia[] = $dado['total'];
             $coresCompanhia[] = $colorPalette[$index % count($colorPalette)];
-            $totalVoosPorCompanhia[$companhia->id] = $totalVoos;
-            $totalGeralVoos += $totalVoos;
-            $valoresVoos[] = $totalVoos;
+            $totalGeralVoos += $dado['total'];
+            $valoresVoos[] = $dado['total'];
         }
         
         $medianaGeralVoos = $this->calcularMediana($valoresVoos);
         $medianasGerais = array_fill(0, count($dataCompanhia), $medianaGeralVoos);
         
-        // Dados para Passageiros por Companhia
+        // Preparar arrays para o gráfico de passageiros
         $labelsPassageirosCompanhia = [];
         $dataPassageirosCompanhia = [];
         $coresPassageirosCompanhia = [];
         $totalPassageiros = 0;
-        $valoresPassageiros = []; // Para calcular mediana
+        $valoresPassageiros = [];
         
-        foreach ($companhias as $index => $companhia) {
-            $totalPassageirosCompanhia = DB::table('voos')
-                ->where('companhia_aerea_id', $companhia->id)
-                ->sum('total_passageiros') ?? 0;
-            
-            $labelsPassageirosCompanhia[] = $companhia->nome;
-            $dataPassageirosCompanhia[] = $totalPassageirosCompanhia;
+        foreach ($dadosPassageiros as $index => $dado) {
+            $labelsPassageirosCompanhia[] = $dado['nome'];
+            $dataPassageirosCompanhia[] = $dado['total'];
             $coresPassageirosCompanhia[] = $colorPalette[$index % count($colorPalette)];
-            $totalPassageiros += $totalPassageirosCompanhia;
-            $valoresPassageiros[] = $totalPassageirosCompanhia;
+            $totalPassageiros += $dado['total'];
+            $valoresPassageiros[] = $dado['total'];
         }
         
         $medianaGeralPassageiros = $this->calcularMediana($valoresPassageiros);
@@ -151,7 +182,7 @@ class DashboardController extends Controller
         $voosPorHorario = $dashboard->getVoosPorHorario();
         $horarios = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
         $dataHorario = [];
-        $valoresHorario = []; // Para calcular mediana
+        $valoresHorario = [];
         
         foreach ($horarios as $horario) {
             $valor = $voosPorHorario[$horario] ?? 0;
@@ -164,7 +195,7 @@ class DashboardController extends Controller
         // Dados para Passageiros por Horário
         $passageirosPorHorario = $dashboard->getPassageirosPorHorario();
         $dataPassageirosHorario = [];
-        $valoresPassageirosHorario = []; // Para calcular mediana
+        $valoresPassageirosHorario = [];
         
         foreach ($horarios as $horario) {
             $valor = $passageirosPorHorario[$horario] ?? 0;
@@ -179,7 +210,7 @@ class DashboardController extends Controller
         $labelsTipoVoo = ['Regular', 'Charter'];
         $dataTipoVoo = [];
         $totalTipoVoo = 0;
-        $valoresTipoVoo = []; // Para calcular mediana
+        $valoresTipoVoo = [];
         
         foreach ($labelsTipoVoo as $tipo) {
             $valor = $voosPorTipo[$tipo] ?? 0;
@@ -196,7 +227,7 @@ class DashboardController extends Controller
         $labelsPassageirosTipoVoo = ['Regular', 'Charter'];
         $dataPassageirosTipoVoo = [];
         $totalPassageirosTipoVoo = 0;
-        $valoresPassageirosTipoVoo = []; // Para calcular mediana
+        $valoresPassageirosTipoVoo = [];
         
         foreach ($labelsPassageirosTipoVoo as $tipo) {
             $valor = $passageirosPorTipo[$tipo] ?? 0;
@@ -213,7 +244,7 @@ class DashboardController extends Controller
         $labelsTipoAeronave = ['PC', 'MC', 'LC'];
         $dataTipoAeronave = [];
         $totalTipoAeronave = 0;
-        $valoresTipoAeronave = []; // Para calcular mediana
+        $valoresTipoAeronave = [];
         
         foreach ($labelsTipoAeronave as $tipo) {
             $valor = $voosPorTipoAeronave[$tipo] ?? 0;
@@ -230,7 +261,7 @@ class DashboardController extends Controller
         $labelsPassageirosTipoAeronave = ['PC', 'MC', 'LC'];
         $dataPassageirosTipoAeronave = [];
         $totalPassageirosTipoAeronave = 0;
-        $valoresPassageirosTipoAeronave = []; // Para calcular mediana
+        $valoresPassageirosTipoAeronave = [];
         
         foreach ($labelsPassageirosTipoAeronave as $tipo) {
             $valor = $passageirosPorTipoAeronave[$tipo] ?? 0;
