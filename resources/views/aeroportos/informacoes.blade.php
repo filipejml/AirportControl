@@ -12,6 +12,9 @@
     <!-- Ícones -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
     <style>
         body {
             background-color: white;
@@ -43,6 +46,38 @@
         
         .btn-dashboard:hover {
             transform: scale(1.02);
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        
+        .toggle-series-btn {
+            transition: all 0.2s;
+        }
+        
+        .toggle-series-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .series-badge {
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .series-badge:hover {
+            opacity: 0.7;
+        }
+        
+        .series-badge.hidden-series {
+            opacity: 0.4;
+            text-decoration: line-through;
+        }
+        
+        .ano-filter {
+            max-width: 150px;
         }
     </style>
 </head>
@@ -107,7 +142,7 @@
 
         {{-- Filtros --}}
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <select id="searchSelect" class="form-select">
                     <option value="">Todos os aeroportos</option>
                     @foreach($aeroportosData as $aeroporto)
@@ -135,9 +170,20 @@
                     <option value="patio">Melhor Nota Pátio</option>
                 </select>
             </div>
+            <div class="col-md-2">
+                <select id="anoFilter" class="form-select ano-filter">
+                    @if(isset($anosDisponiveis) && count($anosDisponiveis) > 0)
+                        @foreach($anosDisponiveis as $ano)
+                            <option value="{{ $ano }}" {{ $ano == $anoSelecionado ? 'selected' : '' }}>Ano {{ $ano }}</option>
+                        @endforeach
+                    @else
+                        <option value="{{ date('Y') }}" selected>Ano {{ date('Y') }}</option>
+                    @endif
+                </select>
+            </div>
         </div>
 
-        {{-- Cards dos Aeroportos --}}
+        {{-- CARDS DOS AEROPORTOS (ACIMA DO GRÁFICO) --}}
         <div class="row" id="aeroportosContainer">
             @foreach($aeroportosData as $aeroporto)
                 @php
@@ -305,6 +351,68 @@
             </div>
         @endif
 
+        {{-- GRÁFICO DE PASSAGEIROS POR SEMANA (ABAIXO DOS CARDS) --}}
+        @if(isset($dadosSemanais) && count($dadosSemanais['aeroportos']) > 0 && count($dadosSemanais['semanas']) > 0)
+        <div class="card shadow-sm mb-4 mt-4">
+            <div class="card-header bg-white">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up me-2 text-primary"></i>
+                            Evolução Semanal de Passageiros por Aeroporto - Ano {{ $anoSelecionado }}
+                        </h5>
+                        <small class="text-muted">Semanas com registros de voos</small>
+                    </div>
+                    <div class="mt-2 mt-md-0">
+                        <button class="btn btn-sm btn-outline-secondary toggle-series-btn" id="toggleAllBtn">
+                            <i class="bi bi-eye"></i> Mostrar Todos
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {{-- Legenda interativa --}}
+                <div class="mb-3 d-flex flex-wrap gap-2" id="chartLegend">
+                    @foreach($dadosSemanais['aeroportos'] as $index => $aeroporto)
+                        <span class="badge series-badge p-2" 
+                              data-series-index="{{ $index }}"
+                              style="background-color: {{ $aeroporto['cor'] }}; cursor: pointer;">
+                            <i class="bi bi-eye-fill me-1"></i>
+                            {{ $aeroporto['nome'] }}
+                        </span>
+                    @endforeach
+                </div>
+                
+                {{-- Container do gráfico --}}
+                <div class="chart-container">
+                    <canvas id="passageirosSemanalChart"></canvas>
+                </div>
+                
+                {{-- Resumo estatístico --}}
+                <div class="alert alert-info mt-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            <strong>Como interpretar:</strong> O gráfico mostra a evolução do número de passageiros 
+                            transportados por cada aeroporto nas semanas do ano de <strong>{{ $anoSelecionado }}</strong> 
+                            que possuem registros de voos.
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <small class="text-muted">
+                                Clique nos badges acima para mostrar/ocultar aeroportos no gráfico
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @else
+        <div class="alert alert-warning mb-4 mt-4">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            Não há dados suficientes para exibir o gráfico de evolução semanal de passageiros para o ano {{ $anoSelecionado }}.
+        </div>
+        @endif
+
         <p class="text-center text-muted mt-4">
             Desenvolvido por <strong>Filipe Lopes</strong>
         </p>
@@ -314,27 +422,215 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        // Inicializar gráfico de passageiros por semana
+        let passageirosChart = null;
+        const seriesVisibility = {};
+        
+        @if(isset($dadosSemanais) && count($dadosSemanais['aeroportos']) > 0 && count($dadosSemanais['semanas']) > 0)
+            const dadosSemanais = @json($dadosSemanais);
+            
+            function initPassageirosChart() {
+                const ctx = document.getElementById('passageirosSemanalChart').getContext('2d');
+                
+                // Preparar datasets - SEM sombreado (fill: false)
+                const datasets = dadosSemanais.aeroportos.map((aeroporto, index) => {
+                    seriesVisibility[index] = true;
+                    return {
+                        label: aeroporto.nome,
+                        data: aeroporto.dados,
+                        borderColor: aeroporto.cor,
+                        backgroundColor: 'transparent', // Sem cor de fundo
+                        borderWidth: 2.5,
+                        fill: false, // SEM SOMBREADO
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: aeroporto.cor,
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    };
+                });
+                
+                passageirosChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dadosSemanais.semanas,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        let value = context.parsed.y;
+                                        return label + ': ' + new Intl.NumberFormat('pt-BR').format(value) + ' passageiros';
+                                    }
+                                }
+                            },
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Número de Passageiros',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return new Intl.NumberFormat('pt-BR').format(value);
+                                    }
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Semanas do Ano (com dados)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    autoSkip: true,
+                                    maxTicksLimit: 15
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function updateChartVisibility() {
+                if (!passageirosChart) return;
+                
+                passageirosChart.data.datasets.forEach((dataset, index) => {
+                    dataset.hidden = !seriesVisibility[index];
+                });
+                passageirosChart.update();
+            }
+            
+            function toggleSeries(index) {
+                seriesVisibility[index] = !seriesVisibility[index];
+                const badge = document.querySelector(`.series-badge[data-series-index="${index}"]`);
+                if (badge) {
+                    if (seriesVisibility[index]) {
+                        badge.classList.remove('hidden-series');
+                        badge.innerHTML = '<i class="bi bi-eye-fill me-1"></i> ' + dadosSemanais.aeroportos[index].nome;
+                    } else {
+                        badge.classList.add('hidden-series');
+                        badge.innerHTML = '<i class="bi bi-eye-slash-fill me-1"></i> ' + dadosSemanais.aeroportos[index].nome;
+                    }
+                }
+                updateChartVisibility();
+            }
+            
+            function showAllSeries() {
+                for (let i = 0; i < dadosSemanais.aeroportos.length; i++) {
+                    seriesVisibility[i] = true;
+                    const badge = document.querySelector(`.series-badge[data-series-index="${i}"]`);
+                    if (badge) {
+                        badge.classList.remove('hidden-series');
+                        badge.innerHTML = '<i class="bi bi-eye-fill me-1"></i> ' + dadosSemanais.aeroportos[i].nome;
+                    }
+                }
+                updateChartVisibility();
+            }
+            
+            function hideAllSeries() {
+                for (let i = 0; i < dadosSemanais.aeroportos.length; i++) {
+                    seriesVisibility[i] = false;
+                    const badge = document.querySelector(`.series-badge[data-series-index="${i}"]`);
+                    if (badge) {
+                        badge.classList.add('hidden-series');
+                        badge.innerHTML = '<i class="bi bi-eye-slash-fill me-1"></i> ' + dadosSemanais.aeroportos[i].nome;
+                    }
+                }
+                updateChartVisibility();
+            }
+            
+            // Inicializar quando o DOM estiver pronto
+            document.addEventListener('DOMContentLoaded', function() {
+                initPassageirosChart();
+                
+                // Adicionar eventos aos badges
+                document.querySelectorAll('.series-badge').forEach(badge => {
+                    badge.addEventListener('click', function() {
+                        const index = parseInt(this.dataset.seriesIndex);
+                        toggleSeries(index);
+                    });
+                });
+                
+                // Evento do botão toggle all
+                const toggleAllBtn = document.getElementById('toggleAllBtn');
+                
+                toggleAllBtn.addEventListener('click', function() {
+                    const someHidden = Object.values(seriesVisibility).some(v => v === false);
+                    if (someHidden) {
+                        showAllSeries();
+                        this.innerHTML = '<i class="bi bi-eye"></i> Mostrar Todos';
+                    } else {
+                        hideAllSeries();
+                        this.innerHTML = '<i class="bi bi-eye-slash"></i> Ocultar Todos';
+                    }
+                });
+            });
+        @endif
+        
+        // Filtro por ano - redireciona ao selecionar
+        const anoFilter = document.getElementById('anoFilter');
+        if (anoFilter) {
+            anoFilter.addEventListener('change', function() {
+                const ano = this.value;
+                const url = new URL(window.location.href);
+                url.searchParams.set('ano', ano);
+                window.location.href = url.toString();
+            });
+        }
+        
         // Filtro por nome do aeroporto
-        document.getElementById('searchSelect').addEventListener('change', function() {
-            const searchTerm = this.value;
-            filterCards();
-        });
+        const searchSelect = document.getElementById('searchSelect');
+        if (searchSelect) {
+            searchSelect.addEventListener('change', function() {
+                const searchTerm = this.value;
+                filterCards();
+            });
+        }
 
         // Filtro por companhia
-        document.getElementById('filterCompanhia').addEventListener('change', function() {
-            const companhiaId = this.value;
-            filterCards();
-        });
+        const filterCompanhia = document.getElementById('filterCompanhia');
+        if (filterCompanhia) {
+            filterCompanhia.addEventListener('change', function() {
+                const companhiaId = this.value;
+                filterCards();
+            });
+        }
 
         // Ordenação
-        document.getElementById('sortSelect').addEventListener('change', function() {
-            const sortType = this.value;
-            sortCards(sortType);
-        });
+        const sortSelect = document.getElementById('sortSelect');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                const sortType = this.value;
+                sortCards(sortType);
+            });
+        }
 
         function filterCards() {
-            const searchTerm = document.getElementById('searchSelect').value.toLowerCase();
-            const companhiaFilter = document.getElementById('filterCompanhia').value;
+            const searchTerm = document.getElementById('searchSelect') ? document.getElementById('searchSelect').value.toLowerCase() : '';
+            const companhiaFilter = document.getElementById('filterCompanhia') ? document.getElementById('filterCompanhia').value : '';
             
             const cards = document.querySelectorAll('.aeroporto-card');
             
@@ -398,7 +694,9 @@
         }
         
         // Inicializar ordenação padrão
-        sortCards('nome');
+        if (typeof sortCards === 'function') {
+            sortCards('nome');
+        }
     </script>
 </body>
 </html>
