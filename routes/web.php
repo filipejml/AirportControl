@@ -26,6 +26,16 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.po
 
 /*
 |--------------------------------------------------------------------------
+| ROTAS PÚBLICAS - RECUPERAÇÃO DE SENHA
+|--------------------------------------------------------------------------
+*/
+Route::get('/esqueci-senha', [App\Http\Controllers\PasswordResetController::class, 'showForgotForm'])->name('password.request');
+Route::post('/esqueci-senha', [App\Http\Controllers\PasswordResetController::class, 'sendResetLink'])->name('password.email');
+Route::get('/resetar-senha/{token}', [App\Http\Controllers\PasswordResetController::class, 'showResetForm'])->name('password.reset');
+Route::post('/resetar-senha', [App\Http\Controllers\PasswordResetController::class, 'resetPassword'])->name('password.update');
+
+/*
+|--------------------------------------------------------------------------
 | ROTAS AUTENTICADAS
 |--------------------------------------------------------------------------
 */

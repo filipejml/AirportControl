@@ -61,15 +61,15 @@
                 >
             </div>
 
+            <!-- Senha e Esqueci minha senha -->
             <div class="mb-3">
                 <label class="form-label">Senha</label>
-                <input 
-                    type="password" 
-                    name="password" 
-                    class="form-control" 
-                    placeholder="Digite sua senha"
-                    required
-                >
+                <input type="password" name="password" class="form-control" placeholder="Digite sua senha" required>
+                <div class="text-end mt-2">
+                    <a href="{{ route('password.request') }}" class="text-decoration-none small">
+                        Esqueceu sua senha?
+                    </a>
+                </div>
             </div>
 
             <div class="d-grid mb-3">
