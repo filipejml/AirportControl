@@ -58,22 +58,38 @@ class VooController extends Controller
         
         $voos = $query->paginate($perPage)->withQueryString();
         
-        // CORRIGIDO: Calcular estatísticas com soma de qtd_voos
-        $totalVoosRegistros = Voo::count(); // Quantidade de registros de voos
+        // ==========================================
+        // ESTATÍSTICAS GERAIS (sem filtros)
+        // ==========================================
+        $totalVoosRegistros = Voo::count(); // Quantidade de registros (linhas na tabela)
         $totalVoosQuantidade = Voo::sum('qtd_voos'); // SOMA da quantidade de voos
+        $totalPassageiros = Voo::sum('total_passageiros'); // SOMA total de passageiros
+        $totalQuantidadeVoos = Voo::sum('qtd_voos'); // Soma de todos os qtd_voos
         
-        // Para estatísticas com filtros (se houver filtros aplicados)
+        // ==========================================
+        // ESTATÍSTICAS COM FILTROS (se houver filtros aplicados)
+        // ==========================================
         $queryStats = clone $query;
-        $totalVoosFiltrados = $queryStats->sum('qtd_voos');
-        $totalPassageirosFiltrados = $queryStats->sum('total_passageiros');
+        $totalVoosFiltrados = $queryStats->sum('qtd_voos'); // Soma dos qtd_voos com filtros
+        $totalPassageirosFiltrados = $queryStats->sum('total_passageiros'); // Soma total_passageiros com filtros
+        $mediaPaxVooFiltrada = $totalVoosFiltrados > 0 ? round($totalPassageirosFiltrados / $totalVoosFiltrados, 0) : 0;
         
         $estatisticas = [
-            'total_voos_registros' => $totalVoosRegistros, // Quantos cadastros
-            'total_voos' => $totalVoosQuantidade, // SOMA dos voos (ex: 514)
-            'total_passageiros' => Voo::sum('total_passageiros'),
-            'media_pax_voo' => $totalVoosQuantidade > 0 ? round(Voo::sum('total_passageiros') / $totalVoosQuantidade, 0) : 0,
+            // Estatísticas gerais (todos os voos)
+            'total_voos_registros' => $totalVoosRegistros,
+            'total_voos' => $totalVoosQuantidade,
+            'total_passageiros' => $totalPassageiros,
+            'media_pax_voo' => $totalQuantidadeVoos > 0 ? round($totalPassageiros / $totalQuantidadeVoos, 0) : 0,
             'voos_com_notas' => Voo::whereNotNull('media_notas')->count(),
-            'media_geral_notas' => Voo::whereNotNull('media_notas')->avg('media_notas')
+            'media_geral_notas' => Voo::whereNotNull('media_notas')->avg('media_notas'),
+            
+            // Estatísticas com filtros (opcional - para mostrar na view se necessário)
+            'filtrados' => [
+                'total_voos' => $totalVoosFiltrados,
+                'total_passageiros' => $totalPassageirosFiltrados,
+                'media_pax_voo' => $mediaPaxVooFiltrada,
+                'tem_filtro' => $request->has('search') || $request->has('tipo') || $request->has('horario') || $request->has('dias')
+            ]
         ];
         
         return view('voos.index', compact('voos', 'estatisticas', 'perPage'));
@@ -512,6 +528,11 @@ class VooController extends Controller
     public function exportPDF(Request $request)
     {
         try {
+
+            // Aumentar limite de memória e tempo de execução
+            ini_set('memory_limit', '1024M'); // Aumenta para 1GB
+            ini_set('max_execution_time', 300); // Aumenta para 5 minutos
+
             $query = Voo::with(['aeroporto', 'companhiaAerea', 'aeronave'])
                 ->orderBy('created_at', 'desc');
             
@@ -544,7 +565,7 @@ class VooController extends Controller
                 $query->where('created_at', '>=', $dataLimite);
             }
             
-            $voos = $query->get();
+            $voos = $query->simplePaginate(100);
             
             if ($voos->isEmpty()) {
                 if ($request->ajax()) {
@@ -554,9 +575,9 @@ class VooController extends Controller
             }
             
             $estatisticas = [
-                'total_voos' => $voos->count(),
+                'total_voos' => $voos->sum('qtd_voos'), // SOMA dos qtd_voos, não count()
                 'total_passageiros' => $voos->sum('total_passageiros'),
-                'media_pax_voo' => $voos->count() > 0 ? round($voos->sum('total_passageiros') / $voos->count(), 0) : 0,
+                'media_pax_voo' => $voos->sum('qtd_voos') > 0 ? round($voos->sum('total_passageiros') / $voos->sum('qtd_voos'), 0) : 0,
                 'voos_com_notas' => $voos->filter(function($voo) { return $voo->media_notas !== null; })->count(),
                 'media_geral_notas' => $voos->filter(function($voo) { return $voo->media_notas !== null; })->avg('media_notas'),
                 'data_exportacao' => now()->format('d/m/Y H:i:s'),

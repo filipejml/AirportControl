@@ -31,7 +31,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h6 class="text-white-50 mb-1">Total de Voos</h6>
-                            <h3 class="mb-0">{{ $estatisticas['total_voos'] }}</h3>
+                            <h3 class="mb-0">{{ number_format($estatisticas['total_voos'], 0, ',', '.') }}</h3>
                         </div>
                         <i class="bi bi-airplane fs-1 text-white-50"></i>
                     </div>
