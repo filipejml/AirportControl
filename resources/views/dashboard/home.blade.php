@@ -13,7 +13,7 @@
                 <div class="card-body py-3 text-center">
                     <h6 class="text-muted mb-2">Companhias</h6>
                     <i class="bi bi-building text-primary fs-1 mb-2 d-block"></i>
-                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['companhias'], 0, ',', '.') }}</p>
+                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['companhias'] ?? 0, 0, ',', '.') }}</p>
                     <p class="text-muted small mb-0">Companhias registradas</p>
                 </div>
             </div>
@@ -25,7 +25,7 @@
                 <div class="card-body py-3 text-center">
                     <h6 class="text-muted mb-2">Modelos</h6>
                     <i class="bi bi-airplane-fill text-success fs-1 mb-2 d-block"></i>
-                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['modelos'], 0, ',', '.') }}</p>
+                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['modelos'] ?? 0, 0, ',', '.') }}</p>
                     <p class="text-muted small mb-0">Modelos distintos</p>
                 </div>
             </div>
@@ -37,7 +37,7 @@
                 <div class="card-body py-3 text-center">
                     <h6 class="text-muted mb-2">Aeroportos</h6>
                     <i class="bi bi-geo-alt-fill text-info fs-1 mb-2 d-block"></i>
-                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['aeroportos'], 0, ',', '.') }}</p>
+                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['aeroportos'] ?? 0, 0, ',', '.') }}</p>
                     <p class="text-muted small mb-0">Aeroportos registrados</p>
                 </div>
             </div>
@@ -49,7 +49,7 @@
                 <div class="card-body py-3 text-center">
                     <h6 class="text-muted mb-2">Voos</h6>
                     <i class="bi bi-calendar-check-fill text-warning fs-1 mb-2 d-block"></i>
-                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['voos'], 0, ',', '.') }}</p>
+                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['voos'] ?? 0, 0, ',', '.') }}</p>
                     <p class="text-muted small mb-0">Voos realizados</p>
                 </div>
             </div>
@@ -65,7 +65,7 @@
                 <div class="card-body py-3 text-center">
                     <h6 class="text-muted mb-2">Total de Passageiros</h6>
                     <i class="bi bi-people-fill text-danger fs-1 mb-2 d-block"></i>
-                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['passageiros_total'], 0, ',', '.') }}</p>
+                    <p class="display-4 fw-bold text-dark mb-0">{{ number_format($stats['passageiros_total'] ?? 0, 0, ',', '.') }}</p>
                     <p class="text-muted small mb-0">Passageiros transportados</p>
                 </div>
             </div>
@@ -85,23 +85,23 @@
                     <div class="row">
                         <div class="col-3">
                             <span class="text-muted small">Objetivo</span>
-                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['objetivo'], 1) }}</p>
+                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['objetivo'] ?? 0, 1) }}</p>
                         </div>
                         <div class="col-3">
                             <span class="text-muted small">Pontualidade</span>
-                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['pontualidade'], 1) }}</p>
+                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['pontualidade'] ?? 0, 1) }}</p>
                         </div>
                         <div class="col-3">
                             <span class="text-muted small">Serviços</span>
-                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['servicos'], 1) }}</p>
+                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['servicos'] ?? 0, 1) }}</p>
                         </div>
                         <div class="col-3">
                             <span class="text-muted small">Pátio</span>
-                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['patio'], 1) }}</p>
+                            <p class="h5 fw-bold text-dark mb-0">{{ number_format($mediasNotas['patio'] ?? 0, 1) }}</p>
                         </div>
                     </div>
                     @php
-                        $mediaGeral = ($mediasNotas['objetivo'] + $mediasNotas['pontualidade'] + $mediasNotas['servicos'] + $mediasNotas['patio']) / 4;
+                        $mediaGeral = (($mediasNotas['objetivo'] ?? 0) + ($mediasNotas['pontualidade'] ?? 0) + ($mediasNotas['servicos'] ?? 0) + ($mediasNotas['patio'] ?? 0)) / 4;
                     @endphp
                     <div class="mt-2 pt-2 border-top">
                         <div class="d-flex justify-content-between align-items-center small">
@@ -127,13 +127,15 @@
                     </div>
                     <div>
                         @php
-                            $totalPassageirosAeroporto = array_sum($passageirosPorAeroporto);
-                            arsort($passageirosPorAeroporto);
+                            $totalPassageirosAeroporto = array_sum($passageirosPorAeroporto ?? []);
+                            if (!empty($passageirosPorAeroporto)) {
+                                arsort($passageirosPorAeroporto);
+                            }
                             $contador = 0;
                             $medalhas = ['🥇', '🥈', '🥉'];
                             $coresMedalha = ['#FFD700', '#C0C0C0', '#CD7F32'];
                         @endphp
-                        @foreach($passageirosPorAeroporto as $aeroporto => $total)
+                        @forelse(($passageirosPorAeroporto ?? []) as $aeroporto => $total)
                             @php
                                 $contador++;
                                 $percentual = $totalPassageirosAeroporto > 0 ? ($total / $totalPassageirosAeroporto) * 100 : 0;
@@ -155,7 +157,7 @@
                             <div class="progress mb-2" style="height: 3px;">
                                 <div class="progress-bar" role="progressbar" style="width: {{ $percentual }}%; background-color: #dc3545 !important;"></div>
                             </div>
-                            @if($contador >= 5)
+                            @if($contador >= 5 && count($passageirosPorAeroporto) > 5)
                                 @php
                                     $outros = array_slice($passageirosPorAeroporto, 5);
                                     $totalOutros = array_sum($outros);
@@ -173,7 +175,9 @@
                                 </div>
                                 @break
                             @endif
-                        @endforeach
+                        @empty
+                            <p class="text-muted text-center py-3">Nenhum dado de passageiro disponível</p>
+                        @endforelse
                     </div>
                     <div class="mt-2 pt-2 border-top">
                         <div class="d-flex justify-content-between align-items-center small">
@@ -196,7 +200,7 @@
                     <div>
                         @php
                             $ordemHorarios = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
-                            $totalPassageirosHorario = array_sum($passageirosPorHorario);
+                            $totalPassageirosHorario = array_sum($passageirosPorHorario ?? []);
                             $legendas = [
                                 'EAM' => '05h-08h',
                                 'AM' => '08h-12h',
@@ -256,13 +260,15 @@
                     </div>
                     <div>
                         @php
-                            $totalVoosAeroporto = array_sum($voosPorAeroporto);
-                            arsort($voosPorAeroporto);
+                            $totalVoosAeroporto = array_sum($voosPorAeroporto ?? []);
+                            if (!empty($voosPorAeroporto)) {
+                                arsort($voosPorAeroporto);
+                            }
                             $contador = 0;
                             $medalhas = ['🥇', '🥈', '🥉'];
                             $coresMedalha = ['#FFD700', '#C0C0C0', '#CD7F32'];
                         @endphp
-                        @foreach($voosPorAeroporto as $aeroporto => $total)
+                        @forelse(($voosPorAeroporto ?? []) as $aeroporto => $total)
                             @php
                                 $contador++;
                                 $percentual = $totalVoosAeroporto > 0 ? ($total / $totalVoosAeroporto) * 100 : 0;
@@ -284,7 +290,7 @@
                             <div class="progress mb-2" style="height: 3px;">
                                 <div class="progress-bar" role="progressbar" style="width: {{ $percentual }}%; background-color: #198754 !important;"></div>
                             </div>
-                            @if($contador >= 5)
+                            @if($contador >= 5 && count($voosPorAeroporto) > 5)
                                 @php
                                     $outros = array_slice($voosPorAeroporto, 5);
                                     $totalOutros = array_sum($outros);
@@ -302,7 +308,9 @@
                                 </div>
                                 @break
                             @endif
-                        @endforeach
+                        @empty
+                            <p class="text-muted text-center py-3">Nenhum dado de voo disponível</p>
+                        @endforelse
                     </div>
                     <div class="mt-2 pt-2 border-top">
                         <div class="d-flex justify-content-between align-items-center small">
@@ -345,7 +353,10 @@
                     <div class="mt-2 pt-2 border-top">
                         <div class="d-flex justify-content-between align-items-center small">
                             <span class="text-muted">Premiados</span>
-                            <span class="fw-bold text-dark">{{ count(array_filter($melhoresCompanhias)) }}/4 companhias • {{ count(array_filter($melhoresModelos)) }}/4 modelos</span>
+                            <span class="fw-bold text-dark">
+                                {{ count(array_filter($melhoresCompanhias ?? [])) }}/4 companhias • 
+                                {{ count(array_filter($melhoresModelos ?? [])) }}/4 modelos
+                            </span>
                         </div>
                     </div>
                 </div>
