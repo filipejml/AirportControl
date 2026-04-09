@@ -343,6 +343,233 @@
         </div>
         @endif
 
+        <!-- Depósitos e Veículos do Aeroporto -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-building text-primary"></i> Depósitos e Veículos
+                        </h5>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> Estrutura de armazenamento do aeroporto
+                        </small>
+                    </div>
+                    
+                    @php
+                        $depositos = $aeroporto->depositos()->with('veiculos')->get();
+                        $totalDepositos = $depositos->count();
+                        $totalVeiculos = $depositos->sum(function($d) { return $d->veiculos->count(); });
+                        $totalVeiculosDisponiveis = $depositos->sum(function($d) { 
+                            return $d->veiculos->where('status', 'disponivel')->count(); 
+                        });
+                        $totalVeiculosManutencao = $depositos->sum(function($d) { 
+                            return $d->veiculos->where('status', 'manutencao')->count(); 
+                        });
+                    @endphp
+                    
+                    @if($totalDepositos > 0)
+                        <!-- Resumo rápido -->
+                        <div class="row mb-4">
+                            <div class="col-md-3 col-6 mb-2">
+                                <div class="bg-light rounded p-3 text-center">
+                                    <i class="bi bi-box fs-2 text-primary"></i>
+                                    <h4 class="mb-0 mt-2">{{ $totalDepositos }}</h4>
+                                    <small class="text-muted">Depósitos</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-2">
+                                <div class="bg-light rounded p-3 text-center">
+                                    <i class="bi bi-car-front fs-2 text-success"></i>
+                                    <h4 class="mb-0 mt-2">{{ $totalVeiculos }}</h4>
+                                    <small class="text-muted">Total Veículos</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-2">
+                                <div class="bg-light rounded p-3 text-center">
+                                    <i class="bi bi-check-circle fs-2 text-info"></i>
+                                    <h4 class="mb-0 mt-2">{{ $totalVeiculosDisponiveis }}</h4>
+                                    <small class="text-muted">Disponíveis</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-2">
+                                <div class="bg-light rounded p-3 text-center">
+                                    <i class="bi bi-tools fs-2 text-warning"></i>
+                                    <h4 class="mb-0 mt-2">{{ $totalVeiculosManutencao }}</h4>
+                                    <small class="text-muted">Manutenção</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Lista de Depósitos -->
+                        <div class="accordion" id="accordionDepositos">
+                            @foreach($depositos as $index => $deposito)
+                                @php
+                                    $veiculosDeposito = $deposito->veiculos;
+                                    $totalVeic = $veiculosDeposito->count();
+                                    $disponiveis = $veiculosDeposito->where('status', 'disponivel')->count();
+                                    $emUso = $veiculosDeposito->where('status', 'em_uso')->count();
+                                    $manutencao = $veiculosDeposito->where('status', 'manutencao')->count();
+                                    $ocupacao = $deposito->capacidade_maxima ? round(($totalVeic / $deposito->capacidade_maxima) * 100, 1) : 0;
+                                    $statusClass = $deposito->status === 'ativo' ? 'success' : ($deposito->status === 'manutencao' ? 'warning' : 'secondary');
+                                @endphp
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading{{ $index }}">
+                                        <button class="accordion-button {{ $index > 0 ? 'collapsed' : '' }}" type="button" 
+                                                data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" 
+                                                aria-expanded="{{ $index === 0 ? 'true' : 'false' }}" 
+                                                aria-controls="collapse{{ $index }}">
+                                            <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                                <div>
+                                                    <i class="bi bi-building me-2"></i>
+                                                    <strong>{{ $deposito->nome }}</strong>
+                                                    <span class="badge bg-{{ $statusClass }} ms-2">{{ ucfirst($deposito->status) }}</span>
+                                                </div>
+                                                <div class="d-flex gap-3">
+                                                    <span class="text-muted small">
+                                                        <i class="bi bi-car-front"></i> {{ $totalVeic }} veículos
+                                                    </span>
+                                                    @if($deposito->capacidade_maxima)
+                                                        <span class="text-muted small">
+                                                            <i class="bi bi-box"></i> {{ $ocupacao }}% ocupado
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ $index }}" class="accordion-collapse collapse {{ $index === 0 ? 'show' : '' }}" 
+                                        aria-labelledby="heading{{ $index }}" data-bs-parent="#accordionDepositos">
+                                        <div class="accordion-body">
+                                            <!-- Informações do Depósito -->
+                                            <div class="row mb-3">
+                                                <div class="col-md-4">
+                                                    <small class="text-muted">Código</small>
+                                                    <p class="mb-0"><strong>{{ $deposito->codigo }}</strong></p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <small class="text-muted">Localização</small>
+                                                    <p class="mb-0">{{ $deposito->localizacao ?? 'Não informada' }}</p>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <small class="text-muted">Área Total</small>
+                                                    <p class="mb-0">{{ $deposito->area_total ? number_format($deposito->area_total, 2) . ' m²' : 'Não informada' }}</p>
+                                                </div>
+                                            </div>
+
+                                            <!-- Estatísticas do Depósito -->
+                                            <div class="row mb-3 text-center">
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <small class="text-muted d-block">Total</small>
+                                                        <strong class="fs-5">{{ $totalVeic }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <small class="text-muted d-block">Disponíveis</small>
+                                                        <strong class="fs-5 text-success">{{ $disponiveis }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <small class="text-muted d-block">Em Uso</small>
+                                                        <strong class="fs-5 text-warning">{{ $emUso }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="border rounded p-2">
+                                                        <small class="text-muted d-block">Manutenção</small>
+                                                        <strong class="fs-5 text-danger">{{ $manutencao }}</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Barra de Capacidade -->
+                                            @if($deposito->capacidade_maxima)
+                                                <div class="mb-3">
+                                                    <small class="text-muted">Capacidade: {{ $totalVeic }} / {{ $deposito->capacidade_maxima }} veículos</small>
+                                                    <div class="progress" style="height: 8px;">
+                                                        <div class="progress-bar bg-{{ $ocupacao >= 90 ? 'danger' : ($ocupacao >= 70 ? 'warning' : 'success') }}" 
+                                                            style="width: {{ $ocupacao }}%"></div>
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            <!-- Lista de Veículos -->
+                                            @if($veiculosDeposito->count() > 0)
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-hover">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>Placa</th>
+                                                                <th>Modelo/Marca</th>
+                                                                <th>Ano</th>
+                                                                <th>Tipo</th>
+                                                                <th>Status</th>
+                                                                <th>Quilometragem</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($veiculosDeposito->take(5) as $veiculo)
+                                                                <tr>
+                                                                    <td><strong>{{ $veiculo->placa }}</strong></td>
+                                                                    <td>{{ $veiculo->modelo }}<br><small class="text-muted">{{ $veiculo->marca }}</small></td>
+                                                                    <td>{{ $veiculo->ano }}</td>
+                                                                    <td><span class="badge bg-secondary">{{ ucfirst($veiculo->tipo) }}</span></td>
+                                                                    <td>
+                                                                        @php
+                                                                            $vStatusColors = [
+                                                                                'disponivel' => 'success',
+                                                                                'em_uso' => 'warning',
+                                                                                'manutencao' => 'danger',
+                                                                                'inativo' => 'secondary'
+                                                                            ];
+                                                                        @endphp
+                                                                        <span class="badge bg-{{ $vStatusColors[$veiculo->status] }}">
+                                                                            {{ ucfirst(str_replace('_', ' ', $veiculo->status)) }}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>{{ number_format($veiculo->quilometragem, 0, ',', '.') }} km</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                    @if($veiculosDeposito->count() > 5)
+                                                        <small class="text-muted d-block text-center mt-2">
+                                                            + {{ $veiculosDeposito->count() - 5 }} veículos não listados
+                                                        </small>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                <div class="text-center py-3">
+                                                    <i class="bi bi-car-front text-muted"></i>
+                                                    <p class="text-muted mb-0">Nenhum veículo cadastrado neste depósito</p>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-5">
+                            <i class="bi bi-box text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">Nenhum depósito cadastrado neste aeroporto</h5>
+                            <p class="text-muted">A estrutura de depósitos e veículos está disponível apenas para administradores.</p>
+                            @auth
+                                @if(auth()->user()->is_admin ?? false)
+                                    <a href="{{ route('aeroportos.depositos.create', $aeroporto) }}" class="btn btn-primary mt-2">
+                                        <i class="bi bi-plus-circle"></i> Criar Primeiro Depósito
+                                    </a>
+                                @endif
+                            @endauth
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
         <p class="text-center text-muted mt-4">
             Desenvolvido por <strong>Filipe Lopes</strong>
         </p>
