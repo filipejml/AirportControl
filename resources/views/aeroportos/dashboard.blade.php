@@ -82,7 +82,7 @@
         <!-- Botão Voltar e Título -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <a href="{{ route('aeroportos.informacoes') }}" class="btn btn-outline-secondary back-button">
+                <a href="{{ route('aeroportos.informacoes') }}?ano={{ date('Y') }}" class="btn btn-outline-secondary back-button">
                     <i class="bi bi-arrow-left"></i> Voltar para Informações
                 </a>
             </div>

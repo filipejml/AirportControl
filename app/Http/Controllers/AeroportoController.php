@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 class AeroportoController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of the resource (ADMIN)
      */
     public function index()
     {
@@ -20,7 +20,7 @@ class AeroportoController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Show the form for creating a new resource (ADMIN)
      */
     public function create()
     {
@@ -29,12 +29,12 @@ class AeroportoController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created resource in storage (ADMIN)
      */
     public function store(Request $request)
     {
         $request->validate([
-            'nome_aeroporto' => 'required|string|max:255',
+            'nome_aeroporto' => 'required|string|max:255|unique:aeroportos,nome_aeroporto',
             'companhias' => 'nullable|array'
         ]);
 
@@ -51,9 +51,79 @@ class AeroportoController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * Display the specified resource (ADMIN) - CORRIGIDO
      */
     public function show(Aeroporto $aeroporto)
+    {
+        // Carregar os relacionamentos necessários para o ADMIN
+        $aeroporto->load(['companhias', 'depositos.veiculos']);
+        
+        // Retornar a view ADMIN (não a de usuário comum)
+        return view('admin.aeroportos.show', compact('aeroporto'));
+    }
+
+    /**
+     * Show the form for editing the specified resource (ADMIN)
+     */
+    public function edit(Aeroporto $aeroporto)
+    {
+        $companhias = CompanhiaAerea::withCount('aeronaves')->get();
+        $aeroporto->load('companhias');
+        return view('admin.aeroportos.edit', compact('aeroporto', 'companhias'));
+    }
+
+    /**
+     * Update the specified resource in storage (ADMIN)
+     */
+    public function update(Request $request, Aeroporto $aeroporto)
+    {
+        $request->validate([
+            'nome_aeroporto' => 'required|string|max:255|unique:aeroportos,nome_aeroporto,' . $aeroporto->id,
+            'companhias' => 'nullable|array'
+        ]);
+
+        $aeroporto->update([
+            'nome_aeroporto' => $request->nome_aeroporto
+        ]);
+
+        if ($request->has('companhias')) {
+            $aeroporto->companhias()->sync($request->companhias);
+        } else {
+            $aeroporto->companhias()->detach();
+        }
+
+        return redirect()->route('aeroportos.index')
+            ->with('success', 'Aeroporto atualizado com sucesso!');
+    }
+
+    /**
+     * Remove the specified resource from storage (ADMIN)
+     */
+    public function destroy(Aeroporto $aeroporto)
+    {
+        try {
+            // Verificar se tem voos
+            if ($aeroporto->voos()->exists()) {
+                return redirect()->route('aeroportos.index')
+                    ->with('error', 'Não é possível excluir um aeroporto que possui voos cadastrados.');
+            }
+            
+            $aeroporto->companhias()->detach();
+            $aeroporto->depositos()->delete(); // Remove depósitos e veículos (cascade)
+            $aeroporto->delete();
+            
+            return redirect()->route('aeroportos.index')
+                ->with('success', 'Aeroporto excluído com sucesso!');
+        } catch (\Exception $e) {
+            return redirect()->route('aeroportos.index')
+                ->with('error', 'Erro ao excluir aeroporto: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Display dashboard for common user (USUÁRIO COMUM)
+     */
+    public function dashboard(Aeroporto $aeroporto)
     {
         // Estatísticas gerais
         $totalVoos = $aeroporto->voos()->sum('qtd_voos');
@@ -176,6 +246,7 @@ class AeroportoController extends Controller
             ->orderBy('mes')
             ->get();
         
+        // Retornar a view de USUÁRIO COMUM (dashboard)
         return view('aeroportos.dashboard', compact(
             'aeroporto',
             'totalVoos',
@@ -196,85 +267,7 @@ class AeroportoController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Aeroporto $aeroporto)
-    {
-        $companhias = CompanhiaAerea::withCount('aeronaves')->get();
-        $aeroporto->load('companhias');
-        return view('admin.aeroportos.edit', compact('aeroporto', 'companhias'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Aeroporto $aeroporto)
-    {
-        $request->validate([
-            'nome_aeroporto' => 'required|string|max:255',
-            'companhias' => 'nullable|array'
-        ]);
-
-        $aeroporto->update([
-            'nome_aeroporto' => $request->nome_aeroporto
-        ]);
-
-        if ($request->has('companhias')) {
-            $aeroporto->companhias()->sync($request->companhias);
-        } else {
-            $aeroporto->companhias()->detach();
-        }
-
-        return redirect()->route('aeroportos.index')
-            ->with('success', 'Aeroporto atualizado com sucesso!');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Aeroporto $aeroporto)
-    {
-        try {
-            $aeroporto->companhias()->detach();
-            $aeroporto->delete();
-            
-            return redirect()->route('aeroportos.index')
-                ->with('success', 'Aeroporto excluído com sucesso!');
-        } catch (\Exception $e) {
-            return redirect()->route('aeroportos.index')
-                ->with('error', 'Erro ao excluir aeroporto: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Check if airport name already exists
-     */
-    public function checkName(Request $request)
-    {
-        $request->validate([
-            'nome' => 'required|string|max:255'
-        ]);
-
-        $nome = $request->nome;
-        $airportId = $request->id;
-
-        // Check if name exists excluding current airport when editing
-        $query = Aeroporto::where('nome_aeroporto', $nome);
-        
-        if ($airportId) {
-            $query->where('id', '!=', $airportId);
-        }
-        
-        $exists = $query->exists();
-
-        return response()->json([
-            'exists' => $exists,
-            'message' => $exists ? 'Este nome de aeroporto já está em uso.' : 'Nome disponível'
-        ]);
-    }
-
-    /**
-     * Display general information about airports
+     * Display general information about airports (USUÁRIO COMUM)
      */
     public function informacoes(Request $request)
     {
@@ -285,9 +278,8 @@ class AeroportoController extends Controller
             ->withCount('companhias')
             ->get();
         
-        // CORRIGIDO: usar sum('qtd_voos') ao invés de count()
+        // Calcular totais para cada aeroporto
         foreach ($aeroportos as $aeroporto) {
-            // Soma a quantidade de voos (qtd_voos) em vez de contar registros
             $aeroporto->total_voos = $aeroporto->voos()->whereYear('created_at', $anoSelecionado)->sum('qtd_voos');
             $aeroporto->total_passageiros = $aeroporto->voos()->whereYear('created_at', $anoSelecionado)->sum('total_passageiros');
             $aeroporto->media_passageiros_por_voo = $aeroporto->total_voos > 0 
@@ -310,7 +302,6 @@ class AeroportoController extends Controller
             ];
             
             foreach ($categorias as $categoria => $campoNota) {
-                // CORRIGIDO: usar sum(qtd_voos * nota) / sum(qtd_voos) para média ponderada
                 $melhorCompanhia = DB::table('voos')
                     ->join('companhias_aereas', 'voos.companhia_aerea_id', '=', 'companhias_aereas.id')
                     ->select(
@@ -336,9 +327,7 @@ class AeroportoController extends Controller
                 }
             }
             
-            // CORRIGIDO: calcular médias ponderadas por quantidade de voos
-            $totalVoos = $a->total_voos;
-            
+            // Calcular médias ponderadas
             $notaObj = DB::table('voos')
                 ->where('aeroporto_id', $a->id)
                 ->whereYear('created_at', $anoSelecionado)
@@ -367,7 +356,7 @@ class AeroportoController extends Controller
                 ->select(DB::raw('SUM(qtd_voos * nota_patio) / SUM(qtd_voos) as media'))
                 ->value('media') ?? 0;
             
-            // Média geral (média das 4 notas)
+            // Média geral
             $mediaNotas = 0;
             $countNotas = 0;
             if ($notaObj > 0) { $mediaNotas += $notaObj; $countNotas++; }
@@ -390,7 +379,6 @@ class AeroportoController extends Controller
                 'nota_patio' => $notaPatio,
                 'melhores_companhias' => $melhoresCompanhias,
                 'companhias' => $a->companhias->map(function($c) use ($a, $anoSelecionado) {
-                    // CORRIGIDO: contar quantidade de voos (soma do qtd_voos)
                     $totalVoosCompanhia = DB::table('voos')
                         ->where('aeroporto_id', $a->id)
                         ->where('companhia_aerea_id', $c->id)
@@ -408,13 +396,11 @@ class AeroportoController extends Controller
         
         $companhias = CompanhiaAerea::orderBy('nome')->get();
         
-        // CORRIGIDO: totais gerais usando sum(qtd_voos)
         $totalAeroportos = $aeroportos->count();
         $totalVoos = $aeroportos->sum('total_voos');
         $totalPassageiros = $aeroportos->sum('total_passageiros');
         $mediaPassageirosPorVoo = $totalVoos > 0 ? $totalPassageiros / $totalVoos : 0;
         
-        // Anos disponíveis para o filtro
         $anosDisponiveis = DB::table('voos')
             ->select(DB::raw('DISTINCT YEAR(created_at) as ano'))
             ->orderBy('ano', 'desc')
@@ -425,6 +411,7 @@ class AeroportoController extends Controller
             $anosDisponiveis = [date('Y')];
         }
         
+        // Retornar a view de USUÁRIO COMUM (informacoes)
         return view('aeroportos.informacoes', compact(
             'aeroportosData',
             'companhias',
@@ -439,6 +426,32 @@ class AeroportoController extends Controller
     }
 
     /**
+     * Check if airport name already exists (AJAX - ADMIN)
+     */
+    public function checkName(Request $request)
+    {
+        $request->validate([
+            'nome' => 'required|string|max:255'
+        ]);
+
+        $nome = $request->nome;
+        $airportId = $request->id;
+
+        $query = Aeroporto::where('nome_aeroporto', $nome);
+        
+        if ($airportId) {
+            $query->where('id', '!=', $airportId);
+        }
+        
+        $exists = $query->exists();
+
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists ? 'Este nome de aeroporto já está em uso.' : 'Nome disponível'
+        ]);
+    }
+
+    /**
      * Get weekly passenger data for all airports - Only show weeks with data
      */
     private function getDadosPassageirosPorSemana($aeroportos, $ano)
@@ -446,7 +459,6 @@ class AeroportoController extends Controller
         $semanasComDados = [];
         $dadosPorAeroporto = [];
         
-        // Buscar todas as semanas que têm dados no ano
         $semanasExistentes = DB::table('voos')
             ->whereYear('created_at', $ano)
             ->select(DB::raw('YEARWEEK(created_at, 1) as semana_ano'), DB::raw('MIN(created_at) as data_referencia'))
@@ -458,7 +470,6 @@ class AeroportoController extends Controller
             return ['semanas' => [], 'aeroportos' => []];
         }
         
-        // Para cada semana com dados, criar o label
         foreach ($semanasExistentes as $semana) {
             $data = \Carbon\Carbon::parse($semana->data_referencia);
             $numeroSemana = $data->weekOfYear;
@@ -474,7 +485,6 @@ class AeroportoController extends Controller
             ];
         }
         
-        // Para cada aeroporto, buscar os dados apenas para as semanas que existem
         foreach ($aeroportos as $aeroporto) {
             $dadosSemanais = [];
             
@@ -488,7 +498,6 @@ class AeroportoController extends Controller
                 $dadosSemanais[] = $totalPassageiros;
             }
             
-            // Só adicionar aeroportos que têm pelo menos um voo registrado no ano
             if (array_sum($dadosSemanais) > 0) {
                 $dadosPorAeroporto[] = [
                     'nome' => $aeroporto->nome_aeroporto,
@@ -510,16 +519,8 @@ class AeroportoController extends Controller
     private function gerarCorAleatoria($index)
     {
         $cores = [
-            '#0d6efd', // azul
-            '#198754', // verde
-            '#dc3545', // vermelho
-            '#ffc107', // amarelo
-            '#6f42c1', // roxo
-            '#fd7e14', // laranja
-            '#20c997', // turquesa
-            '#e83e8c', // rosa
-            '#6610f2', // índigo
-            '#d63384'  // magenta
+            '#0d6efd', '#198754', '#dc3545', '#ffc107', '#6f42c1',
+            '#fd7e14', '#20c997', '#e83e8c', '#6610f2', '#d63384'
         ];
         
         return $cores[$index % count($cores)];

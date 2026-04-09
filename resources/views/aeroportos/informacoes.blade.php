@@ -325,8 +325,8 @@
                             <div class="mt-3">
                                 @if($temDados)
                                     <div class="d-grid">
-                                        <a href="{{ route('aeroportos.show', $aeroporto['id']) }}" 
-                                           class="btn btn-primary btn-dashboard">
+                                        <a href="{{ route('aeroportos.dashboard', $aeroporto['id']) }}" 
+                                        class="btn btn-primary btn-dashboard">
                                             <i class="bi bi-graph-up me-1"></i> Ver Dashboard do Aeroporto
                                         </a>
                                     </div>

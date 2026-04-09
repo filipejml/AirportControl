@@ -28,19 +28,49 @@ class Aeroporto extends Model
         return $this->hasMany(Voo::class);
     }
 
-    // CORRIGIDO: Total de voos do aeroporto (soma qtd_voos)
+    // NOVO: Relacionamento com Depósitos
+    public function depositos()
+    {
+        return $this->hasMany(Deposito::class);
+    }
+
+    // NOVO: Relacionamento com Veículos através de depósitos
+    public function veiculos()
+    {
+        return $this->hasManyThrough(Veiculo::class, Deposito::class);
+    }
+
+    // NOVO: Total de veículos no aeroporto
+    public function getTotalVeiculosAttribute()
+    {
+        return $this->veiculos()->count();
+    }
+
+    // NOVO: Total de depósitos no aeroporto
+    public function getTotalDepositosAttribute()
+    {
+        return $this->depositos()->count();
+    }
+
+    // NOVO: Total de veículos disponíveis
+    public function getVeiculosDisponiveisAttribute()
+    {
+        return $this->veiculos()->where('status', 'disponivel')->count();
+    }
+
+    // Total de voos do aeroporto (soma qtd_voos)
     public function getTotalVoosAttribute()
     {
         return $this->voos()->sum('qtd_voos');
     }
 
-    // CORRIGIDO: Total de passageiros que passaram pelo aeroporto
+    // Total de passageiros que passaram pelo aeroporto
     public function getTotalPassageirosAttribute()
     {
         return $this->voos()->sum('total_passageiros');
     }
 
-    // CORRIGIDO: Média de passageiros por voo
+    // Média de passageiros por voo
     public function getMediaPassageirosPorVooAttribute()
     {
         $totalVoos = $this->total_voos;
@@ -52,7 +82,7 @@ class Aeroporto extends Model
         return round($this->total_passageiros / $totalVoos, 0);
     }
 
-    // CORRIGIDO: Média ponderada da nota Objetivo
+    // Média ponderada da nota Objetivo
     public function getMediaNotaObjAttribute()
     {
         $result = DB::table('voos')
@@ -64,7 +94,7 @@ class Aeroporto extends Model
         return $result ?? 0;
     }
 
-    // CORRIGIDO: Média ponderada da nota Pontualidade
+    // Média ponderada da nota Pontualidade
     public function getMediaNotaPontualidadeAttribute()
     {
         $result = DB::table('voos')
@@ -76,7 +106,7 @@ class Aeroporto extends Model
         return $result ?? 0;
     }
 
-    // CORRIGIDO: Média ponderada da nota Serviços
+    // Média ponderada da nota Serviços
     public function getMediaNotaServicosAttribute()
     {
         $result = DB::table('voos')
@@ -88,7 +118,7 @@ class Aeroporto extends Model
         return $result ?? 0;
     }
 
-    // CORRIGIDO: Média ponderada da nota Pátio
+    // Média ponderada da nota Pátio
     public function getMediaNotaPatioAttribute()
     {
         $result = DB::table('voos')
@@ -100,7 +130,7 @@ class Aeroporto extends Model
         return $result ?? 0;
     }
 
-    // CORRIGIDO: Média geral das notas
+    // Média geral das notas
     public function getMediaNotasAttribute()
     {
         $notaObj = $this->media_nota_obj;
