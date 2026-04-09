@@ -14,16 +14,12 @@ class Deposito extends Model
     protected $fillable = [
         'aeroporto_id',
         'nome',
-        'codigo',
-        'localizacao',
-        'area_total',
         'capacidade_maxima',
         'status',
         'observacoes'
     ];
 
     protected $casts = [
-        'area_total' => 'decimal:2',
         'capacidade_maxima' => 'integer'
     ];
 
@@ -79,11 +75,5 @@ class Deposito extends Model
     public function scopeAtivos($query)
     {
         return $query->where('status', 'ativo');
-    }
-
-    // Scope para depósitos com capacidade disponível
-    public function scopeComCapacidade($query)
-    {
-        return $query->whereRaw('capacidade_maxima IS NULL OR (SELECT COUNT(*) FROM veiculos WHERE veiculos.deposito_id = depositos.id) < capacidade_maxima');
     }
 }

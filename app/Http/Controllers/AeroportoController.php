@@ -81,18 +81,25 @@ class AeroportoController extends Controller
             return redirect()->route('aeroportos.create.step3', $aeroporto);
         }
 
+        // Se não tem depósitos para salvar, também pula
+        if (empty($request->depositos)) {
+            return redirect()->route('aeroportos.create.step3', $aeroporto);
+        }
+
+        // Validar os dados dos depósitos
         $request->validate([
             'depositos.*.nome' => 'required|string|max:255',
-            'depositos.*.codigo' => 'required|string|max:50|unique:depositos,codigo',
-            'depositos.*.localizacao' => 'nullable|string|max:500',
-            'depositos.*.area_total' => 'nullable|numeric|min:0',
             'depositos.*.capacidade_maxima' => 'nullable|integer|min:0',
+            'depositos.*.observacoes' => 'nullable|string'
         ]);
 
+        // Salvar cada depósito
         foreach ($request->depositos as $depositoData) {
+            $depositoData['status'] = 'ativo';
             $aeroporto->depositos()->create($depositoData);
         }
 
+        // Redirecionar para o próximo passo
         return redirect()->route('aeroportos.create.step3', $aeroporto)
             ->with('success', 'Depósitos adicionados com sucesso!');
     }

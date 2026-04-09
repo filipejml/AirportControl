@@ -14,7 +14,7 @@
     </div>
 
     <div class="row">
-        <div class="col-md-10 mx-auto">
+        <div class="col-md-8 mx-auto">
             <div class="card shadow-sm">
                 <div class="card-body p-4">
                     <!-- Progresso -->
@@ -29,7 +29,6 @@
                         </div>
                     </div>
 
-                    <!-- REUTILIZANDO O FORMULÁRIO EXISTENTE DO create.blade.php DE DEPÓSITOS -->
                     <form method="POST" action="{{ route('aeroportos.store.step2', $aeroporto) }}" id="depositosForm">
                         @csrf
 
@@ -42,36 +41,22 @@
                                     </button>
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Nome do Depósito *</label>
-                                        <input type="text" name="depositos[0][nome]" class="form-control" required>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Código *</label>
-                                        <input type="text" name="depositos[0][codigo]" class="form-control" required>
-                                        <small class="text-muted">Ex: DEP-001, GALPÃO-A, etc.</small>
-                                    </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Nome do Depósito *</label>
+                                    <input type="text" name="depositos[0][nome]" class="form-control" required 
+                                           placeholder="Ex: Depósito Central, Galpão de Manutenção, Estacionamento Sul">
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Localização</label>
-                                        <input type="text" name="depositos[0][localizacao]" class="form-control" 
-                                               placeholder="Ex: Terminal 1, Ala Norte">
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Área Total (m²)</label>
-                                        <input type="number" step="any" name="depositos[0][area_total]" class="form-control">
-                                    </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Capacidade Máxima (veículos)</label>
+                                    <input type="number" name="depositos[0][capacidade_maxima]" class="form-control" min="0">
+                                    <small class="text-muted">Deixe em branco para capacidade ilimitada</small>
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Capacidade Máxima (veículos)</label>
-                                        <input type="number" name="depositos[0][capacidade_maxima]" class="form-control">
-                                        <small class="text-muted">Deixe em branco para capacidade ilimitada</small>
-                                    </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Observações</label>
+                                    <textarea name="depositos[0][observacoes]" class="form-control" rows="2" 
+                                              placeholder="Informações adicionais sobre o depósito..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -126,13 +111,13 @@ document.getElementById('add-deposito').addEventListener('click', function() {
     const template = container.querySelector('.deposito-item').cloneNode(true);
     
     // Limpar valores
-    template.querySelectorAll('input').forEach(input => {
+    template.querySelectorAll('input, textarea').forEach(input => {
         input.value = '';
         input.classList.remove('is-valid', 'is-invalid');
     });
     
     // Atualizar índices
-    const inputs = template.querySelectorAll('input');
+    const inputs = template.querySelectorAll('input, textarea');
     inputs.forEach(input => {
         const name = input.getAttribute('name');
         if (name) {
@@ -168,7 +153,7 @@ function reindexDepositos() {
             title.textContent = `Depósito #${index + 1}`;
         }
         
-        deposito.querySelectorAll('input').forEach(input => {
+        deposito.querySelectorAll('input, textarea').forEach(input => {
             const name = input.getAttribute('name');
             if (name) {
                 input.setAttribute('name', name.replace(/\[\d+\]/, `[${index}]`));
@@ -186,45 +171,5 @@ function reindexDepositos() {
     });
     depositoCount = depositos.length;
 }
-
-// Verificar código duplicado em tempo real
-function checkCodigo(input) {
-    const codigo = input.value;
-    if (!codigo) return;
-    
-    fetch('{{ route("aeroportos.depositos.check-codigo", $aeroporto) }}', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ codigo: codigo })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.exists) {
-            input.classList.add('is-invalid');
-            let feedback = input.nextElementSibling;
-            if (!feedback || !feedback.classList.contains('invalid-feedback')) {
-                feedback = document.createElement('div');
-                feedback.className = 'invalid-feedback';
-                input.parentNode.appendChild(feedback);
-            }
-            feedback.textContent = 'Este código já está em uso';
-        } else {
-            input.classList.remove('is-invalid');
-            input.classList.add('is-valid');
-        }
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Delegar eventos para inputs de código
-    document.addEventListener('blur', function(e) {
-        if (e.target && e.target.name && e.target.name.match(/depositos\[\d+\]\[codigo\]/)) {
-            checkCodigo(e.target);
-        }
-    }, true);
-});
 </script>
 @endsection

@@ -35,23 +35,21 @@
                     <div class="card-header bg-white">
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">{{ $deposito->nome }}</h5>
-                            <span class="badge bg-{{ $deposito->status === 'ativo' ? 'success' : ($deposito->status === 'manutencao' ? 'warning' : 'secondary') }}">
+                            <span class="badge bg-{{ $deposito->status === 'ativo' ? 'success' : 'secondary' }}">
                                 {{ ucfirst($deposito->status) }}
                             </span>
                         </div>
-                        <small class="text-muted">Código: {{ $deposito->codigo }}</small>
                     </div>
                     <div class="card-body">
-                        <p><i class="bi bi-geo-alt"></i> {{ $deposito->localizacao ?? 'Localização não informada' }}</p>
-                        <p><i class="bi bi-box"></i> Área: {{ $deposito->area_total ? number_format($deposito->area_total, 2) . ' m²' : 'N/I' }}</p>
-                        
-                        <div class="progress mb-2" style="height: 8px;">
-                            @php
-                                $percentual = $deposito->capacidade_maxima ? min(100, ($deposito->veiculos_count / $deposito->capacidade_maxima) * 100) : 0;
-                                $barClass = $percentual >= 90 ? 'bg-danger' : ($percentual >= 70 ? 'bg-warning' : 'bg-success');
-                            @endphp
-                            <div class="progress-bar {{ $barClass }}" style="width: {{ $percentual }}%"></div>
-                        </div>
+                        @if($deposito->capacidade_maxima)
+                            <div class="progress mb-2" style="height: 8px;">
+                                @php
+                                    $percentual = min(100, ($deposito->veiculos_count / $deposito->capacidade_maxima) * 100);
+                                    $barClass = $percentual >= 90 ? 'bg-danger' : ($percentual >= 70 ? 'bg-warning' : 'bg-success');
+                                @endphp
+                                <div class="progress-bar {{ $barClass }}" style="width: {{ $percentual }}%"></div>
+                            </div>
+                        @endif
                         
                         <div class="row text-center mt-3">
                             <div class="col-6">
@@ -63,6 +61,14 @@
                                 <small class="text-muted">Capacidade</small>
                             </div>
                         </div>
+
+                        @if($deposito->observacoes)
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-chat"></i> {{ Str::limit($deposito->observacoes, 50) }}
+                                </small>
+                            </div>
+                        @endif
                     </div>
                     <div class="card-footer bg-white">
                         <div class="btn-group w-100">
