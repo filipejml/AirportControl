@@ -12,20 +12,39 @@ return new class extends Migration
         Schema::create('veiculos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('deposito_id')->constrained('depositos')->cascadeOnDelete();
-            $table->string('placa')->unique();
-            $table->string('modelo');
-            $table->string('marca');
-            $table->integer('ano');
-            $table->string('cor')->nullable();
-            $table->enum('tipo', ['carro', 'caminhao', 'onibus', 'van', 'utilitario', 'outro'])->default('carro');
+            $table->string('codigo')->unique()->comment('Código de identificação do veículo');
+            $table->enum('tipo_veiculo', [
+                'esteira_bagagem',
+                'caminhao_combustivel',
+                'carro_inspecao',
+                'carrinho_bagagem',
+                'caminhao_pushback',
+                'caminhao_escada',
+                'caminhao_limpeza',
+                'outro'
+            ])->default('outro');
+            $table->string('modelo')->nullable();
+            $table->string('fabricante')->nullable();
+            $table->integer('ano_fabricacao')->nullable();
+            $table->string('placa')->nullable()->unique();
             $table->enum('status', ['disponivel', 'em_uso', 'manutencao', 'inativo'])->default('disponivel');
-            $table->integer('quilometragem')->default(0);
-            $table->integer('capacidade_passageiros')->nullable();
-            $table->decimal('carga_maxima', 10, 2)->nullable()->comment('Carga máxima em kg');
-            $table->date('data_aquisicao')->nullable();
+            
+            // Campos específicos por tipo de veículo
+            $table->integer('capacidade_operacional')->nullable()->comment('Capacidade em kg ou litros ou metros');
+            $table->string('unidade_capacidade')->nullable()->comment('kg, litros, m³, unidades');
+            $table->integer('horimetro')->default(0)->comment('Horas de operação');
             $table->date('ultima_manutencao')->nullable();
             $table->date('proxima_manutencao')->nullable();
+            $table->integer('manutencao_prevista_horas')->nullable()->comment('Manutenção a cada X horas');
+            
+            // Certificações e licenças
+            $table->string('certificado_operacao')->nullable();
+            $table->date('validade_certificado')->nullable();
+            $table->string('operadores_autorizados')->nullable()->comment('IDs ou nomes dos operadores autorizados');
+            
+            // Manutenção e histórico
             $table->text('observacoes')->nullable();
+            $table->json('historico_manutencoes')->nullable();
             $table->timestamps();
         });
     }

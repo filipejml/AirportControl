@@ -109,4 +109,20 @@ class VeiculoController extends Controller
             
         return response()->json(['exists' => $exists]);
     }
+
+    // Registrar manutenção do veículo
+    public function registrarManutencao(Request $request, Aeroporto $aeroporto, Deposito $deposito, Veiculo $veiculo)
+    {
+        $request->validate([
+            'descricao' => 'required|string',
+            'horimetro' => 'required|integer|min:' . $veiculo->horimetro
+        ]);
+        
+        $veiculo->adicionarManutencao($request->descricao, $request->horimetro);
+        $veiculo->status = 'disponivel';
+        $veiculo->save();
+        
+        return redirect()->route('aeroportos.depositos.veiculos.index', [$aeroporto, $deposito])
+            ->with('success', 'Manutenção registrada com sucesso!');
+    }
 }

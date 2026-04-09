@@ -120,7 +120,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/depositos/{deposito}/veiculos/{veiculo}/edit', [VeiculoController::class, 'edit'])->name('depositos.veiculos.edit');
         Route::put('/depositos/{deposito}/veiculos/{veiculo}', [VeiculoController::class, 'update'])->name('depositos.veiculos.update');
         Route::delete('/depositos/{deposito}/veiculos/{veiculo}', [VeiculoController::class, 'destroy'])->name('depositos.veiculos.destroy');
-        Route::post('/depositos/{deposito}/veiculos/check-placa', [VeiculoController::class, 'checkPlaca'])->name('depositos.veiculos.check-placa');
+        
+        // Rota para registrar manutenção de veículo
+        Route::put('/depositos/{deposito}/veiculos/{veiculo}/manutencao', [VeiculoController::class, 'registrarManutencao'])
+            ->name('depositos.veiculos.manutencao');
+        
+        // Rota AJAX para verificar placa/código do veículo
+        Route::post('/depositos/{deposito}/veiculos/check-placa', [VeiculoController::class, 'checkPlaca'])
+            ->name('depositos.veiculos.check-placa');
     });
     
     /*
