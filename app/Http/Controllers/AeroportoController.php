@@ -125,6 +125,9 @@ class AeroportoController extends Controller
      */
     public function dashboard(Aeroporto $aeroporto)
     {
+        // Carregar depósitos e veículos para exibir no dashboard
+        $aeroporto->load(['depositos.veiculos']);
+        
         // Estatísticas gerais
         $totalVoos = $aeroporto->voos()->sum('qtd_voos');
         $totalPassageiros = $aeroporto->voos()->sum('total_passageiros');

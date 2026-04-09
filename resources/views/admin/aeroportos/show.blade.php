@@ -57,7 +57,7 @@
     <div class="row mb-4">
         <div class="col-md-8">
             <h2 class="fw-bold">🛫 {{ $aeroporto->nome_aeroporto }}</h2>
-            <p class="text-muted">Detalhes do aeroporto - Visualização Administrativa</p>
+            <p class="text-muted">Detalhes do aeroporto</p>
         </div>
         <div class="col-md-4 text-end">
             <a href="{{ route('aeroportos.index') }}" class="btn btn-outline-secondary btn-action">
