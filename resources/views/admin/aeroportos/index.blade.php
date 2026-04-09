@@ -1,3 +1,4 @@
+{{-- resources/views/admin/aeroportos/index.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Aeroportos')
@@ -17,7 +18,8 @@
             <p class="text-muted">Lista de todos os aeroportos cadastrados</p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{{ route('aeroportos.create') }}" class="btn btn-primary">
+            {{-- ALTERADO: usar a nova rota do wizard --}}
+            <a href="{{ route('aeroportos.create.step1') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Novo Aeroporto
             </a>
         </div>
@@ -46,6 +48,8 @@
                             <th>ID</th>
                             <th>Aeroporto</th>
                             <th>Companhias Atendidas</th>
+                            <th>Depósitos</th>
+                            <th>Veículos</th>
                             <th>Data de Cadastro</th>
                             <th width="200">Ações</th>
                         </tr>
@@ -67,16 +71,39 @@
                                         <span class="badge bg-secondary">Nenhuma companhia</span>
                                     @endif
                                 </td>
+                                <td>
+                                    @if($aeroporto->depositos->count() > 0)
+                                        <span class="badge bg-info">{{ $aeroporto->depositos->count() }} depósito(s)</span>
+                                    @else
+                                        <span class="badge bg-secondary">Nenhum depósito</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($aeroporto->veiculos->count() > 0)
+                                        <span class="badge bg-success">{{ $aeroporto->veiculos->count() }} veículo(s)</span>
+                                    @else
+                                        <span class="badge bg-secondary">Nenhum veículo</span>
+                                    @endif
+                                </td>
                                 <td>{{ $aeroporto->created_at?->format('d/m/Y H:i') ?? 'Data não disponível' }}</td>
                                 <td>
                                     <div class="d-flex gap-2">
+                                        <a href="{{ route('aeroportos.show', $aeroporto) }}" 
+                                           class="btn btn-sm btn-info"
+                                           title="Ver Detalhes">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
                                         <a href="{{ route('aeroportos.edit', $aeroporto) }}" 
                                            class="btn btn-sm btn-primary"
                                            title="Editar Aeroporto">
-                                            <i class="bi bi-pencil"></i> Editar
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{{ route('aeroportos.depositos.index', $aeroporto) }}" 
+                                           class="btn btn-sm btn-warning"
+                                           title="Gerenciar Depósitos">
+                                            <i class="bi bi-building"></i>
                                         </a>
                                         
-                                        <!-- FORMULÁRIO DE EXCLUSÃO DIRETO - MESMO PADRÃO DO EDITAR -->
                                         <form action="{{ route('aeroportos.destroy', $aeroporto) }}" 
                                               method="POST" 
                                               class="d-inline"
@@ -86,7 +113,7 @@
                                             <button type="submit" 
                                                     class="btn btn-sm btn-danger"
                                                     title="Excluir Aeroporto">
-                                                <i class="bi bi-trash"></i> Excluir
+                                                <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
                                     </div>
@@ -94,11 +121,11 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-5">
+                                <td colspan="7" class="text-center py-5">
                                     <i class="bi bi-exclamation-circle text-muted" style="font-size: 3rem;"></i>
                                     <h5 class="text-muted mt-3">Nenhum aeroporto cadastrado ainda</h5>
                                     <p class="text-muted mb-3">Comece cadastrando o primeiro aeroporto.</p>
-                                    <a href="{{ route('aeroportos.create') }}" class="btn btn-primary">
+                                    <a href="{{ route('aeroportos.create.step1') }}" class="btn btn-primary">
                                         <i class="bi bi-plus-circle"></i> Cadastrar Primeiro Aeroporto
                                     </a>
                                 </td>

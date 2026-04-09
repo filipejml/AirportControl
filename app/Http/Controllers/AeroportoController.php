@@ -5,11 +5,185 @@ namespace App\Http\Controllers;
 
 use App\Models\Aeroporto;
 use App\Models\CompanhiaAerea;
+use App\Models\Deposito;
+use App\Models\Veiculo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class AeroportoController extends Controller
 {
+
+    /**
+     * STEP 1: Informações básicas do aeroporto
+     */
+    public function createStep1()
+    {
+        // Limpar sessão anterior se existir
+        Session::forget('aeroporto_em_criacao');
+        
+        // Carregar companhias para o formulário (igual ao create antigo)
+        $companhias = CompanhiaAerea::withCount('aeronaves')->get();
+        
+        return view('admin.aeroportos.wizard.step1', compact('companhias'));
+    }
+
+    /**
+     * Store Step 1 - Salva informações básicas
+     */
+    public function storeStep1(Request $request)
+    {
+        $request->validate([
+            'nome_aeroporto' => 'required|string|max:255|unique:aeroportos,nome_aeroporto',
+            'companhias' => 'nullable|array'
+        ]);
+
+        // Criar aeroporto
+        $aeroporto = Aeroporto::create([
+            'nome_aeroporto' => $request->nome_aeroporto
+        ]);
+
+        // Associar companhias selecionadas
+        if ($request->has('companhias')) {
+            $aeroporto->companhias()->sync($request->companhias);
+        }
+
+        // Armazenar ID na sessão para uso nos próximos passos
+        Session::put('aeroporto_em_criacao', $aeroporto->id);
+
+        return redirect()->route('aeroportos.create.step2', $aeroporto)
+            ->with('success', 'Aeroporto criado com sucesso! Agora adicione os depósitos.');
+    }
+
+    /**
+     * STEP 2: Cadastro de Depósitos
+     */
+    public function createStep2(Aeroporto $aeroporto)
+    {
+        // Verificar se o aeroporto pertence à criação atual
+        if (Session::get('aeroporto_em_criacao') != $aeroporto->id) {
+            return redirect()->route('aeroportos.create.step1')
+                ->with('error', 'Sessão expirada. Comece novamente.');
+        }
+
+        $depositos = $aeroporto->depositos()->get();
+        
+        return view('admin.aeroportos.wizard.step2', compact('aeroporto', 'depositos'));
+    }
+
+    /**
+     * Store Step 2 - Salva depósitos
+     */
+    public function storeStep2(Request $request, Aeroporto $aeroporto)
+    {
+        // Validar se é para pular ou salvar
+        if ($request->has('skip')) {
+            return redirect()->route('aeroportos.create.step3', $aeroporto);
+        }
+
+        $request->validate([
+            'depositos.*.nome' => 'required|string|max:255',
+            'depositos.*.codigo' => 'required|string|max:50|unique:depositos,codigo',
+            'depositos.*.localizacao' => 'nullable|string|max:500',
+            'depositos.*.area_total' => 'nullable|numeric|min:0',
+            'depositos.*.capacidade_maxima' => 'nullable|integer|min:0',
+        ]);
+
+        foreach ($request->depositos as $depositoData) {
+            $aeroporto->depositos()->create($depositoData);
+        }
+
+        return redirect()->route('aeroportos.create.step3', $aeroporto)
+            ->with('success', 'Depósitos adicionados com sucesso!');
+    }
+
+    /**
+     * STEP 3: Cadastro de Veículos por depósito
+     */
+    public function createStep3(Aeroporto $aeroporto)
+    {
+        // Verificar se o aeroporto pertence à criação atual
+        if (Session::get('aeroporto_em_criacao') != $aeroporto->id) {
+            return redirect()->route('aeroportos.create.step1')
+                ->with('error', 'Sessão expirada. Comece novamente.');
+        }
+
+        $depositos = $aeroporto->depositos()->with('veiculos')->get();
+        
+        return view('admin.aeroportos.wizard.step3', compact('aeroporto', 'depositos'));
+    }
+
+    /**
+     * Store Step 3 - Salva veículos
+     */
+    public function storeStep3(Request $request, Aeroporto $aeroporto)
+    {
+        // Se for pular, finalizar
+        if ($request->has('skip')) {
+            Session::forget('aeroporto_em_criacao');
+            return redirect()->route('aeroportos.show', $aeroporto)
+                ->with('success', 'Aeroporto cadastrado com sucesso!');
+        }
+
+        $request->validate([
+            'veiculos' => 'array',
+            'veiculos.*.deposito_id' => 'required|exists:depositos,id',
+            'veiculos.*.codigo' => 'required|string|max:50|unique:veiculos,codigo',
+            'veiculos.*.tipo_veiculo' => 'required|in:' . implode(',', array_keys(Veiculo::TIPOS_VEICULOS)),
+            'veiculos.*.modelo' => 'nullable|string|max:100',
+            'veiculos.*.fabricante' => 'nullable|string|max:100',
+            'veiculos.*.ano_fabricacao' => 'nullable|integer|min:1900|max:' . date('Y'),
+            'veiculos.*.capacidade_operacional' => 'nullable|numeric|min:0',
+        ]);
+
+        $unidadeMap = [
+            'esteira_bagagem' => 'kg',
+            'caminhao_combustivel' => 'litros',
+            'carrinho_bagagem' => 'unidades',
+            'caminhao_pushback' => 'toneladas',
+            'caminhao_escada' => 'metros',
+            'caminhao_limpeza' => 'litros'
+        ];
+
+        foreach ($request->veiculos as $veiculoData) {
+            $deposito = Deposito::find($veiculoData['deposito_id']);
+            
+            // Verificar capacidade do depósito
+            if (!$deposito->hasEspacoDisponivel()) {
+                continue; // Pular se não tem espaço
+            }
+            
+            $veiculoData['unidade_capacidade'] = $unidadeMap[$veiculoData['tipo_veiculo']] ?? null;
+            $veiculoData['status'] = 'disponivel';
+            
+            $deposito->veiculos()->create($veiculoData);
+        }
+
+        // Limpar sessão
+        Session::forget('aeroporto_em_criacao');
+
+        return redirect()->route('aeroportos.show', $aeroporto)
+            ->with('success', 'Aeroporto cadastrado com todos os veículos!');
+    }
+
+    public function getVeiculoTemplate(Request $request)
+    {
+        $depositoId = $request->deposito_id;
+        $index = $request->index;
+        
+        return view('admin.aeroportos.wizard.partials.veiculo-form', compact('depositoId', 'index'))->render();
+    }
+
+    public function checkVeiculoCodigo(Request $request)
+    {
+        $request->validate(['codigo' => 'required|string']);
+        
+        $exists = Veiculo::where('codigo', $request->codigo)->exists();
+        
+        return response()->json(['exists' => $exists]);
+    }
+
+
     /**
      * Display a listing of the resource (ADMIN)
      */
@@ -17,15 +191,6 @@ class AeroportoController extends Controller
     {
         $aeroportos = Aeroporto::with('companhias')->get();
         return view('admin.aeroportos.index', compact('aeroportos'));
-    }
-
-    /**
-     * Show the form for creating a new resource (ADMIN)
-     */
-    public function create()
-    {
-        $companhias = CompanhiaAerea::withCount('aeronaves')->get();
-        return view('admin.aeroportos.create', compact('companhias'));
     }
 
     /**

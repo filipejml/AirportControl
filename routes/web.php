@@ -93,8 +93,29 @@ Route::middleware('auth')->group(function () {
         ]
     ]);
     
-    // Rotas para aeroportos - CRUD completo (ADMIN)
-    Route::resource('aeroportos', AeroportoController::class);
+    /*
+    |--------------------------------------------------------------------------
+    | ROTAS PARA AEROPORTOS - WIZARD DE CRIAÇÃO (3 ETAPAS)
+    |--------------------------------------------------------------------------
+    */
+    // Rotas do wizard (substituem o create padrão)
+    Route::get('/aeroportos/create-step1', [AeroportoController::class, 'createStep1'])->name('aeroportos.create.step1');
+    Route::post('/aeroportos/store-step1', [AeroportoController::class, 'storeStep1'])->name('aeroportos.store.step1');
+    Route::get('/aeroportos/create-step2/{aeroporto}', [AeroportoController::class, 'createStep2'])->name('aeroportos.create.step2');
+    Route::post('/aeroportos/store-step2/{aeroporto}', [AeroportoController::class, 'storeStep2'])->name('aeroportos.store.step2');
+    Route::get('/aeroportos/create-step3/{aeroporto}', [AeroportoController::class, 'createStep3'])->name('aeroportos.create.step3');
+    Route::post('/aeroportos/store-step3/{aeroporto}', [AeroportoController::class, 'storeStep3'])->name('aeroportos.store.step3');
+    
+    // Rotas AJAX para o wizard
+    Route::post('/aeroportos/veiculos/template', [AeroportoController::class, 'getVeiculoTemplate'])->name('aeroportos.veiculos.template');
+    Route::post('/aeroportos/veiculos/check-codigo', [AeroportoController::class, 'checkVeiculoCodigo'])->name('aeroportos.veiculos.check-codigo');
+    
+    // CRUD padrão para aeroportos (edit, update, destroy, show, index)
+    Route::get('/aeroportos', [AeroportoController::class, 'index'])->name('aeroportos.index');
+    Route::get('/aeroportos/{aeroporto}', [AeroportoController::class, 'show'])->name('aeroportos.show');
+    Route::get('/aeroportos/{aeroporto}/edit', [AeroportoController::class, 'edit'])->name('aeroportos.edit');
+    Route::put('/aeroportos/{aeroporto}', [AeroportoController::class, 'update'])->name('aeroportos.update');
+    Route::delete('/aeroportos/{aeroporto}', [AeroportoController::class, 'destroy'])->name('aeroportos.destroy');
     
     /*
     |--------------------------------------------------------------------------

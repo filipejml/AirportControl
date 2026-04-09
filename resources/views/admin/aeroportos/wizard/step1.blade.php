@@ -1,3 +1,4 @@
+{{-- resources/views/admin/aeroportos/wizard/step1.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Cadastrar Aeroporto')
@@ -13,7 +14,7 @@
 
     <div class="card shadow-sm">
         <div class="card-body p-4">
-            <form method="POST" action="{{ route('aeroportos.store') }}" id="aeroportoForm">
+            <form method="POST" action="{{ route('aeroportos.store.step1') }}" id="aeroportoForm">
                 @csrf
 
                 <div class="mb-4">
@@ -118,10 +119,10 @@
 
                 <div class="d-flex gap-2 mt-4">
                     <button type="submit" class="btn btn-primary" id="submitBtn">
-                        <i class="bi bi-save"></i> Salvar Aeroporto
+                        <i class="bi bi-save"></i> Salvar e Continuar
                     </button>
                     <a href="{{ route('aeroportos.index') }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left"></i> Voltar
+                        <i class="bi bi-arrow-left"></i> Cancelar
                     </a>
                 </div>
             </form>
@@ -545,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cards.forEach(card => {
         const parentDiv = card.parentElement;
         const checkbox = parentDiv.querySelector('.companhia-checkbox');
-        if (checkbox.checked) {
+        if (checkbox && checkbox.checked) {
             card.classList.add('selected');
         }
     });
