@@ -12,7 +12,18 @@ class VeiculoController extends Controller
 {
     public function index(Aeroporto $aeroporto, Deposito $deposito)
     {
-        $veiculos = $deposito->veiculos()->paginate(15);
+        $query = $deposito->veiculos();
+        
+        if ($tipo = request('tipo')) {
+            $query->where('tipo_veiculo', $tipo);
+        }
+        
+        if ($status = request('status')) {
+            $query->where('status', $status);
+        }
+        
+        $veiculos = $query->orderBy('codigo')->paginate(15);
+        
         return view('admin.aeroportos.depositos.veiculos.index', compact('aeroporto', 'deposito', 'veiculos'));
     }
 
@@ -24,21 +35,27 @@ class VeiculoController extends Controller
     public function store(Request $request, Aeroporto $aeroporto, Deposito $deposito)
     {
         $validated = $request->validate([
-            'placa' => 'required|string|max:10|unique:veiculos,placa',
-            'modelo' => 'required|string|max:100',
-            'marca' => 'required|string|max:100',
-            'ano' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'cor' => 'nullable|string|max:50',
-            'tipo' => 'required|in:carro,caminhao,onibus,van,utilitario,outro',
-            'status' => 'required|in:disponivel,em_uso,manutencao,inativo',
-            'quilometragem' => 'nullable|integer|min:0',
-            'capacidade_passageiros' => 'nullable|integer|min:0',
-            'carga_maxima' => 'nullable|numeric|min:0',
-            'data_aquisicao' => 'nullable|date',
-            'ultima_manutencao' => 'nullable|date',
-            'proxima_manutencao' => 'nullable|date|after:ultima_manutencao',
+            'codigo' => 'required|string|max:50|unique:veiculos,codigo',
+            'tipo_veiculo' => 'required|in:' . implode(',', array_keys(Veiculo::TIPOS_VEICULOS)),
+            'modelo' => 'nullable|string|max:100',
+            'fabricante' => 'nullable|string|max:100',
+            'ano_fabricacao' => 'nullable|integer|min:1900|max:' . date('Y'),
+            'capacidade_operacional' => 'nullable|numeric|min:0',
+            'status' => 'required|in:disponivel,indisponivel',
             'observacoes' => 'nullable|string'
         ]);
+
+        // Definir unidade de capacidade baseada no tipo
+        $unidadeMap = [
+            'esteira_bagagem' => 'kg',
+            'caminhao_combustivel' => 'litros',
+            'carrinho_bagagem' => 'unidades',
+            'caminhao_pushback' => 'toneladas',
+            'caminhao_escada' => 'metros',
+            'caminhao_limpeza' => 'litros'
+        ];
+        
+        $validated['unidade_capacidade'] = $unidadeMap[$validated['tipo_veiculo']] ?? null;
 
         // Verificar capacidade do depósito
         if (!$deposito->hasEspacoDisponivel()) {
@@ -65,21 +82,27 @@ class VeiculoController extends Controller
     public function update(Request $request, Aeroporto $aeroporto, Deposito $deposito, Veiculo $veiculo)
     {
         $validated = $request->validate([
-            'placa' => 'required|string|max:10|unique:veiculos,placa,' . $veiculo->id,
-            'modelo' => 'required|string|max:100',
-            'marca' => 'required|string|max:100',
-            'ano' => 'required|integer|min:1900|max:' . (date('Y') + 1),
-            'cor' => 'nullable|string|max:50',
-            'tipo' => 'required|in:carro,caminhao,onibus,van,utilitario,outro',
-            'status' => 'required|in:disponivel,em_uso,manutencao,inativo',
-            'quilometragem' => 'nullable|integer|min:0',
-            'capacidade_passageiros' => 'nullable|integer|min:0',
-            'carga_maxima' => 'nullable|numeric|min:0',
-            'data_aquisicao' => 'nullable|date',
-            'ultima_manutencao' => 'nullable|date',
-            'proxima_manutencao' => 'nullable|date',
+            'codigo' => 'required|string|max:50|unique:veiculos,codigo,' . $veiculo->id,
+            'tipo_veiculo' => 'required|in:' . implode(',', array_keys(Veiculo::TIPOS_VEICULOS)),
+            'modelo' => 'nullable|string|max:100',
+            'fabricante' => 'nullable|string|max:100',
+            'ano_fabricacao' => 'nullable|integer|min:1900|max:' . date('Y'),
+            'capacidade_operacional' => 'nullable|numeric|min:0',
+            'status' => 'required|in:disponivel,indisponivel',
             'observacoes' => 'nullable|string'
         ]);
+
+        // Atualizar unidade de capacidade baseada no tipo
+        $unidadeMap = [
+            'esteira_bagagem' => 'kg',
+            'caminhao_combustivel' => 'litros',
+            'carrinho_bagagem' => 'unidades',
+            'caminhao_pushback' => 'toneladas',
+            'caminhao_escada' => 'metros',
+            'caminhao_limpeza' => 'litros'
+        ];
+        
+        $validated['unidade_capacidade'] = $unidadeMap[$validated['tipo_veiculo']] ?? null;
 
         $veiculo->update($validated);
 
@@ -99,30 +122,14 @@ class VeiculoController extends Controller
         }
     }
 
-    public function checkPlaca(Request $request)
+    public function checkCodigo(Request $request, Aeroporto $aeroporto, Deposito $deposito)
     {
-        $request->validate(['placa' => 'required|string']);
+        $request->validate(['codigo' => 'required|string']);
         
-        $exists = Veiculo::where('placa', $request->placa)
+        $exists = Veiculo::where('codigo', $request->codigo)
             ->when($request->id, fn($q) => $q->where('id', '!=', $request->id))
             ->exists();
             
         return response()->json(['exists' => $exists]);
-    }
-
-    // Registrar manutenção do veículo
-    public function registrarManutencao(Request $request, Aeroporto $aeroporto, Deposito $deposito, Veiculo $veiculo)
-    {
-        $request->validate([
-            'descricao' => 'required|string',
-            'horimetro' => 'required|integer|min:' . $veiculo->horimetro
-        ]);
-        
-        $veiculo->adicionarManutencao($request->descricao, $request->horimetro);
-        $veiculo->status = 'disponivel';
-        $veiculo->save();
-        
-        return redirect()->route('aeroportos.depositos.veiculos.index', [$aeroporto, $deposito])
-            ->with('success', 'Manutenção registrada com sucesso!');
     }
 }

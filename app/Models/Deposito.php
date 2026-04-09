@@ -24,10 +24,7 @@ class Deposito extends Model
 
     protected $casts = [
         'area_total' => 'decimal:2',
-        'capacidade_maxima' => 'integer',
-        'data_aquisicao' => 'date',
-        'ultima_manutencao' => 'date',
-        'proxima_manutencao' => 'date'
+        'capacidade_maxima' => 'integer'
     ];
 
     // Relacionamento com Aeroporto
@@ -63,10 +60,10 @@ class Deposito extends Model
         return $this->veiculos()->where('status', 'disponivel')->count();
     }
 
-    // Veículos em manutenção
-    public function getVeiculosManutencaoAttribute()
+    // Veículos indisponíveis
+    public function getVeiculosIndisponiveisAttribute()
     {
-        return $this->veiculos()->where('status', 'manutencao')->count();
+        return $this->veiculos()->where('status', 'indisponivel')->count();
     }
 
     // Verificar se há espaço disponível

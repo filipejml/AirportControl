@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('localizacao')->nullable();
             $table->decimal('area_total', 10, 2)->nullable()->comment('Área total em m²');
             $table->integer('capacidade_maxima')->nullable()->comment('Capacidade máxima de veículos');
-            $table->enum('status', ['ativo', 'inativo', 'manutencao'])->default('ativo');
+            $table->enum('status', ['ativo', 'inativo'])->default('ativo');
             $table->text('observacoes')->nullable();
             $table->timestamps();
         });
