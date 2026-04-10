@@ -1,5 +1,4 @@
 <?php
-// database/migrations/2026_04_08_000002_create_veiculos_table.php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -12,6 +11,8 @@ return new class extends Migration
         Schema::create('veiculos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('deposito_id')->constrained('depositos')->cascadeOnDelete();
+            $table->string('codigo')->unique();
+            $table->integer('quantidade')->default(1);
             $table->enum('tipo_veiculo', [
                 'esteira_bagagem',
                 'caminhao_combustivel',
@@ -22,8 +23,6 @@ return new class extends Migration
                 'caminhao_limpeza',
                 'outro'
             ])->default('outro');
-            $table->string('codigo')->unique()->comment('Código de identificação do veículo');
-            $table->integer('quantidade')->default(1)->comment('Quantidade deste veículo no depósito');
             $table->enum('status', ['disponivel', 'indisponivel'])->default('disponivel');
             $table->text('observacoes')->nullable();
             $table->timestamps();

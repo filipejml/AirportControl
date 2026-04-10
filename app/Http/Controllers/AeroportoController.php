@@ -125,48 +125,23 @@ class AeroportoController extends Controller
      */
     public function storeStep3(Request $request, Aeroporto $aeroporto)
     {
-        // Se for pular, finalizar
-        if ($request->has('skip')) {
-            Session::forget('aeroporto_em_criacao');
-            return redirect()->route('aeroportos.show', $aeroporto)
-                ->with('success', 'Aeroporto cadastrado com sucesso!');
-        }
-
         $request->validate([
             'veiculos' => 'array',
             'veiculos.*.deposito_id' => 'required|exists:depositos,id',
-            'veiculos.*.codigo' => 'required|string|max:50|unique:veiculos,codigo',
             'veiculos.*.tipo_veiculo' => 'required|in:' . implode(',', array_keys(Veiculo::TIPOS_VEICULOS)),
-            'veiculos.*.modelo' => 'nullable|string|max:100',
-            'veiculos.*.fabricante' => 'nullable|string|max:100',
-            'veiculos.*.ano_fabricacao' => 'nullable|integer|min:1900|max:' . date('Y'),
-            'veiculos.*.capacidade_operacional' => 'nullable|numeric|min:0',
+            'veiculos.*.codigo' => 'required|string|max:50|unique:veiculos,codigo',
+            'veiculos.*.quantidade' => 'nullable|integer|min:1'
         ]);
-
-        $unidadeMap = [
-            'esteira_bagagem' => 'kg',
-            'caminhao_combustivel' => 'litros',
-            'carrinho_bagagem' => 'unidades',
-            'caminhao_pushback' => 'toneladas',
-            'caminhao_escada' => 'metros',
-            'caminhao_limpeza' => 'litros'
-        ];
 
         foreach ($request->veiculos as $veiculoData) {
             $deposito = Deposito::find($veiculoData['deposito_id']);
             
-            // Verificar capacidade do depósito
-            if (!$deposito->hasEspacoDisponivel()) {
-                continue; // Pular se não tem espaço
-            }
-            
-            $veiculoData['unidade_capacidade'] = $unidadeMap[$veiculoData['tipo_veiculo']] ?? null;
+            $veiculoData['quantidade'] = $veiculoData['quantidade'] ?? 1;
             $veiculoData['status'] = 'disponivel';
             
             $deposito->veiculos()->create($veiculoData);
         }
 
-        // Limpar sessão
         Session::forget('aeroporto_em_criacao');
 
         return redirect()->route('aeroportos.show', $aeroporto)

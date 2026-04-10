@@ -38,8 +38,8 @@
                                     <div class="card-header bg-light">
                                         <h5 class="mb-0">
                                             <i class="bi bi-building"></i> 
-                                            Depósito: {{ $deposito->nome }} (Código: {{ $deposito->codigo }})
-                                            <span class="badge bg-secondary ms-2">{{ $deposito->veiculos->count() }}/{{ $deposito->capacidade_maxima ?? '∞' }} veículos</span>
+                                            Depósito: {{ $deposito->nome }}
+                                            <span class="badge bg-secondary ms-2">{{ $deposito->veiculos->sum('quantidade') }}/{{ $deposito->capacidade_maxima ?? '∞' }} veículos</span>
                                         </h5>
                                     </div>
                                     <div class="card-body">
@@ -56,8 +56,7 @@
                                         </div>
                                         
                                         <button type="button" class="btn btn-sm btn-outline-primary add-veiculo" 
-                                                data-deposito-id="{{ $deposito->id }}" 
-                                                data-deposito-nome="{{ $deposito->nome }}">
+                                                data-deposito-id="{{ $deposito->id }}">
                                             <i class="bi bi-plus-circle"></i> Adicionar veículo neste depósito
                                         </button>
                                     </div>
@@ -66,7 +65,7 @@
 
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle"></i> 
-                                Você pode adicionar quantos veículos precisar em cada depósito, respeitando a capacidade máxima.
+                                Você pode adicionar quantos veículos precisar em cada depósito.
                             </div>
 
                             <div class="d-flex justify-content-between gap-2 mt-4">
@@ -74,9 +73,9 @@
                                     <i class="bi bi-arrow-left"></i> Voltar
                                 </a>
                                 <div>
-                                    <button type="submit" name="skip" value="1" class="btn btn-secondary">
+                                    <a href="{{ route('aeroportos.show', $aeroporto) }}" class="btn btn-secondary">
                                         Finalizar sem veículos <i class="bi bi-check-circle"></i>
-                                    </button>
+                                    </a>
                                     <button type="submit" class="btn btn-success">
                                         Finalizar Cadastro <i class="bi bi-check-circle"></i>
                                     </button>
@@ -94,13 +93,9 @@
                             <a href="{{ route('aeroportos.create.step2', $aeroporto) }}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left"></i> Voltar para Depósitos
                             </a>
-                            <form method="POST" action="{{ route('aeroportos.store.step3', $aeroporto) }}">
-                                @csrf
-                                <input type="hidden" name="skip" value="1">
-                                <button type="submit" class="btn btn-success">
-                                    Finalizar sem depósitos <i class="bi bi-check-circle"></i>
-                                </button>
-                            </form>
+                            <a href="{{ route('aeroportos.show', $aeroporto) }}" class="btn btn-success">
+                                Finalizar sem depósitos <i class="bi bi-check-circle"></i>
+                            </a>
                         </div>
                     @endif
                 </div>
@@ -110,92 +105,9 @@
 </div>
 
 <script>
-// Mapeamento dos tipos de veículos (mesmo do create.blade.php de veículos)
-const tiposInfo = {
-    'esteira_bagagem': { unidade: 'kg', label: 'Capacidade (kg)', help: 'Peso máximo suportado em kg' },
-    'caminhao_combustivel': { unidade: 'litros', label: 'Capacidade (litros)', help: 'Capacidade do tanque em litros' },
-    'carro_inspecao': { unidade: null, label: 'Capacidade', help: 'Informações adicionais nos observações' },
-    'carrinho_bagagem': { unidade: 'unidades', label: 'Capacidade (unidades)', help: 'Número de bagagens por viagem' },
-    'caminhao_pushback': { unidade: 'toneladas', label: 'Capacidade (toneladas)', help: 'Peso máximo de reboque em toneladas' },
-    'caminhao_escada': { unidade: 'metros', label: 'Altura Máxima (metros)', help: 'Altura máxima de alcance da escada' },
-    'caminhao_limpeza': { unidade: 'litros', label: 'Capacidade (litros)', help: 'Capacidade do reservatório em litros' },
-    'outro': { unidade: null, label: 'Capacidade', help: 'Especifique a capacidade nos observações' }
-};
-
-function selectTipo(selectElement) {
-    const tipo = selectElement.value;
-    const veiculoItem = selectElement.closest('.veiculo-item');
-    const unidadeSpan = veiculoItem.querySelector('.unidade-capacidade');
-    const capacidadeLabel = veiculoItem.querySelector('.capacidade-label');
-    const capacidadeHelp = veiculoItem.querySelector('.capacidade-help');
-    
-    const info = tiposInfo[tipo] || tiposInfo['outro'];
-    
-    if (capacidadeLabel) {
-        capacidadeLabel.textContent = info.label;
-    }
-    
-    if (unidadeSpan) {
-        unidadeSpan.textContent = info.unidade || '-';
-    }
-    
-    if (capacidadeHelp) {
-        capacidadeHelp.textContent = info.help;
-    }
-}
-
-function updateCapacidadeLabel() {
-    document.querySelectorAll('select[name*="[tipo_veiculo]"]').forEach(select => {
-        if (select.value) {
-            selectTipo(select);
-        }
-        select.addEventListener('change', function() { selectTipo(this); });
-    });
-}
-
-// Adicionar veículo dinamicamente
 let veiculoCounters = {};
 
-document.querySelectorAll('.add-veiculo').forEach(button => {
-    const depositoId = button.dataset.depositoId;
-    veiculoCounters[depositoId] = document.querySelectorAll(`#veiculos-deposito-${depositoId} .veiculo-item`).length;
-    
-    button.addEventListener('click', function() {
-        const depositoId = this.dataset.depositoId;
-        const container = document.getElementById(`veiculos-deposito-${depositoId}`);
-        const currentCount = veiculoCounters[depositoId];
-        
-        fetch('{{ route("aeroportos.veiculos.template") }}', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ deposito_id: depositoId, index: currentCount })
-        })
-        .then(response => response.text())
-        .then(html => {
-            container.insertAdjacentHTML('beforeend', html);
-            veiculoCounters[depositoId]++;
-            
-            const newItem = container.lastElementChild;
-            newItem.querySelectorAll('select[name*="[tipo_veiculo]"]').forEach(select => {
-                select.addEventListener('change', function() { selectTipo(this); });
-            });
-            
-            const removeBtn = newItem.querySelector('.remove-veiculo');
-            if (removeBtn) {
-                removeBtn.addEventListener('click', function() {
-                    newItem.remove();
-                    veiculoCounters[depositoId]--;
-                });
-            }
-        });
-    });
-});
-
-// Verificar código duplicado
-function checkVeiculoCodigo(input) {
+function checkVeiculoCodigo(input, depositoId) {
     const codigo = input.value;
     if (!codigo) return;
     
@@ -225,14 +137,54 @@ function checkVeiculoCodigo(input) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    updateCapacidadeLabel();
+document.querySelectorAll('.add-veiculo').forEach(button => {
+    const depositoId = button.dataset.depositoId;
+    veiculoCounters[depositoId] = document.querySelectorAll(`#veiculos-deposito-${depositoId} .veiculo-item`).length;
     
-    document.addEventListener('blur', function(e) {
-        if (e.target && e.target.name && e.target.name.match(/veiculos\[\d+\]\[codigo\]/)) {
-            checkVeiculoCodigo(e.target);
-        }
-    }, true);
+    button.addEventListener('click', function() {
+        const depositoId = this.dataset.depositoId;
+        const container = document.getElementById(`veiculos-deposito-${depositoId}`);
+        const currentCount = veiculoCounters[depositoId];
+        
+        fetch('{{ route("aeroportos.veiculos.template") }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ deposito_id: depositoId, index: currentCount })
+        })
+        .then(response => response.text())
+        .then(html => {
+            container.insertAdjacentHTML('beforeend', html);
+            veiculoCounters[depositoId]++;
+            
+            const newItem = container.lastElementChild;
+            const codigoInput = newItem.querySelector('input[name*="[codigo]"]');
+            if (codigoInput) {
+                codigoInput.addEventListener('blur', function() {
+                    checkVeiculoCodigo(this, depositoId);
+                });
+            }
+            
+            const removeBtn = newItem.querySelector('.remove-veiculo');
+            if (removeBtn) {
+                removeBtn.addEventListener('click', function() {
+                    newItem.remove();
+                    veiculoCounters[depositoId]--;
+                });
+            }
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[name*="[codigo]"]').forEach(input => {
+        const depositoId = input.closest('.veiculo-item').querySelector('input[name*="[deposito_id]"]')?.value;
+        input.addEventListener('blur', function() {
+            checkVeiculoCodigo(this, depositoId);
+        });
+    });
 });
 </script>
 @endsection

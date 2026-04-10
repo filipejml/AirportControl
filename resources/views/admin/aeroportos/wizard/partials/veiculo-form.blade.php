@@ -25,55 +25,16 @@
         <div class="col-md-4 mb-3">
             <label class="form-label">Código *</label>
             <input type="text" name="veiculos[{{ $index }}][codigo]" class="form-control" 
-                   value="{{ $veiculo->codigo ?? '' }}" required>
+                   value="{{ $veiculo->codigo ?? '' }}" required
+                   placeholder="Ex: EB-001, CC-023">
             <small class="text-muted">Código único de identificação</small>
         </div>
         
         <div class="col-md-4 mb-3">
-            <label class="form-label">Fabricante</label>
-            <input type="text" name="veiculos[{{ $index }}][fabricante]" class="form-control" 
-                   value="{{ $veiculo->fabricante ?? '' }}">
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-4 mb-3">
-            <label class="form-label">Modelo</label>
-            <input type="text" name="veiculos[{{ $index }}][modelo]" class="form-control" 
-                   value="{{ $veiculo->modelo ?? '' }}">
-        </div>
-        
-        <div class="col-md-4 mb-3">
-            <label class="form-label">Ano de Fabricação</label>
-            <input type="number" name="veiculos[{{ $index }}][ano_fabricacao]" class="form-control" 
-                   value="{{ $veiculo->ano_fabricacao ?? '' }}" min="1970" max="{{ date('Y') }}">
-        </div>
-        
-        <div class="col-md-4 mb-3">
-            <label class="form-label capacidade-label">Capacidade Operacional</label>
-            <div class="input-group">
-                <input type="number" step="any" name="veiculos[{{ $index }}][capacidade_operacional]" class="form-control" 
-                       value="{{ $veiculo->capacidade_operacional ?? '' }}">
-                <span class="input-group-text unidade-capacidade">-</span>
-            </div>
-            <small class="text-muted capacidade-help">Capacidade máxima de operação</small>
+            <label class="form-label">Quantidade</label>
+            <input type="number" name="veiculos[{{ $index }}][quantidade]" class="form-control" 
+                   value="{{ $veiculo->quantidade ?? 1 }}" min="1" step="1">
+            <small class="text-muted">Quantidade deste veículo</small>
         </div>
     </div>
 </div>
-
-@if(!isset($veiculo))
-<script>
-    // Para novos veículos adicionados dinamicamente
-    const select = document.querySelector('select[name="veiculos[{{ $index }}][tipo_veiculo]"]');
-    if (select) {
-        select.addEventListener('change', function() { selectTipo(this); });
-    }
-    
-    const removeBtn = document.querySelector('#veiculos-deposito-{{ $depositoId }} .veiculo-item:last-child .remove-veiculo');
-    if (removeBtn) {
-        removeBtn.addEventListener('click', function() {
-            this.closest('.veiculo-item').remove();
-        });
-    }
-</script>
-@endif
