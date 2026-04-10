@@ -4,7 +4,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Deposito extends Model
@@ -15,65 +14,63 @@ class Deposito extends Model
         'aeroporto_id',
         'nome',
         'capacidade_maxima',
-        'status',
-        'observacoes'
+        'status'
     ];
-
+    
     protected $casts = [
-        'capacidade_maxima' => 'integer'
+        'capacidade_maxima' => 'integer',
+        'status' => 'string'
     ];
-
+    
     // Relacionamento com Aeroporto
-    public function aeroporto(): BelongsTo
+    public function aeroporto()
     {
         return $this->belongsTo(Aeroporto::class);
     }
-
+    
     // Relacionamento com Veículos
     public function veiculos(): HasMany
     {
         return $this->hasMany(Veiculo::class);
     }
-
-    // Total de veículos no depósito
-    public function getTotalVeiculosAttribute()
+    
+    // Accessor para capacidade formatada
+    public function getCapacidadeFormatadaAttribute()
     {
-        return $this->veiculos()->count();
+        return $this->capacidade_maxima ? $this->capacidade_maxima . ' veículos' : 'Ilimitada';
     }
-
-    // Percentual de ocupação
-    public function getPercentualOcupacaoAttribute()
+    
+    // Accessor para status com cor
+    public function getStatusCorAttribute()
     {
-        if (!$this->capacidade_maxima || $this->capacidade_maxima == 0) {
-            return 0;
-        }
-        return round(($this->total_veiculos / $this->capacidade_maxima) * 100, 1);
+        return match($this->status) {
+            'ativo' => 'success',
+            'inativo' => 'danger',
+            'manutencao' => 'warning',
+            default => 'secondary'
+        };
     }
-
-    // Veículos disponíveis
-    public function getVeiculosDisponiveisAttribute()
+    
+    // Accessor para status ícone
+    public function getStatusIconeAttribute()
     {
-        return $this->veiculos()->where('status', 'disponivel')->count();
+        return match($this->status) {
+            'ativo' => 'check-circle',
+            'inativo' => 'x-circle',
+            'manutencao' => 'tools',
+            default => 'question-circle'
+        };
     }
-
-    // Veículos indisponíveis
-    public function getVeiculosIndisponiveisAttribute()
+    
+    // Boot do modelo
+    protected static function booted()
     {
-        return $this->veiculos()->where('status', 'indisponivel')->count();
-    }
-
-    // Verificar se há espaço disponível
-    public function hasEspacoDisponivel($quantidade = 1)
-    {
-        if (!$this->capacidade_maxima) {
-            return true;
-        }
-        return ($this->total_veiculos + $quantidade) <= $this->capacidade_maxima;
-    }
-
-    // Scope para depósitos ativos
-    public function scopeAtivos($query)
-    {
-        return $query->where('status', 'ativo');
+        static::creating(function ($deposito) {
+            // Se não tiver nome definido, gerar automaticamente
+            if (empty($deposito->nome)) {
+                $count = self::where('aeroporto_id', $deposito->aeroporto_id)->count() + 1;
+                $deposito->nome = "Depósito {$count}";
+            }
+        });
     }
 }

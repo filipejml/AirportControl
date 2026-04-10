@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Aeroporto;
 use App\Models\Deposito;
-use App\Models\Veiculo;
 use Illuminate\Http\Request;
 
 class DepositoController extends Controller
@@ -25,7 +24,11 @@ class DepositoController extends Controller
      */
     public function create(Aeroporto $aeroporto)
     {
-        return view('admin.aeroportos.depositos.create', compact('aeroporto'));
+        // Calcular o próximo número de depósito
+        $proximoNumero = $aeroporto->depositos()->count() + 1;
+        $nomeSugerido = "Depósito {$proximoNumero}";
+        
+        return view('admin.aeroportos.depositos.create', compact('aeroporto', 'nomeSugerido', 'proximoNumero'));
     }
 
     /**
@@ -34,16 +37,23 @@ class DepositoController extends Controller
     public function store(Request $request, Aeroporto $aeroporto)
     {
         $request->validate([
-            'nome' => 'required|string|max:255',
-            'codigo' => 'required|string|max:50|unique:depositos,codigo',
-            'localizacao' => 'nullable|string|max:500',
-            'area_total' => 'nullable|numeric|min:0',
+            'nome' => 'nullable|string|max:255',
             'capacidade_maxima' => 'nullable|integer|min:0',
-            'status' => 'required|in:ativo,inativo,manutencao',
-            'observacoes' => 'nullable|string'
+            'status' => 'required|in:ativo,inativo,manutencao'
         ]);
 
-        $deposito = $aeroporto->depositos()->create($request->all());
+        // Se o nome não foi enviado ou está vazio, gerar automaticamente
+        $nome = $request->nome;
+        if (empty($nome)) {
+            $count = $aeroporto->depositos()->count() + 1;
+            $nome = "Depósito {$count}";
+        }
+
+        $deposito = $aeroporto->depositos()->create([
+            'nome' => $nome,
+            'capacidade_maxima' => $request->capacidade_maxima,
+            'status' => $request->status
+        ]);
 
         return redirect()->route('aeroportos.depositos.show', [$aeroporto, $deposito])
             ->with('success', 'Depósito criado com sucesso!');
@@ -54,7 +64,6 @@ class DepositoController extends Controller
      */
     public function show(Aeroporto $aeroporto, Deposito $deposito)
     {
-        // CORRIGIDO: Removida a ordenação por 'modelo' que não existe
         $deposito->load(['veiculos' => function($query) {
             $query->orderBy('status')->orderBy('codigo');
         }]);
@@ -85,11 +94,10 @@ class DepositoController extends Controller
         $request->validate([
             'nome' => 'required|string|max:255',
             'capacidade_maxima' => 'nullable|integer|min:0',
-            'status' => 'required|in:ativo,inativo',
-            'observacoes' => 'nullable|string'
+            'status' => 'required|in:ativo,inativo,manutencao'
         ]);
 
-        $deposito->update($request->only(['nome', 'capacidade_maxima', 'status', 'observacoes']));
+        $deposito->update($request->only(['nome', 'capacidade_maxima', 'status']));
 
         return redirect()->route('aeroportos.depositos.show', [$aeroporto, $deposito])
             ->with('success', 'Depósito atualizado com sucesso!');
@@ -113,28 +121,14 @@ class DepositoController extends Controller
     }
 
     /**
-     * Check if deposit code already exists (AJAX)
+     * Check if deposit code already exists (AJAX) - Removido pois não usamos mais código
+     * Mantido apenas para compatibilidade, mas sempre retorna disponível
      */
     public function checkCodigo(Request $request, Aeroporto $aeroporto)
     {
-        $request->validate([
-            'codigo' => 'required|string|max:50'
-        ]);
-
-        $codigo = $request->codigo;
-        $depositoId = $request->id;
-
-        $query = Deposito::where('codigo', $codigo);
-        
-        if ($depositoId) {
-            $query->where('id', '!=', $depositoId);
-        }
-        
-        $exists = $query->exists();
-
         return response()->json([
-            'exists' => $exists,
-            'message' => $exists ? 'Este código já está em uso.' : 'Código disponível'
+            'exists' => false,
+            'message' => 'Código disponível'
         ]);
     }
 }

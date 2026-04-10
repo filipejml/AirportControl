@@ -133,14 +133,18 @@ Route::middleware('auth')->group(function () {
         Route::delete('/depositos/{deposito}', [DepositoController::class, 'destroy'])->name('depositos.destroy');
         Route::post('/depositos/check-codigo', [DepositoController::class, 'checkCodigo'])->name('depositos.check-codigo');
         
-        // Rotas de veículos (simplificadas - sem manutenção)
+        // Rotas de veículos 
         Route::get('/depositos/{deposito}/veiculos', [VeiculoController::class, 'index'])->name('depositos.veiculos.index');
         Route::get('/depositos/{deposito}/veiculos/create', [VeiculoController::class, 'create'])->name('depositos.veiculos.create');
         Route::post('/depositos/{deposito}/veiculos', [VeiculoController::class, 'store'])->name('depositos.veiculos.store');
+        Route::post('/depositos/{deposito}/veiculos/finalizar', [VeiculoController::class, 'finalizar'])->name('depositos.veiculos.finalizar');
+        Route::delete('/depositos/{deposito}/veiculos/remover-carrinho', [VeiculoController::class, 'removerDoCarrinho'])->name('depositos.veiculos.remover-carrinho');
+        Route::delete('/depositos/{deposito}/veiculos/limpar-carrinho', [VeiculoController::class, 'limparCarrinho'])->name('depositos.veiculos.limpar-carrinho');
         Route::get('/depositos/{deposito}/veiculos/{veiculo}', [VeiculoController::class, 'show'])->name('depositos.veiculos.show');
         Route::get('/depositos/{deposito}/veiculos/{veiculo}/edit', [VeiculoController::class, 'edit'])->name('depositos.veiculos.edit');
         Route::put('/depositos/{deposito}/veiculos/{veiculo}', [VeiculoController::class, 'update'])->name('depositos.veiculos.update');
         Route::delete('/depositos/{deposito}/veiculos/{veiculo}', [VeiculoController::class, 'destroy'])->name('depositos.veiculos.destroy');
+        Route::post('/depositos/{deposito}/veiculos/check-codigo', [VeiculoController::class, 'checkCodigo'])->name('depositos.veiculos.check-codigo');
         
         // Rota AJAX para verificar código do veículo
         Route::post('/depositos/{deposito}/veiculos/check-codigo', [VeiculoController::class, 'checkCodigo'])
