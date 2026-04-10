@@ -42,6 +42,69 @@
     text-decoration: underline;
     transform: translateX(2px);
 }
+
+/* Estilos modernos para os cards de estatísticas */
+.stats-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.25rem 1rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.stats-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+.stats-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+}
+
+.stats-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+}
+
+.stats-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.stats-sub {
+    font-size: 0.7rem;
+    color: #adb5bd;
+    margin-top: 0.25rem;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
 @media (max-width: 768px) {
     .btn-action span {
         display: none;
@@ -49,6 +112,14 @@
     .btn-action {
         min-width: 44px;
         padding: 0.5rem;
+    }
+    .stats-value {
+        font-size: 1.5rem;
+    }
+    .stats-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
     }
 }
 </style>
@@ -82,41 +153,66 @@
         </div>
     </div>
 
-    <!-- Card com estatísticas -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Total de Companhias</h5>
-                    <h2 class="display-4">{{ $aeroporto->companhias->count() }}</h2>
-                    <small>operando no aeroporto</small>
+    <!-- Cards de Estatísticas - Layout Moderno inspirado na imagem -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stats-label">Companhias</div>
+                        <div class="stats-value">{{ $aeroporto->companhias->count() }}</div>
+                        <div class="stats-sub">operando no aeroporto</div>
+                    </div>
+                    <div class="stats-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-building"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Total de Depósitos</h5>
-                    <h2 class="display-4">{{ $aeroporto->depositos->count() }}</h2>
-                    <small>depósitos cadastrados</small>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stats-label">Depósitos</div>
+                        <div class="stats-value">{{ $aeroporto->depositos->count() }}</div>
+                        <div class="stats-sub">depósitos cadastrados</div>
+                    </div>
+                    <div class="stats-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Total de Veículos</h5>
-                    <h2 class="display-4">{{ $aeroporto->veiculos->count() }}</h2>
-                    <small>veículos nos depósitos</small>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stats-label">Veículos</div>
+                        <div class="stats-value">{{ $aeroporto->veiculos->count() }}</div>
+                        <div class="stats-sub">nos depósitos</div>
+                    </div>
+                    <div class="stats-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-truck"></i>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-warning text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Data Cadastro</h5>
-                    <h5 class="mb-0">{{ $aeroporto->created_at?->format('d/m/Y') ?? 'N/A' }}</h5>
-                    <small>criado em</small>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stats-label">Cadastro</div>
+                        <div class="stats-value" style="font-size: 1.2rem; font-weight: 600;">
+                            {{ $aeroporto->created_at?->format('d/m/Y') ?? 'N/A' }}
+                        </div>
+                        <div class="stats-sub">data de criação</div>
+                    </div>
+                    <div class="stats-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-calendar"></i>
+                    </div>
                 </div>
             </div>
         </div>
