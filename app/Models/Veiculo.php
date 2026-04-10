@@ -71,6 +71,12 @@ class Veiculo extends Model
         return $this->belongsTo(Deposito::class);
     }
     
+    // Relacionamento com Aeroporto através do depósito
+    public function aeroporto()
+    {
+        return $this->hasOneThrough(Aeroporto::class, Deposito::class, 'id', 'id', 'deposito_id', 'aeroporto_id');
+    }
+    
     // Accessor para nome do tipo
     public function getTipoNomeAttribute()
     {
@@ -114,6 +120,14 @@ class Veiculo extends Model
     public function scopeDisponiveis($query)
     {
         return $query->where('status', 'disponivel');
+    }
+    
+    // Scope para veículos por aeroporto
+    public function scopePorAeroporto($query, $aeroportoId)
+    {
+        return $query->whereHas('deposito', function($q) use ($aeroportoId) {
+            $q->where('aeroporto_id', $aeroportoId);
+        });
     }
     
     // Boot do modelo

@@ -40,10 +40,27 @@ class VeiculoController extends Controller
     public function store(Request $request, Aeroporto $aeroporto, Deposito $deposito)
     {
         $request->validate([
-            'codigo' => 'required|string|max:50|unique:veiculos,codigo',
+            'codigo' => 'required|string|max:50',
             'tipo_veiculo' => 'required|in:' . implode(',', array_keys(Veiculo::TIPOS_VEICULOS)),
             'status' => 'nullable|in:disponivel,indisponivel'
         ]);
+
+        // Verificar se o código já existe neste depósito
+        $exists = Veiculo::where('deposito_id', $deposito->id)
+                        ->where('codigo', $request->codigo)
+                        ->exists();
+
+        if ($exists) {
+            if ($request->ajax() || $request->has('ajax')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este código já está em uso neste depósito.'
+                ], 422);
+            }
+            
+            return back()->with('error', 'Este código já está em uso neste depósito.')
+                        ->withInput();
+        }
 
         // Se for AJAX, adicionar ao carrinho da sessão
         if ($request->ajax() || $request->has('ajax')) {
@@ -107,9 +124,11 @@ class VeiculoController extends Controller
         
         foreach ($carrinho as $item) {
             try {
-                // Verificar se o código já existe no banco
-                if (Veiculo::where('codigo', $item['codigo'])->exists()) {
-                    $errors[] = "Código {$item['codigo']} já existe no sistema.";
+                // Verificar se o código já existe neste depósito
+                if (Veiculo::where('deposito_id', $deposito->id)
+                        ->where('codigo', $item['codigo'])
+                        ->exists()) {
+                    $errors[] = "Código {$item['codigo']} já existe neste depósito.";
                     continue;
                 }
                 
@@ -239,21 +258,23 @@ class VeiculoController extends Controller
         $codigo = $request->codigo;
         $veiculoId = $request->id;
 
-        // Verificar se existe no banco
-        $query = Veiculo::where('codigo', $codigo);
+        // Verificar se existe no banco para este depósito específico
+        $query = Veiculo::where('deposito_id', $deposito->id)
+                        ->where('codigo', $codigo);
+        
         if ($veiculoId) {
             $query->where('id', '!=', $veiculoId);
         }
         $exists = $query->exists();
         
-        // Verificar se existe no carrinho atual
+        // Verificar se existe no carrinho atual (também para este depósito)
         $carrinhoKey = 'veiculos_carrinho_' . $deposito->id;
         $carrinho = Session::get($carrinhoKey, []);
         $carrinhoExists = collect($carrinho)->contains('codigo', $codigo);
 
         return response()->json([
             'exists' => $exists || $carrinhoExists,
-            'message' => ($exists || $carrinhoExists) ? 'Este código já está em uso.' : 'Código disponível'
+            'message' => ($exists || $carrinhoExists) ? 'Este código já está em uso neste depósito.' : 'Código disponível'
         ]);
     }
 }
