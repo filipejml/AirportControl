@@ -89,20 +89,101 @@
     margin-top: 0.25rem;
 }
 
-.bg-gradient-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Estilos para a tabela de tipos de veículos */
+.types-table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
 }
 
-.bg-gradient-success {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+.types-table .table {
+    margin-bottom: 0;
 }
 
-.bg-gradient-info {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+.types-table .table thead th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 12px 16px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
 }
 
-.bg-gradient-warning {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+.types-table .table tbody td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.progress-bar-custom {
+    height: 8px;
+    border-radius: 4px;
+    background-color: #e5e7eb;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Estilos para cards de depósitos */
+.deposito-card {
+    background: white;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+.deposito-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    border-color: #cbd5e1;
+}
+
+.deposito-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.deposito-body {
+    padding: 16px;
+}
+
+.deposito-stats {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+}
+
+.deposito-stats .number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #3b82f6;
+    line-height: 1;
+}
+
+.deposito-stats .label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 @media (max-width: 768px) {
@@ -153,7 +234,7 @@
         </div>
     </div>
 
-    <!-- Cards de Estatísticas - Layout Moderno inspirado na imagem -->
+    <!-- Cards de Estatísticas -->
     <div class="row g-4 mb-5">
         <div class="col-md-3 col-sm-6">
             <div class="stats-card">
@@ -295,6 +376,84 @@
         </div>
     </div>
 
+    <!-- Tabela de Veículos por Tipo - SEM colunas de disponibilidade -->
+    @php
+        // Agrupar veículos por tipo
+        $veiculosPorTipo = [];
+        foreach ($aeroporto->veiculos as $veiculo) {
+            $tipo = $veiculo->tipo_veiculo;
+            if (!isset($veiculosPorTipo[$tipo])) {
+                $veiculosPorTipo[$tipo] = [
+                    'count' => 0,
+                    'nome' => $veiculo->tipo_nome,
+                    'icone' => $veiculo->tipo_icone
+                ];
+            }
+            $veiculosPorTipo[$tipo]['count']++;
+        }
+        
+        // Ordenar por quantidade decrescente
+        arsort($veiculosPorTipo);
+        $totalVeiculos = $aeroporto->veiculos->count();
+    @endphp
+
+    @if($totalVeiculos > 0)
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">🚗 Distribuição de Veículos por Tipo</h5>
+        </div>
+        <div class="card-body">
+            <div class="types-table">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Tipo de Veículo</th>
+                            <th>Quantidade</th>
+                            <th>Percentual</th>
+                        </thead>
+                        <tbody>
+                            @foreach($veiculosPorTipo as $tipo => $dados)
+                                @php
+                                    $percentual = ($dados['count'] / $totalVeiculos) * 100;
+                                    $corProgresso = $percentual >= 30 ? 'danger' : ($percentual >= 15 ? 'warning' : 'primary');
+                                @endphp
+                                <tr>
+                                    <td>
+                                        <div class="type-badge">
+                                            <i class="bi {{ $dados['icone'] }} fs-5 text-primary"></i>
+                                            <span class="fw-semibold">{{ $dados['nome'] }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary rounded-pill px-3 py-2">
+                                            {{ $dados['count'] }}
+                                        </span>
+                                    </td>
+                                    <td style="width: 250px;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress-bar-custom flex-grow-1">
+                                                <div class="progress-fill bg-{{ $corProgresso }}" style="width: {{ $percentual }}%"></div>
+                                            </div>
+                                            <small class="text-muted fw-semibold">{{ number_format($percentual, 1) }}%</small>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th><strong>Total Geral</strong></th>
+                                <th><strong>{{ $totalVeiculos }}</strong></th>
+                                <th><strong>100%</strong></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Depósitos e Veículos -->
     <div class="card shadow-sm">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -312,48 +471,53 @@
             @if($aeroporto->depositos->count() > 0)
                 <div class="row">
                     @foreach($aeroporto->depositos as $deposito)
-                        <div class="col-md-6 col-lg-4 mb-3">
-                            <div class="border rounded p-3 h-100">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <h6 class="mb-1">{{ $deposito->nome }}</h6>
-                                        <small class="text-muted">Código: {{ $deposito->codigo }}</small>
-                                    </div>
-                                    <span class="badge bg-{{ $deposito->status === 'ativo' ? 'success' : ($deposito->status === 'manutencao' ? 'warning' : 'secondary') }}">
-                                        {{ ucfirst($deposito->status) }}
-                                    </span>
-                                </div>
-                                
-                                <p class="mb-2 mt-2 small">
-                                    <i class="bi bi-geo-alt"></i> {{ $deposito->localizacao ?? 'Localização não informada' }}
-                                </p>
-                                
-                                <div class="mt-2">
-                                    <div class="row text-center">
-                                        <div class="col-4">
-                                            <small class="text-muted">Total</small>
-                                            <strong class="d-block">{{ $deposito->veiculos->count() }}</strong>
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="deposito-card">
+                                <div class="deposito-header">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1 fw-bold">{{ $deposito->nome }}</h6>
+                                            @if($deposito->capacidade_maxima)
+                                                <small class="text-muted">
+                                                    <i class="bi bi-box-seam"></i> Capacidade: {{ $deposito->capacidade_maxima }} veículos
+                                                </small>
+                                            @endif
                                         </div>
-                                        <div class="col-4">
-                                            <small class="text-muted">Disponíveis</small>
-                                            <strong class="d-block text-success">
-                                                {{ $deposito->veiculos->where('status', 'disponivel')->count() }}
-                                            </strong>
-                                        </div>
-                                        <div class="col-4">
-                                            <small class="text-muted">Em Uso</small>
-                                            <strong class="d-block text-warning">
-                                                {{ $deposito->veiculos->where('status', 'em_uso')->count() }}
-                                            </strong>
-                                        </div>
+                                        <span class="badge bg-{{ $deposito->status === 'ativo' ? 'success' : ($deposito->status === 'manutencao' ? 'warning' : 'secondary') }}">
+                                            {{ ucfirst($deposito->status) }}
+                                        </span>
                                     </div>
                                 </div>
                                 
-                                <div class="mt-3">
-                                    <a href="{{ route('aeroportos.depositos.show', [$aeroporto, $deposito]) }}" 
-                                       class="btn btn-sm btn-outline-primary w-100">
-                                        <i class="bi bi-eye"></i> Ver Detalhes
-                                    </a>
+                                <div class="deposito-body">
+                                    <div class="deposito-stats">
+                                        <div class="number">{{ $deposito->veiculos->count() }}</div>
+                                        <div class="label">Veículos no Depósito</div>
+                                    </div>
+                                    
+                                    @if($deposito->capacidade_maxima)
+                                        @php
+                                            $percentualOcupacao = $deposito->capacidade_maxima > 0 ? ($deposito->veiculos->count() / $deposito->capacidade_maxima) * 100 : 0;
+                                            $corOcupacao = $percentualOcupacao >= 90 ? 'danger' : ($percentualOcupacao >= 70 ? 'warning' : 'success');
+                                        @endphp
+                                        <div class="mt-3">
+                                            <div class="d-flex justify-content-between mb-1">
+                                                <small class="text-muted">Ocupação</small>
+                                                <small class="text-muted">{{ number_format($percentualOcupacao, 1) }}%</small>
+                                            </div>
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar bg-{{ $corOcupacao }}" 
+                                                     style="width: {{ min(100, $percentualOcupacao) }}%"></div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                    
+                                    <div class="mt-3">
+                                        <a href="{{ route('aeroportos.depositos.show', [$aeroporto, $deposito]) }}" 
+                                           class="btn btn-sm btn-outline-primary w-100">
+                                            <i class="bi bi-eye"></i> Ver Detalhes
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>

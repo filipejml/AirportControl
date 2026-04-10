@@ -203,9 +203,13 @@ class AeroportoController extends Controller
     public function show(Aeroporto $aeroporto)
     {
         // Carregar os relacionamentos necessários para o ADMIN
-        $aeroporto->load(['companhias', 'depositos.veiculos']);
+        // Carrega depósitos com seus veículos
+        $aeroporto->load([
+            'companhias', 
+            'depositos.veiculos'
+        ]);
         
-        // Retornar a view ADMIN (não a de usuário comum)
+        // Retornar a view ADMIN
         return view('admin.aeroportos.show', compact('aeroporto'));
     }
 
