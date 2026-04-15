@@ -28,8 +28,8 @@
                         <tr>
                             <th>Código</th>
                             <th>Tipo</th>
-                            <th>Quantidade</th>
                             <th>Status</th>
+                            <th>Data Cadastro</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -39,10 +39,10 @@
                                 <td><strong>{{ $veiculo->codigo }}</strong></td>
                                 <td>
                                     <span class="badge bg-primary">
+                                        <i class="bi {{ $veiculo->tipo_icone }}"></i>
                                         {{ $veiculo->tipo_nome }}
                                     </span>
                                 </td>
-                                <td>{{ $veiculo->quantidade }} unidade(s)</td>
                                 <td>
                                     @if($veiculo->status == 'disponivel')
                                         <span class="badge bg-success">✅ Disponível</span>
@@ -50,8 +50,13 @@
                                         <span class="badge bg-secondary">❌ Indisponível</span>
                                     @endif
                                 </td>
+                                <td>{{ $veiculo->created_at->format('d/m/Y H:i') }}</td>
                                 <td>
                                     <div class="btn-group">
+                                        <a href="{{ route('aeroportos.depositos.veiculos.show', [$aeroporto, $deposito, $veiculo]) }}" 
+                                           class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
                                         <a href="{{ route('aeroportos.depositos.veiculos.edit', [$aeroporto, $deposito, $veiculo]) }}" 
                                            class="btn btn-sm btn-outline-secondary" title="Editar">
                                             <i class="bi bi-pencil"></i>

@@ -28,31 +28,31 @@ class Aeroporto extends Model
         return $this->hasMany(Voo::class);
     }
 
-    // NOVO: Relacionamento com Depósitos
+    // Relacionamento com Depósitos
     public function depositos()
     {
         return $this->hasMany(Deposito::class);
     }
 
-    // NOVO: Relacionamento com Veículos através de depósitos
+    // Relacionamento com Veículos através de depósitos
     public function veiculos()
     {
-        return $this->hasManyThrough(Veiculo::class, Deposito::class);
+        return $this->hasManyThrough(Veiculo::class, Deposito::class, 'aeroporto_id', 'deposito_id', 'id', 'id');
     }
 
-    // NOVO: Total de veículos no aeroporto
+    // Total de veículos no aeroporto
     public function getTotalVeiculosAttribute()
     {
         return $this->veiculos()->count();
     }
 
-    // NOVO: Total de depósitos no aeroporto
+    // Total de depósitos no aeroporto
     public function getTotalDepositosAttribute()
     {
         return $this->depositos()->count();
     }
 
-    // NOVO: Total de veículos disponíveis
+    // Total de veículos disponíveis
     public function getVeiculosDisponiveisAttribute()
     {
         return $this->veiculos()->where('status', 'disponivel')->count();

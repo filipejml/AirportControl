@@ -12,107 +12,129 @@ class Veiculo extends Model
     
     protected $fillable = [
         'deposito_id',
-        'tipo_veiculo',
         'codigo',
-        'quantidade',
-        'status',
-        'observacoes'
+        'tipo_veiculo',
+        'status'
     ];
-
+    
     protected $casts = [
-        'quantidade' => 'integer'
+        'status' => 'string'
     ];
-
-    // Mapeamento dos tipos de veículos
-    const TIPOS_VEICULOS = [
+    
+    // Tipos de veículos disponíveis
+    public const TIPOS_VEICULOS = [
         'esteira_bagagem' => [
             'nome' => 'Esteira de Bagagem',
-            'icone' => 'bi-box-seam',
-            'cor' => 'primary',
-            'descricao' => 'Transporte de bagagens entre terminais e aeronaves'
+            'descricao' => 'Transporte de bagagens',
+            'icone' => 'bi-box-seam'
         ],
         'caminhao_combustivel' => [
             'nome' => 'Caminhão de Combustível',
-            'icone' => 'bi-fuel-pump',
-            'cor' => 'danger',
-            'descricao' => 'Abastecimento de aeronaves'
+            'descricao' => 'Abastecimento de aeronaves',
+            'icone' => 'bi-fuel-pump'
         ],
         'carro_inspecao' => [
             'nome' => 'Carro de Inspeção',
-            'icone' => 'bi-search',
-            'cor' => 'info',
-            'descricao' => 'Inspeção de segurança e manutenção de pistas'
+            'descricao' => 'Inspeção de pistas e segurança',
+            'icone' => 'bi-binoculars'
         ],
         'carrinho_bagagem' => [
             'nome' => 'Carrinho de Bagagem',
-            'icone' => 'bi-cart',
-            'cor' => 'secondary',
-            'descricao' => 'Transporte de bagagens no pátio'
+            'descricao' => 'Transporte interno de bagagens',
+            'icone' => 'bi-cart'
         ],
         'caminhao_pushback' => [
             'nome' => 'Caminhão de Pushback',
-            'icone' => 'bi-arrow-return-left',
-            'cor' => 'warning',
-            'descricao' => 'Manobra de aeronaves para posicionamento'
+            'descricao' => 'Manobra de aeronaves',
+            'icone' => 'bi-arrow-left-right'
         ],
         'caminhao_escada' => [
             'nome' => 'Caminhão Escada',
-            'icone' => 'bi-stairs',
-            'cor' => 'success',
-            'descricao' => 'Embarque e desembarque de passageiros'
+            'descricao' => 'Embarque/desembarque',
+            'icone' => 'bi-stairs'
         ],
         'caminhao_limpeza' => [
             'nome' => 'Caminhão de Limpeza',
-            'icone' => 'bi-brush',
-            'cor' => 'dark',
-            'descricao' => 'Limpeza de aeronaves e áreas operacionais'
+            'descricao' => 'Limpeza de aeronaves',
+            'icone' => 'bi-droplet'
         ],
         'outro' => [
             'nome' => 'Outro',
-            'icone' => 'bi-question-circle',
-            'cor' => 'secondary',
-            'descricao' => 'Outros tipos de veículos'
+            'descricao' => 'Outros tipos de veículos',
+            'icone' => 'bi-truck'
         ]
     ];
-
+    
     // Relacionamento com Depósito
     public function deposito(): BelongsTo
     {
         return $this->belongsTo(Deposito::class);
     }
-
-    // Acessor para o aeroporto
-    public function getAeroportoAttribute()
+    
+    // Relacionamento com Aeroporto através do depósito
+    public function aeroporto()
     {
-        return $this->deposito->aeroporto;
+        return $this->hasOneThrough(Aeroporto::class, Deposito::class, 'id', 'id', 'deposito_id', 'aeroporto_id');
     }
-
-    // Acessor para informações do tipo de veículo
-    public function getTipoInfoAttribute()
-    {
-        return self::TIPOS_VEICULOS[$this->tipo_veiculo] ?? self::TIPOS_VEICULOS['outro'];
-    }
-
-    // Acessor para nome do tipo formatado
+    
+    // Accessor para nome do tipo
     public function getTipoNomeAttribute()
     {
-        return $this->tipo_info['nome'];
+        return self::TIPOS_VEICULOS[$this->tipo_veiculo]['nome'] ?? ucfirst($this->tipo_veiculo);
     }
-
-    // Verificar se está disponível
-    public function isDisponivel()
+    
+    // Accessor para ícone do tipo
+    public function getTipoIconeAttribute()
     {
-        return $this->status === 'disponivel';
+        return self::TIPOS_VEICULOS[$this->tipo_veiculo]['icone'] ?? 'bi-truck';
     }
-
-    // Scopes
+    
+    // Accessor para cor do tipo
+    public function getTipoCorAttribute()
+    {
+        $cores = [
+            'esteira_bagagem' => 'primary',
+            'caminhao_combustivel' => 'danger',
+            'carro_inspecao' => 'info',
+            'carrinho_bagagem' => 'success',
+            'caminhao_pushback' => 'warning',
+            'caminhao_escada' => 'secondary',
+            'caminhao_limpeza' => 'dark',
+            'outro' => 'light'
+        ];
+        
+        return $cores[$this->tipo_veiculo] ?? 'secondary';
+    }
+    
+    // Accessor para status com cor
+    public function getStatusCorAttribute()
+    {
+        return match($this->status) {
+            'disponivel' => 'success',
+            'indisponivel' => 'danger',
+            default => 'secondary'
+        };
+    }
+    
+    // Scope para veículos disponíveis
     public function scopeDisponiveis($query)
     {
         return $query->where('status', 'disponivel');
     }
-
-    public function scopePorTipo($query, $tipo)
+    
+    // Scope para veículos por aeroporto
+    public function scopePorAeroporto($query, $aeroportoId)
     {
-        return $query->where('tipo_veiculo', $tipo);
+        return $query->whereHas('deposito', function($q) use ($aeroportoId) {
+            $q->where('aeroporto_id', $aeroportoId);
+        });
+    }
+    
+    // Boot do modelo
+    protected static function booted()
+    {
+        static::creating(function ($veiculo) {
+            $veiculo->status = $veiculo->status ?? 'disponivel';
+        });
     }
 }

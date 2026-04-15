@@ -4,6 +4,65 @@
 @section('title', 'Detalhes do Depósito - ' . $deposito->nome)
 
 @section('content')
+<style>
+/* Estilos modernos para os cards de estatísticas */
+.stats-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.25rem 1rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.stats-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+.stats-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+}
+
+.stats-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+}
+
+.stats-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.stats-sub {
+    font-size: 0.7rem;
+    color: #adb5bd;
+    margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+    .stats-value {
+        font-size: 1.5rem;
+    }
+    .stats-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+}
+</style>
+
 <div class="container mt-4">
     <div class="row mb-4">
         <div class="col">
@@ -20,201 +79,193 @@
         </div>
     </div>
 
-    <!-- Informações do Depósito -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card shadow-sm bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Código</h5>
-                    <h3 class="mb-0">{{ $deposito->codigo }}</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Status</h5>
-                    <h3 class="mb-0">
-                        @if($deposito->status == 'ativo')
-                            <i class="bi bi-check-circle"></i> Ativo
-                        @elseif($deposito->status == 'manutencao')
-                            <i class="bi bi-tools"></i> Manutenção
-                        @else
-                            <i class="bi bi-x-circle"></i> Inativo
-                        @endif
-                    </h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Capacidade</h5>
-                    <h3 class="mb-0">{{ $deposito->capacidade_maxima ?? 'Ilimitada' }}</h3>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-md-6">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">📋 Informações Detalhadas</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-borderless">
-                        <tr>
-                            <th width="40%">Localização:</th>
-                            <td>{{ $deposito->localizacao ?? 'Não informada' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Área Total:</th>
-                            <td>{{ $deposito->area_total ? number_format($deposito->area_total, 2) . ' m²' : 'Não informada' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Capacidade Máxima:</th>
-                            <td>{{ $deposito->capacidade_maxima ?? 'Ilimitada' }} veículos</td>
-                        </tr>
-                        <tr>
-                            <th>Ocupação:</th>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <span class="me-2">{{ $estatisticas['total_veiculos'] }} / {{ $deposito->capacidade_maxima ?? '∞' }}</span>
-                                    @if($deposito->capacidade_maxima)
-                                        <div class="progress flex-grow-1" style="height: 8px;">
-                                            <div class="progress-bar bg-{{ $estatisticas['total_veiculos'] / $deposito->capacidade_maxima >= 0.9 ? 'danger' : ($estatisticas['total_veiculos'] / $deposito->capacidade_maxima >= 0.7 ? 'warning' : 'success') }}" 
-                                                 style="width: {{ ($estatisticas['total_veiculos'] / $deposito->capacidade_maxima) * 100 }}%"></div>
-                                        </div>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Data Cadastro:</th>
-                            <td>{{ $deposito->created_at->format('d/m/Y H:i') }}</td>
-                        </tr>
-                        <tr>
-                            <th>Última Atualização:</th>
-                            <td>{{ $deposito->updated_at->format('d/m/Y H:i') }}</td>
-                        </tr>
-                        @if($deposito->observacoes)
-                        <tr>
-                            <th>Observações:</th>
-                            <td>{{ $deposito->observacoes }}</td>
-                        </tr>
-                        @endif
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">🚗 Estatísticas de Veículos</h5>
-                    <a href="{{ route('aeroportos.depositos.veiculos.create', [$aeroporto, $deposito]) }}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-circle"></i> Novo Veículo
-                    </a>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center mb-4">
-                        <div class="col-6">
-                            <div class="border rounded p-3">
-                                <i class="bi bi-car-front fs-1 text-primary"></i>
-                                <h3 class="mb-0 mt-2">{{ $estatisticas['total_veiculos'] }}</h3>
-                                <small class="text-muted">Total de Veículos</small>
-                            </div>
+    <!-- Cards de Estatísticas - Layout Moderno -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stats-label">Status</div>
+                        <div class="stats-value" style="font-size: 1.2rem;">
+                            @if($deposito->status == 'ativo')
+                                <span class="text-success">✓ Ativo</span>
+                            @elseif($deposito->status == 'manutencao')
+                                <span class="text-warning">🔧 Manutenção</span>
+                            @else
+                                <span class="text-danger">✗ Inativo</span>
+                            @endif
                         </div>
-                        <div class="col-6">
-                            <div class="border rounded p-3">
-                                <i class="bi bi-check-circle fs-1 text-success"></i>
-                                <h3 class="mb-0 mt-2">{{ $estatisticas['disponiveis'] }}</h3>
-                                <small class="text-muted">Disponíveis</small>
-                            </div>
-                        </div>
+                        <div class="stats-sub">situação atual</div>
                     </div>
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <div class="border rounded p-3">
-                                <i class="bi bi-tools fs-1 text-warning"></i>
-                                <h3 class="mb-0 mt-2">{{ $estatisticas['manutencao'] }}</h3>
-                                <small class="text-muted">Em Manutenção</small>
-                            </div>
+                    <div class="stats-icon bg-{{ $deposito->status == 'ativo' ? 'success' : ($deposito->status == 'manutencao' ? 'warning' : 'danger') }} bg-opacity-10 text-{{ $deposito->status == 'ativo' ? 'success' : ($deposito->status == 'manutencao' ? 'warning' : 'danger') }}">
+                        <i class="bi bi-{{ $deposito->status == 'ativo' ? 'check-circle' : ($deposito->status == 'manutencao' ? 'tools' : 'x-circle') }}"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stats-label">Capacidade</div>
+                        <div class="stats-value">{{ $deposito->capacidade_maxima ?? '∞' }}</div>
+                        <div class="stats-sub">veículos no máximo</div>
+                    </div>
+                    <div class="stats-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stats-label">Veículos</div>
+                        <div class="stats-value">{{ $estatisticas['total_veiculos'] }}</div>
+                        <div class="stats-sub">cadastrados no depósito</div>
+                    </div>
+                    <div class="stats-icon bg-info bg-opacity-10 text-info">
+                        <i class="bi bi-car-front"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stats-label">Cadastro</div>
+                        <div class="stats-value" style="font-size: 1.2rem; font-weight: 600;">
+                            {{ $deposito->created_at->format('d/m/Y') }}
                         </div>
-                        <div class="col-6">
-                            <div class="border rounded p-3">
-                                <i class="bi bi-car-front-fill fs-1 text-info"></i>
-                                <h3 class="mb-0 mt-2">{{ $estatisticas['por_tipo']->count() }}</h3>
-                                <small class="text-muted">Tipos Diferentes</small>
-                            </div>
-                        </div>
+                        <div class="stats-sub">data de criação</div>
+                    </div>
+                    <div class="stats-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-calendar"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Lista de Veículos -->
-    <div class="card shadow-sm">
+    <!-- Segunda linha de cards - Disponibilidade -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stats-label">Disponíveis</div>
+                        <div class="stats-value text-success">{{ $estatisticas['disponiveis'] }}</div>
+                        <div class="stats-sub">veículos em operação</div>
+                    </div>
+                    <div class="stats-icon bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="progress" style="height: 6px;">
+                        @php
+                            $percentDisponiveis = $estatisticas['total_veiculos'] > 0 ? ($estatisticas['disponiveis'] / $estatisticas['total_veiculos']) * 100 : 0;
+                        @endphp
+                        <div class="progress-bar bg-success" style="width: {{ $percentDisponiveis }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ number_format($percentDisponiveis, 1) }}% do total</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stats-label">Indisponíveis</div>
+                        <div class="stats-value text-danger">{{ $estatisticas['indisponiveis'] }}</div>
+                        <div class="stats-sub">veículos fora de operação</div>
+                    </div>
+                    <div class="stats-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="progress" style="height: 6px;">
+                        @php
+                            $percentIndisponiveis = $estatisticas['total_veiculos'] > 0 ? ($estatisticas['indisponiveis'] / $estatisticas['total_veiculos']) * 100 : 0;
+                        @endphp
+                        <div class="progress-bar bg-danger" style="width: {{ $percentIndisponiveis }}%"></div>
+                    </div>
+                    <small class="text-muted">{{ number_format($percentIndisponiveis, 1) }}% do total</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="stats-card">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="stats-label">Ocupação</div>
+                        <div class="stats-value">
+                            @php
+                                $ocupacao = $deposito->capacidade_maxima ? ($estatisticas['total_veiculos'] / $deposito->capacidade_maxima) * 100 : 0;
+                            @endphp
+                            {{ number_format($ocupacao, 1) }}%
+                        </div>
+                        <div class="stats-sub">
+                            {{ $estatisticas['total_veiculos'] }} / {{ $deposito->capacidade_maxima ?? '∞' }}
+                        </div>
+                    </div>
+                    <div class="stats-icon bg-{{ $ocupacao >= 90 ? 'danger' : ($ocupacao >= 70 ? 'warning' : 'primary') }} bg-opacity-10 text-{{ $ocupacao >= 90 ? 'danger' : ($ocupacao >= 70 ? 'warning' : 'primary') }}">
+                        <i class="bi bi-pie-chart"></i>
+                    </div>
+                </div>
+                @if($deposito->capacidade_maxima)
+                    <div class="mt-3">
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-{{ $ocupacao >= 90 ? 'danger' : ($ocupacao >= 70 ? 'warning' : 'primary') }}" 
+                                 style="width: {{ min(100, $ocupacao) }}%"></div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Tipos de Veículos -->
+    <div class="card shadow-sm mb-4">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">🚗 Veículos no Depósito</h5>
-            <a href="{{ route('aeroportos.depositos.veiculos.index', [$aeroporto, $deposito]) }}" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-list"></i> Ver Todos
+            <h5 class="mb-0">🚗 Distribuição por Tipo de Veículo</h5>
+            <a href="{{ route('aeroportos.depositos.veiculos.create', [$aeroporto, $deposito]) }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-circle"></i> Novo Veículo
             </a>
         </div>
         <div class="card-body">
-            @if($deposito->veiculos->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Placa</th>
-                                <th>Modelo</th>
-                                <th>Marca</th>
-                                <th>Tipo</th>
-                                <th>Status</th>
-                                <th>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($deposito->veiculos->take(5) as $veiculo)
-                                <tr>
-                                    <td><strong>{{ $veiculo->placa }}</strong></td>
-                                    <td>{{ $veiculo->modelo }}</td>
-                                    <td>{{ $veiculo->marca }}</td>
-                                    <td><span class="badge bg-info">{{ ucfirst($veiculo->tipo) }}</span></td>
-                                    <td>
-                                        @php
-                                            $statusColors = [
-                                                'disponivel' => 'success',
-                                                'em_uso' => 'warning',
-                                                'manutencao' => 'danger',
-                                                'inativo' => 'secondary'
-                                            ];
-                                        @endphp
-                                        <span class="badge bg-{{ $statusColors[$veiculo->status] }}">
-                                            {{ ucfirst(str_replace('_', ' ', $veiculo->status)) }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('aeroportos.depositos.veiculos.show', [$aeroporto, $deposito, $veiculo]) }}" 
-                                           class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+            @if($estatisticas['por_tipo']->count() > 0)
+                <div class="row g-3">
+                    @foreach($estatisticas['por_tipo'] as $tipo => $quantidade)
+                        @php
+                            $tipoInfo = \App\Models\Veiculo::TIPOS_VEICULOS[$tipo] ?? ['nome' => ucfirst($tipo), 'icone' => 'bi-truck'];
+                            $percentual = $estatisticas['total_veiculos'] > 0 ? ($quantidade / $estatisticas['total_veiculos']) * 100 : 0;
+                        @endphp
+                        <div class="col-md-4 col-lg-3">
+                            <div class="border rounded p-3 h-100">
+                                <div class="d-flex align-items-center gap-3 mb-2">
+                                    <i class="bi {{ $tipoInfo['icone'] }} fs-2 text-primary"></i>
+                                    <div>
+                                        <h6 class="mb-0">{{ $tipoInfo['nome'] }}</h6>
+                                        <small class="text-muted">{{ $quantidade }} veículo(s)</small>
+                                    </div>
+                                </div>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar bg-primary" style="width: {{ $percentual }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ number_format($percentual, 1) }}% do total</small>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-                @if($deposito->veiculos->count() > 5)
-                    <div class="text-center mt-3">
-                        <a href="{{ route('aeroportos.depositos.veiculos.index', [$aeroporto, $deposito]) }}" class="btn btn-link">
-                            Ver todos os {{ $deposito->veiculos->count() }} veículos
-                        </a>
-                    </div>
-                @endif
             @else
                 <div class="text-center py-5">
                     <i class="bi bi-car-front text-muted" style="font-size: 3rem;"></i>
@@ -226,5 +277,61 @@
             @endif
         </div>
     </div>
+
+    <!-- Lista de Veículos Recentes -->
+    @if($deposito->veiculos->count() > 0)
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">📋 Últimos Veículos Cadastrados</h5>
+            <a href="{{ route('aeroportos.depositos.veiculos.index', [$aeroporto, $deposito]) }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-list"></i> Ver Todos
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Código</th>
+                            <th>Tipo</th>
+                            <th>Quantidade</th>
+                            <th>Status</th>
+                            <th>Data Cadastro</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($deposito->veiculos->sortByDesc('created_at')->take(10) as $veiculo)
+                            <tr>
+                                <td><strong>{{ $veiculo->codigo }}</strong></td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        <i class="bi {{ \App\Models\Veiculo::TIPOS_VEICULOS[$veiculo->tipo_veiculo]['icone'] ?? 'bi-truck' }}"></i>
+                                        {{ $veiculo->tipo_nome }}
+                                    </span>
+                                </td>
+                                <td>{{ $veiculo->quantidade }} unidade(s)</td>
+                                <td>
+                                    @if($veiculo->status == 'disponivel')
+                                        <span class="badge bg-success">Disponível</span>
+                                    @else
+                                        <span class="badge bg-secondary">Indisponível</span>
+                                    @endif
+                                </td>
+                                <td>{{ $veiculo->created_at->format('d/m/Y H:i') }}</td>
+                                <td>
+                                    <a href="{{ route('aeroportos.depositos.veiculos.show', [$aeroporto, $deposito, $veiculo]) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
 @endsection
