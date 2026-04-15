@@ -371,4 +371,120 @@ class AeronaveController extends Controller
             'passageirosPorCompanhia'
         ));
     }
+
+    /**
+     * Display ranking and general data about aircrafts
+     */
+    public function ranking()
+    {
+        // Buscar todas as aeronaves com seus relacionamentos
+        $aeronaves = Aeronave::with(['fabricante', 'voos.companhiaAerea'])
+            ->withCount('voos')
+            ->get();
+        
+        $rankings = [];
+        
+        foreach ($aeronaves as $aeronave) {
+            $totalVoos = $aeronave->voos()->sum('qtd_voos');
+            $totalPassageiros = $aeronave->voos()->sum('total_passageiros');
+            
+            // Médias ponderadas das notas
+            $mediaObjetivo = DB::table('voos')
+                ->where('aeronave_id', $aeronave->id)
+                ->whereNotNull('nota_obj')
+                ->select(DB::raw('SUM(qtd_voos * nota_obj) / SUM(qtd_voos) as media'))
+                ->value('media') ?? 0;
+                
+            $mediaPontualidade = DB::table('voos')
+                ->where('aeronave_id', $aeronave->id)
+                ->whereNotNull('nota_pontualidade')
+                ->select(DB::raw('SUM(qtd_voos * nota_pontualidade) / SUM(qtd_voos) as media'))
+                ->value('media') ?? 0;
+                
+            $mediaServicos = DB::table('voos')
+                ->where('aeronave_id', $aeronave->id)
+                ->whereNotNull('nota_servicos')
+                ->select(DB::raw('SUM(qtd_voos * nota_servicos) / SUM(qtd_voos) as media'))
+                ->value('media') ?? 0;
+                
+            $mediaPatio = DB::table('voos')
+                ->where('aeronave_id', $aeronave->id)
+                ->whereNotNull('nota_patio')
+                ->select(DB::raw('SUM(qtd_voos * nota_patio) / SUM(qtd_voos) as media'))
+                ->value('media') ?? 0;
+            
+            // Nota média geral (média das 4 notas)
+            $notaGeral = ($mediaObjetivo + $mediaPontualidade + $mediaServicos + $mediaPatio) / 4;
+            
+            $rankings[] = [
+                'id' => $aeronave->id,
+                'modelo' => $aeronave->modelo,
+                'fabricante' => $aeronave->fabricante->nome ?? 'N/A',
+                'capacidade' => $aeronave->capacidade,
+                'porte' => $aeronave->porte_descricao,
+                'total_voos' => $totalVoos,
+                'total_passageiros' => $totalPassageiros,
+                'media_objetivo' => $mediaObjetivo ? round($mediaObjetivo, 1) : 0,
+                'media_pontualidade' => $mediaPontualidade ? round($mediaPontualidade, 1) : 0,
+                'media_servicos' => $mediaServicos ? round($mediaServicos, 1) : 0,
+                'media_patio' => $mediaPatio ? round($mediaPatio, 1) : 0,
+                'nota_geral' => $notaGeral ? round($notaGeral, 1) : 0,
+                'tem_dados' => $totalVoos > 0
+            ];
+        }
+        
+        // Ordenar rankings por nota geral (decrescente)
+        $rankingsPorNota = collect($rankings)->sortByDesc('nota_geral')->values();
+        
+        // Ordenar rankings por total de voos (decrescente)
+        $rankingsPorVoos = collect($rankings)->sortByDesc('total_voos')->values();
+        
+        // Ordenar rankings por total de passageiros (decrescente)
+        $rankingsPorPassageiros = collect($rankings)->sortByDesc('total_passageiros')->values();
+        
+        // Ordenar rankings por capacidade (decrescente)
+        $rankingsPorCapacidade = collect($rankings)->sortByDesc('capacidade')->values();
+        
+        // Estatísticas gerais
+        $estatisticas = [
+            'total_aeronaves' => $aeronaves->count(),
+            'total_fabricantes' => $aeronaves->pluck('fabricante.nome')->unique()->count(),
+            'total_voos_geral' => collect($rankings)->sum('total_voos'),
+            'total_passageiros_geral' => collect($rankings)->sum('total_passageiros'),
+            'media_nota_geral' => collect($rankings)->avg('nota_geral'),
+            'aeronaves_com_dados' => collect($rankings)->where('tem_dados', true)->count(),
+            'porte_pequeno' => collect($rankings)->where('porte', 'Pequeno Porte (≤100)')->count(),
+            'porte_medio' => collect($rankings)->where('porte', 'Médio Porte (101-299)')->count(),
+            'porte_grande' => collect($rankings)->where('porte', 'Grande Porte (≥300)')->count(),
+        ];
+        
+        // Melhor e pior em cada categoria
+        $melhorNotaGeral = $rankingsPorNota->first();
+        $piorNotaGeral = $rankingsPorNota->last();
+        
+        $maisVoos = $rankingsPorVoos->first();
+        $menosVoos = $rankingsPorVoos->last();
+        
+        $maisPassageiros = $rankingsPorPassageiros->first();
+        $menosPassageiros = $rankingsPorPassageiros->last();
+        
+        $maiorCapacidade = $rankingsPorCapacidade->first();
+        $menorCapacidade = $rankingsPorCapacidade->last();
+        
+        return view('aeronaves.ranking', compact(
+            'rankingsPorNota',
+            'rankingsPorVoos',
+            'rankingsPorPassageiros',
+            'rankingsPorCapacidade',
+            'estatisticas',
+            'melhorNotaGeral',
+            'piorNotaGeral',
+            'maisVoos',
+            'menosVoos',
+            'maisPassageiros',
+            'menosPassageiros',
+            'maiorCapacidade',
+            'menorCapacidade'
+        ));
+    }
 }
