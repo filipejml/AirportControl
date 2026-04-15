@@ -60,23 +60,29 @@
                     <!-- Aeronaves com Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {{ request()->routeIs('aeronaves.*') ? 'active' : '' }}" 
-                           href="#" 
-                           id="aeronavesDropdown" 
-                           role="button" 
-                           data-bs-toggle="dropdown" 
-                           aria-expanded="false">
+                        href="#" 
+                        id="aeronavesDropdown" 
+                        role="button" 
+                        data-bs-toggle="dropdown" 
+                        aria-expanded="false">
                             <i class="bi bi-airplane me-1"></i>Aeronaves
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="aeronavesDropdown">
                             <li>
                                 <a class="dropdown-item {{ request()->routeIs('aeronaves.informacoes') ? 'active' : '' }}" 
-                                   href="{{ route('aeronaves.informacoes') }}">
+                                href="{{ route('aeronaves.informacoes') }}">
                                     <i class="bi bi-info-circle me-2"></i>Informações Gerais
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeronaves.ranking') ? 'active' : '' }}" 
+                                href="{{ route('aeronaves.ranking') }}">
+                                    <i class="bi bi-trophy me-2"></i>Ranking de Aeronaves
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item {{ request()->routeIs('aeronaves.index') ? 'active' : '' }}" 
-                                   href="{{ route('aeronaves.index') }}">
+                                href="{{ route('aeronaves.index') }}">
                                     <i class="bi bi-list-ul me-2"></i>Gerenciar Aeronaves
                                 </a>
                             </li>
@@ -120,10 +126,36 @@
                     
                     <!-- Aeronaves (apenas informações gerais) -->
                     <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('aeronaves.informacoes') ? 'active' : '' }}" 
-                           href="{{ route('aeronaves.informacoes') }}">
+                        <a class="nav-link {{ request()->routeIs('companhias.informacoes') ? 'active' : '' }}" 
+                        href="{{ route('companhias.informacoes') }}">
+                            <i class="bi bi-building me-1"></i>Companhias Aéreas
+                        </a>
+                    </li>
+
+                    <!-- Aeronaves (apenas informações gerais e ranking) -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('aeronaves.*') ? 'active' : '' }}" 
+                        href="#" 
+                        id="aeronavesDropdownUser" 
+                        role="button" 
+                        data-bs-toggle="dropdown" 
+                        aria-expanded="false">
                             <i class="bi bi-airplane me-1"></i>Aeronaves
                         </a>
+                        <ul class="dropdown-menu" aria-labelledby="aeronavesDropdownUser">
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeronaves.informacoes') ? 'active' : '' }}" 
+                                href="{{ route('aeronaves.informacoes') }}">
+                                    <i class="bi bi-info-circle me-2"></i>Informações Gerais
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeronaves.ranking') ? 'active' : '' }}" 
+                                href="{{ route('aeronaves.ranking') }}">
+                                    <i class="bi bi-trophy me-2"></i>Ranking de Aeronaves
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     
                     <!-- Aeroportos (apenas informações gerais) -->

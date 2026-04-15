@@ -67,9 +67,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/companhias/{companhia}/dashboard', [CompanhiaAereaController::class, 'dashboard'])->name('companhias.dashboard');
     
     // Rotas de informações de aeronaves (usuário comum)
-    Route::get('/aeronaves/informacoes', [AeronaveController::class, 'informacoes'])->name('aeronaves.informacoes');
-    Route::get('/aeronaves/{aeronave}/dashboard', [AeronaveController::class, 'dashboard'])->name('aeronaves.dashboard');
-    
+    Route::get('/aeronaves/informacoes', [AeronaveController::class, 'informacoes'])->name('aeronaves.informacoes'); // rota para informações de aeronaves
+    Route::get('/aeronaves/{aeronave}/dashboard', [AeronaveController::class, 'dashboard'])->name('aeronaves.dashboard'); // rota para dashboard de aeronaves    
+    Route::get('/aeronaves/ranking', [AeronaveController::class, 'ranking'])->name('aeronaves.ranking'); // rota para ranking de aeronaves
+
     // Rotas de informações de aeroportos (usuário comum)
     Route::get('/aeroportos/informacoes', [AeroportoController::class, 'informacoes'])->name('aeroportos.informacoes');
     Route::get('/aeroportos/{aeroporto}/dashboard', [AeroportoController::class, 'dashboard'])->name('aeroportos.dashboard');
