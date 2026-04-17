@@ -388,29 +388,55 @@ class AeronaveController extends Controller
             $totalVoos = $aeronave->voos()->sum('qtd_voos');
             $totalPassageiros = $aeronave->voos()->sum('total_passageiros');
             
-            // Médias ponderadas das notas
+            // Contar quantos registros de voo (não a quantidade total)
+            $numeroRegistrosVoos = $aeronave->voos()->count();
+            
+            // Só incluir aeronaves com MÍNIMO 3 REGISTROS de voo para cálculos de nota
+            // (alinhado com a lógica do Dashboard)
+            if ($numeroRegistrosVoos < 3) {
+                // Adiciona com notas zeradas, mas marca como sem dados suficientes
+                $rankings[] = [
+                    'id' => $aeronave->id,
+                    'modelo' => $aeronave->modelo,
+                    'fabricante' => $aeronave->fabricante->nome ?? 'N/A',
+                    'capacidade' => $aeronave->capacidade,
+                    'porte' => $aeronave->porte_descricao,
+                    'total_voos' => $totalVoos,
+                    'total_passageiros' => $totalPassageiros,
+                    'media_objetivo' => 0,
+                    'media_pontualidade' => 0,
+                    'media_servicos' => 0,
+                    'media_patio' => 0,
+                    'nota_geral' => 0,
+                    'tem_dados' => $totalVoos > 0,
+                    'dados_suficientes' => false
+                ];
+                continue;
+            }
+            
+            // Médias simples das notas (igual ao Dashboard)
             $mediaObjetivo = DB::table('voos')
                 ->where('aeronave_id', $aeronave->id)
                 ->whereNotNull('nota_obj')
-                ->select(DB::raw('SUM(qtd_voos * nota_obj) / SUM(qtd_voos) as media'))
+                ->select(DB::raw('AVG(nota_obj) as media'))
                 ->value('media') ?? 0;
                 
             $mediaPontualidade = DB::table('voos')
                 ->where('aeronave_id', $aeronave->id)
                 ->whereNotNull('nota_pontualidade')
-                ->select(DB::raw('SUM(qtd_voos * nota_pontualidade) / SUM(qtd_voos) as media'))
+                ->select(DB::raw('AVG(nota_pontualidade) as media'))
                 ->value('media') ?? 0;
                 
             $mediaServicos = DB::table('voos')
                 ->where('aeronave_id', $aeronave->id)
                 ->whereNotNull('nota_servicos')
-                ->select(DB::raw('SUM(qtd_voos * nota_servicos) / SUM(qtd_voos) as media'))
+                ->select(DB::raw('AVG(nota_servicos) as media'))
                 ->value('media') ?? 0;
                 
             $mediaPatio = DB::table('voos')
                 ->where('aeronave_id', $aeronave->id)
                 ->whereNotNull('nota_patio')
-                ->select(DB::raw('SUM(qtd_voos * nota_patio) / SUM(qtd_voos) as media'))
+                ->select(DB::raw('AVG(nota_patio) as media'))
                 ->value('media') ?? 0;
             
             // Nota média geral (média das 4 notas)
@@ -429,50 +455,103 @@ class AeronaveController extends Controller
                 'media_servicos' => $mediaServicos ? round($mediaServicos, 1) : 0,
                 'media_patio' => $mediaPatio ? round($mediaPatio, 1) : 0,
                 'nota_geral' => $notaGeral ? round($notaGeral, 1) : 0,
-                'tem_dados' => $totalVoos > 0
+                'tem_dados' => $totalVoos > 0,
+                'dados_suficientes' => true
             ];
         }
         
-        // Ordenar rankings por nota geral (decrescente)
-        $rankingsPorNota = collect($rankings)->sortByDesc('nota_geral')->values();
+        // Filtrar APENAS aeronaves com dados suficientes (3+ registros) para os rankings de nota
+        $aeronavesComDadosSuficientes = collect($rankings)->filter(function($item) {
+            return $item['dados_suficientes'] === true && $item['nota_geral'] > 0;
+        })->values();
         
-        // Ordenar rankings por total de voos (decrescente)
-        $rankingsPorVoos = collect($rankings)->sortByDesc('total_voos')->values();
+        // Se não houver aeronaves com dados suficientes, mostrar mensagem apropriada
+        if ($aeronavesComDadosSuficientes->isEmpty()) {
+            $rankingsPorNota = collect();
+            $rankingsObjetivo = collect();
+            $rankingsPontualidade = collect();
+            $rankingsServicos = collect();
+            $rankingsPatio = collect();
+            $rankingsPorVoos = collect($rankings)->sortByDesc('total_voos')->values();
+            $rankingsPorPassageiros = collect($rankings)->sortByDesc('total_passageiros')->values();
+            $rankingsPorCapacidade = collect($rankings)->sortByDesc('capacidade')->values();
+            
+            $estatisticas = [
+                'total_aeronaves' => $aeronaves->count(),
+                'total_fabricantes' => $aeronaves->pluck('fabricante.nome')->unique()->count(),
+                'total_voos_geral' => collect($rankings)->sum('total_voos'),
+                'total_passageiros_geral' => collect($rankings)->sum('total_passageiros'),
+                'media_nota_geral' => 0,
+                'aeronaves_com_dados' => collect($rankings)->where('tem_dados', true)->count(),
+                'aeronaves_com_dados_suficientes' => 0,
+                'porte_pequeno' => collect($rankings)->where('porte', 'Pequeno Porte (≤100)')->count(),
+                'porte_medio' => collect($rankings)->where('porte', 'Médio Porte (101-299)')->count(),
+                'porte_grande' => collect($rankings)->where('porte', 'Grande Porte (≥300)')->count(),
+                'aviso_sem_dados' => true
+            ];
+        } else {
+            // Ordenar rankings por nota geral (decrescente) COM DESEMPATE por total de voos
+            $rankingsPorNota = $aeronavesComDadosSuficientes->sortByDesc(function($item) {
+                return [$item['nota_geral'], $item['total_voos']];
+            })->values();
+            
+            // Rankings por categoria individual COM DESEMPATE por total de voos
+            $rankingsObjetivo = $aeronavesComDadosSuficientes->sortByDesc(function($item) {
+                return [$item['media_objetivo'], $item['total_voos']];
+            })->values();
+            
+            $rankingsPontualidade = $aeronavesComDadosSuficientes->sortByDesc(function($item) {
+                return [$item['media_pontualidade'], $item['total_voos']];
+            })->values();
+            
+            $rankingsServicos = $aeronavesComDadosSuficientes->sortByDesc(function($item) {
+                return [$item['media_servicos'], $item['total_voos']];
+            })->values();
+            
+            $rankingsPatio = $aeronavesComDadosSuficientes->sortByDesc(function($item) {
+                return [$item['media_patio'], $item['total_voos']];
+            })->values();
+            
+            // Rankings sem filtro de dados suficientes (mostra todas)
+            $rankingsPorVoos = collect($rankings)->sortByDesc('total_voos')->values();
+            $rankingsPorPassageiros = collect($rankings)->sortByDesc('total_passageiros')->values();
+            $rankingsPorCapacidade = collect($rankings)->sortByDesc('capacidade')->values();
+            
+            // Estatísticas gerais
+            $estatisticas = [
+                'total_aeronaves' => $aeronaves->count(),
+                'total_fabricantes' => $aeronaves->pluck('fabricante.nome')->unique()->count(),
+                'total_voos_geral' => collect($rankings)->sum('total_voos'),
+                'total_passageiros_geral' => collect($rankings)->sum('total_passageiros'),
+                'media_nota_geral' => $aeronavesComDadosSuficientes->avg('nota_geral'),
+                'aeronaves_com_dados' => collect($rankings)->where('tem_dados', true)->count(),
+                'aeronaves_com_dados_suficientes' => $aeronavesComDadosSuficientes->count(),
+                'porte_pequeno' => collect($rankings)->where('porte', 'Pequeno Porte (≤100)')->count(),
+                'porte_medio' => collect($rankings)->where('porte', 'Médio Porte (101-299)')->count(),
+                'porte_grande' => collect($rankings)->where('porte', 'Grande Porte (≥300)')->count(),
+                'aviso_sem_dados' => false
+            ];
+        }
         
-        // Ordenar rankings por total de passageiros (decrescente)
-        $rankingsPorPassageiros = collect($rankings)->sortByDesc('total_passageiros')->values();
+        // Melhor em cada categoria (APENAS com dados suficientes)
+        $melhorNotaGeral = $rankingsPorNota->isNotEmpty() ? $rankingsPorNota->first() : null;
+        $piorNotaGeral = $rankingsPorNota->isNotEmpty() ? $rankingsPorNota->last() : null;
         
-        // Ordenar rankings por capacidade (decrescente)
-        $rankingsPorCapacidade = collect($rankings)->sortByDesc('capacidade')->values();
+        $maisVoos = $rankingsPorVoos->isNotEmpty() ? $rankingsPorVoos->first() : null;
+        $menosVoos = $rankingsPorVoos->isNotEmpty() ? $rankingsPorVoos->last() : null;
         
-        // Estatísticas gerais
-        $estatisticas = [
-            'total_aeronaves' => $aeronaves->count(),
-            'total_fabricantes' => $aeronaves->pluck('fabricante.nome')->unique()->count(),
-            'total_voos_geral' => collect($rankings)->sum('total_voos'),
-            'total_passageiros_geral' => collect($rankings)->sum('total_passageiros'),
-            'media_nota_geral' => collect($rankings)->avg('nota_geral'),
-            'aeronaves_com_dados' => collect($rankings)->where('tem_dados', true)->count(),
-            'porte_pequeno' => collect($rankings)->where('porte', 'Pequeno Porte (≤100)')->count(),
-            'porte_medio' => collect($rankings)->where('porte', 'Médio Porte (101-299)')->count(),
-            'porte_grande' => collect($rankings)->where('porte', 'Grande Porte (≥300)')->count(),
-        ];
+        $maisPassageiros = $rankingsPorPassageiros->isNotEmpty() ? $rankingsPorPassageiros->first() : null;
+        $menosPassageiros = $rankingsPorPassageiros->isNotEmpty() ? $rankingsPorPassageiros->last() : null;
         
-        // Melhor e pior em cada categoria
-        $melhorNotaGeral = $rankingsPorNota->first();
-        $piorNotaGeral = $rankingsPorNota->last();
-        
-        $maisVoos = $rankingsPorVoos->first();
-        $menosVoos = $rankingsPorVoos->last();
-        
-        $maisPassageiros = $rankingsPorPassageiros->first();
-        $menosPassageiros = $rankingsPorPassageiros->last();
-        
-        $maiorCapacidade = $rankingsPorCapacidade->first();
-        $menorCapacidade = $rankingsPorCapacidade->last();
+        $maiorCapacidade = $rankingsPorCapacidade->isNotEmpty() ? $rankingsPorCapacidade->first() : null;
+        $menorCapacidade = $rankingsPorCapacidade->isNotEmpty() ? $rankingsPorCapacidade->last() : null;
         
         return view('aeronaves.ranking', compact(
             'rankingsPorNota',
+            'rankingsObjetivo',
+            'rankingsPontualidade',
+            'rankingsServicos',
+            'rankingsPatio',
             'rankingsPorVoos',
             'rankingsPorPassageiros',
             'rankingsPorCapacidade',

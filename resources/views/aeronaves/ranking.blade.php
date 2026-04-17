@@ -111,27 +111,40 @@
                             <div class="p-3 border rounded bg-light">
                                 <i class="bi bi-trophy-fill text-warning fs-1"></i>
                                 <h6 class="mt-2">Melhor Nota Geral</h6>
-                                <strong>{{ $melhorNotaGeral['modelo'] ?? 'N/A' }}</strong><br>
-                                <small class="text-muted">{{ $melhorNotaGeral['fabricante'] ?? 'N/A' }}</small><br>
-                                <span class="badge bg-success mt-2 fs-6">⭐ {{ $melhorNotaGeral['nota_geral'] ?? 0 }}</span>
+                                @if($melhorNotaGeral)
+                                    <strong>{{ $melhorNotaGeral['modelo'] ?? 'N/A' }}</strong><br>
+                                    <small class="text-muted">{{ $melhorNotaGeral['fabricante'] ?? 'N/A' }}</small><br>
+                                    <span class="badge bg-success mt-2 fs-6">⭐ {{ $melhorNotaGeral['nota_geral'] ?? 0 }}</span>
+                                    <small class="d-block text-muted">{{ number_format($melhorNotaGeral['total_voos'] ?? 0) }} voos</small>
+                                @else
+                                    <span class="text-muted">Sem dados suficientes</span>
+                                @endif
                             </div>
                         </div>
                         <div class="col-md-4 mb-3 mb-md-0">
                             <div class="p-3 border rounded bg-light">
                                 <i class="bi bi-graph-up text-success fs-1"></i>
                                 <h6 class="mt-2">Mais Voos Realizados</h6>
-                                <strong>{{ $maisVoos['modelo'] ?? 'N/A' }}</strong><br>
-                                <small class="text-muted">{{ $maisVoos['fabricante'] ?? 'N/A' }}</small><br>
-                                <span class="badge bg-primary mt-2 fs-6">{{ number_format($maisVoos['total_voos'] ?? 0) }} voos</span>
+                                @if($maisVoos)
+                                    <strong>{{ $maisVoos['modelo'] ?? 'N/A' }}</strong><br>
+                                    <small class="text-muted">{{ $maisVoos['fabricante'] ?? 'N/A' }}</small><br>
+                                    <span class="badge bg-primary mt-2 fs-6">{{ number_format($maisVoos['total_voos'] ?? 0) }} voos</span>
+                                @else
+                                    <span class="text-muted">Sem dados</span>
+                                @endif
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="p-3 border rounded bg-light">
                                 <i class="bi bi-people-fill text-danger fs-1"></i>
                                 <h6 class="mt-2">Mais Passageiros</h6>
-                                <strong>{{ $maisPassageiros['modelo'] ?? 'N/A' }}</strong><br>
-                                <small class="text-muted">{{ $maisPassageiros['fabricante'] ?? 'N/A' }}</small><br>
-                                <span class="badge bg-danger mt-2 fs-6">{{ number_format($maisPassageiros['total_passageiros'] ?? 0) }} passageiros</span>
+                                @if($maisPassageiros)
+                                    <strong>{{ $maisPassageiros['modelo'] ?? 'N/A' }}</strong><br>
+                                    <small class="text-muted">{{ $maisPassageiros['fabricante'] ?? 'N/A' }}</small><br>
+                                    <span class="badge bg-danger mt-2 fs-6">{{ number_format($maisPassageiros['total_passageiros'] ?? 0) }} passageiros</span>
+                                @else
+                                    <span class="text-muted">Sem dados</span>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -140,43 +153,181 @@
         </div>
     </div>
 
-    {{-- Rankings por Notas (inspirado no relatorios.blade.php) --}}
+    {{-- Rankings por Notas --}}
+    @if($estatisticas['aviso_sem_dados'] ?? false)
+        <div class="alert alert-warning text-center">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Atenção:</strong> Não há aeronaves com mínimo de 3 registros de voo para exibir as classificações por nota.
+            <br><small>O ranking de notas requer no mínimo 3 avaliações por aeronave para garantir significância estatística.</small>
+        </div>
+    @elseif(isset($rankingsObjetivo) && $rankingsObjetivo->isEmpty())
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle-fill"></i>
+            <strong>Sem dados suficientes:</strong> Nenhuma aeronave atingiu o mínimo de 3 registros de voo para participar do ranking de notas.
+        </div>
+    @else
     <div class="row g-4 mt-4">
-        @php
-            $rankingsNotas = [
-                'Objetivo' => ['data' => $rankingsPorNota, 'color' => 'success', 'campo' => 'media_objetivo'],
-                'Pontualidade' => ['data' => $rankingsPorNota, 'color' => 'info', 'campo' => 'media_pontualidade'],
-                'Serviços' => ['data' => $rankingsPorNota, 'color' => 'warning', 'campo' => 'media_servicos'],
-                'Pátio' => ['data' => $rankingsPorNota, 'color' => 'danger', 'campo' => 'media_patio']
-            ];
-        @endphp
-
-        @foreach($rankingsNotas as $titulo => $info)
-            <div class="col-md-6">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-body">
-                        <h5 class="card-title text-center mb-3">Ranking - Nota de {{ $titulo }}</h5>
-                        <div class="list-group list-group-flush">
-                            @foreach($info['data']->take(10) as $aeronave)
-                                <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <a href="{{ route('aeronaves.dashboard', $aeronave['id']) }}" 
-                                           class="text-decoration-none">
-                                            {{ $aeronave['modelo'] }}
-                                        </a>
-                                        <small class="text-muted ms-2">({{ $aeronave['fabricante'] }})</small>
-                                    </div>
-                                    <span class="badge bg-{{ $info['color'] }} rounded-pill">
-                                        {{ number_format($aeronave[$info['campo']], 1) }}
-                                    </span>
+        {{-- Ranking Objetivo --}}
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-3">
+                        <i class="bi bi-bullseye text-success"></i> Ranking - Nota de Objetivo
+                    </h5>
+                    <div class="list-group list-group-flush">
+                        @forelse($rankingsObjetivo->take(10) as $index => $aeronave)
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    @if($index == 0) 🥇
+                                    @elseif($index == 1) 🥈
+                                    @elseif($index == 2) 🥉
+                                    @else {{ $index + 1 }}º
+                                    @endif
+                                    <a href="{{ route('aeronaves.dashboard', $aeronave['id']) }}" 
+                                       class="text-decoration-none ms-2 fw-semibold">
+                                        {{ $aeronave['modelo'] }}
+                                    </a>
+                                    <small class="text-muted ms-2">({{ $aeronave['fabricante'] }})</small>
+                                    <br>
+                                    <small class="text-muted ms-4">
+                                        <i class="bi bi-calendar-check"></i> {{ number_format($aeronave['total_voos']) }} voos
+                                    </small>
                                 </div>
-                            @endforeach
-                        </div>
+                                <span class="badge bg-success rounded-pill fs-6 px-3 py-2">
+                                    {{ number_format($aeronave['media_objetivo'], 1) }}
+                                </span>
+                            </div>
+                        @empty
+                            <div class="list-group-item text-center text-muted">
+                                Nenhuma aeronave com dados suficientes
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
-        @endforeach
+        </div>
+
+        {{-- Ranking Pontualidade --}}
+        <div class="col-md-6">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-3">
+                        <i class="bi bi-clock-history text-info"></i> Ranking - Nota de Pontualidade
+                    </h5>
+                    <div class="list-group list-group-flush">
+                        @forelse($rankingsPontualidade->take(10) as $index => $aeronave)
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    @if($index == 0) 🥇
+                                    @elseif($index == 1) 🥈
+                                    @elseif($index == 2) 🥉
+                                    @else {{ $index + 1 }}º
+                                    @endif
+                                    <a href="{{ route('aeronaves.dashboard', $aeronave['id']) }}" 
+                                       class="text-decoration-none ms-2 fw-semibold">
+                                        {{ $aeronave['modelo'] }}
+                                    </a>
+                                    <small class="text-muted ms-2">({{ $aeronave['fabricante'] }})</small>
+                                    <br>
+                                    <small class="text-muted ms-4">
+                                        <i class="bi bi-calendar-check"></i> {{ number_format($aeronave['total_voos']) }} voos
+                                    </small>
+                                </div>
+                                <span class="badge bg-info rounded-pill fs-6 px-3 py-2">
+                                    {{ number_format($aeronave['media_pontualidade'], 1) }}
+                                </span>
+                            </div>
+                        @empty
+                            <div class="list-group-item text-center text-muted">
+                                Nenhuma aeronave com dados suficientes
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Ranking Serviços --}}
+        <div class="col-md-6 mt-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-3">
+                        <i class="bi bi-gem text-warning"></i> Ranking - Nota de Serviços
+                    </h5>
+                    <div class="list-group list-group-flush">
+                        @forelse($rankingsServicos->take(10) as $index => $aeronave)
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    @if($index == 0) 🥇
+                                    @elseif($index == 1) 🥈
+                                    @elseif($index == 2) 🥉
+                                    @else {{ $index + 1 }}º
+                                    @endif
+                                    <a href="{{ route('aeronaves.dashboard', $aeronave['id']) }}" 
+                                       class="text-decoration-none ms-2 fw-semibold">
+                                        {{ $aeronave['modelo'] }}
+                                    </a>
+                                    <small class="text-muted ms-2">({{ $aeronave['fabricante'] }})</small>
+                                    <br>
+                                    <small class="text-muted ms-4">
+                                        <i class="bi bi-calendar-check"></i> {{ number_format($aeronave['total_voos']) }} voos
+                                    </small>
+                                </div>
+                                <span class="badge bg-warning rounded-pill fs-6 px-3 py-2 text-dark">
+                                    {{ number_format($aeronave['media_servicos'], 1) }}
+                                </span>
+                            </div>
+                        @empty
+                            <div class="list-group-item text-center text-muted">
+                                Nenhuma aeronave com dados suficientes
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Ranking Pátio --}}
+        <div class="col-md-6 mt-4">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-center mb-3">
+                        <i class="bi bi-building text-danger"></i> Ranking - Nota de Pátio
+                    </h5>
+                    <div class="list-group list-group-flush">
+                        @forelse($rankingsPatio->take(10) as $index => $aeronave)
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    @if($index == 0) 🥇
+                                    @elseif($index == 1) 🥈
+                                    @elseif($index == 2) 🥉
+                                    @else {{ $index + 1 }}º
+                                    @endif
+                                    <a href="{{ route('aeronaves.dashboard', $aeronave['id']) }}" 
+                                       class="text-decoration-none ms-2 fw-semibold">
+                                        {{ $aeronave['modelo'] }}
+                                    </a>
+                                    <small class="text-muted ms-2">({{ $aeronave['fabricante'] }})</small>
+                                    <br>
+                                    <small class="text-muted ms-4">
+                                        <i class="bi bi-calendar-check"></i> {{ number_format($aeronave['total_voos']) }} voos
+                                    </small>
+                                </div>
+                                <span class="badge bg-danger rounded-pill fs-6 px-3 py-2">
+                                    {{ number_format($aeronave['media_patio'], 1) }}
+                                </span>
+                            </div>
+                        @empty
+                            <div class="list-group-item text-center text-muted">
+                                Nenhuma aeronave com dados suficientes
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+    @endif
 
     {{-- Rankings Gerais (Nota Geral, Voos, Passageiros, Capacidade) --}}
     <div class="row g-4 mt-4">
@@ -185,9 +336,10 @@
                 <div class="card-body">
                     <h5 class="card-title text-center mb-3">
                         <i class="bi bi-trophy-fill text-warning"></i> Ranking - Nota Geral
+                        <small class="text-muted d-block fs-6">(mínimo 3 registros de voo)</small>
                     </h5>
                     <div class="list-group list-group-flush">
-                        @foreach($rankingsPorNota->take(10) as $index => $aeronave)
+                        @forelse($rankingsPorNota->take(10) as $index => $aeronave)
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
                                     @if($index == 0) 🥇
@@ -200,12 +352,20 @@
                                         {{ $aeronave['modelo'] }}
                                     </a>
                                     <small class="text-muted ms-2">({{ $aeronave['fabricante'] }})</small>
+                                    <br>
+                                    <small class="text-muted ms-4">
+                                        <i class="bi bi-calendar-check"></i> {{ number_format($aeronave['total_voos']) }} voos
+                                    </small>
                                 </div>
-                                <span class="badge bg-{{ $aeronave['nota_geral'] >= 8 ? 'success' : ($aeronave['nota_geral'] >= 6 ? 'warning' : 'danger') }} rounded-pill">
+                                <span class="badge bg-{{ $aeronave['nota_geral'] >= 8 ? 'success' : ($aeronave['nota_geral'] >= 6 ? 'warning' : 'danger') }} rounded-pill fs-6 px-3 py-2">
                                     ⭐ {{ number_format($aeronave['nota_geral'], 1) }}
                                 </span>
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="list-group-item text-center text-muted">
+                                Nenhuma aeronave com dados suficientes
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -218,7 +378,7 @@
                         <i class="bi bi-graph-up"></i> Ranking - Total de Voos
                     </h5>
                     <div class="list-group list-group-flush">
-                        @foreach($rankingsPorVoos->take(10) as $index => $aeronave)
+                        @forelse($rankingsPorVoos->take(10) as $index => $aeronave)
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
                                     {{ $index + 1 }}º
@@ -228,11 +388,15 @@
                                     </a>
                                     <small class="text-muted ms-2">({{ $aeronave['fabricante'] }})</small>
                                 </div>
-                                <span class="badge bg-primary rounded-pill">
+                                <span class="badge bg-primary rounded-pill fs-6 px-3 py-2">
                                     {{ number_format($aeronave['total_voos']) }} voos
                                 </span>
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="list-group-item text-center text-muted">
+                                Nenhum dado disponível
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -245,7 +409,7 @@
                         <i class="bi bi-people-fill"></i> Ranking - Passageiros Transportados
                     </h5>
                     <div class="list-group list-group-flush">
-                        @foreach($rankingsPorPassageiros->take(10) as $index => $aeronave)
+                        @forelse($rankingsPorPassageiros->take(10) as $index => $aeronave)
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
                                     {{ $index + 1 }}º
@@ -255,11 +419,15 @@
                                     </a>
                                     <small class="text-muted ms-2">({{ $aeronave['fabricante'] }})</small>
                                 </div>
-                                <span class="badge bg-danger rounded-pill">
+                                <span class="badge bg-danger rounded-pill fs-6 px-3 py-2">
                                     {{ number_format($aeronave['total_passageiros']) }} passageiros
                                 </span>
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="list-group-item text-center text-muted">
+                                Nenhum dado disponível
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -272,7 +440,7 @@
                         <i class="bi bi-airplane"></i> Ranking - Capacidade
                     </h5>
                     <div class="list-group list-group-flush">
-                        @foreach($rankingsPorCapacidade->take(10) as $index => $aeronave)
+                        @forelse($rankingsPorCapacidade->take(10) as $index => $aeronave)
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
                                     {{ $index + 1 }}º
@@ -282,24 +450,30 @@
                                     </a>
                                     <small class="text-muted ms-2">({{ $aeronave['fabricante'] }})</small>
                                 </div>
-                                <span class="badge bg-secondary rounded-pill">
+                                <span class="badge bg-secondary rounded-pill fs-6 px-3 py-2">
                                     {{ number_format($aeronave['capacidade']) }} passageiros
                                 </span>
                             </div>
-                        @endforeach
+                        @empty
+                            <div class="list-group-item text-center text-muted">
+                                Nenhum dado disponível
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Detalhamento completo das notas (inspirado no relatorios.blade.php) --}}
+    {{-- Detalhamento completo das notas --}}
+    @if(!($estatisticas['aviso_sem_dados'] ?? false) && isset($rankingsPorNota) && $rankingsPorNota->isNotEmpty())
     <div class="row g-4 mt-4">
         <div class="col-12">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">
                         <i class="bi bi-table"></i> Detalhamento Completo das Notas por Aeronave
+                        <small class="text-muted fs-6">(apenas aeronaves com 3+ registros de voo)</small>
                     </h5>
                 </div>
                 <div class="card-body p-0">
@@ -307,6 +481,7 @@
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
+                                    <th>#</th>
                                     <th>Modelo</th>
                                     <th>Fabricante</th>
                                     <th class="text-center">🎯 Objetivo</th>
@@ -318,8 +493,15 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($rankingsPorNota->take(15) as $aeronave)
+                                @foreach($rankingsPorNota->take(15) as $index => $aeronave)
                                 <tr>
+                                    <td class="text-center">
+                                        @if($index == 0) 🥇
+                                        @elseif($index == 1) 🥈
+                                        @elseif($index == 2) 🥉
+                                        @else {{ $index + 1 }}º
+                                        @endif
+                                    </td>
                                     <td>
                                         <strong>{{ $aeronave['modelo'] }}</strong>
                                     </td>
@@ -365,6 +547,7 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 
 <hr class="mt-5">
