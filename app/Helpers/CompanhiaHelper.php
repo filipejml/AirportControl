@@ -47,7 +47,8 @@ class CompanhiaHelper
         'RS' => 'Royal Skyways',           // Código para Royal Skyways
         'RX' => 'Riyadh Air',              // Código para Riyadh Air
         'AS' => 'Asfar',                   // Código para Asfar
-        'RE' => 'Reis',                    // Código para Reis
+        'RS' => 'Reis',
+        'LA' => 'LATAM',                    // Código para LATAM
     ];
 
     /**
