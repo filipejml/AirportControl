@@ -919,12 +919,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     aeronaveSelect.innerHTML = '<option value="" disabled selected>Nenhuma aeronave disponível</option>';
                     limparCamposAeronave();
                 } else {
+                    // Ordenar pela capacidade em ordem decrescente antes de renderizar
+                    aeronaves.sort((a, b) => parseInt(b.capacidade, 10) - parseInt(a.capacidade, 10));
+
                     let options = '<option value="" disabled selected>Selecione uma aeronave</option>';
                     aeronaves.forEach(aeronave => {
                         options += `<option value="${aeronave.id}" 
                                          data-capacidade="${aeronave.capacidade}"
                                          data-porte="${aeronave.porte}">
-                                    ${aeronave.modelo} 
+                                    ${aeronave.modelo} (${aeronave.capacidade} pax)
                                 </option>`;
                     });
                     aeronaveSelect.innerHTML = options;
