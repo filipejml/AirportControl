@@ -36,7 +36,7 @@ class RelatorioController extends Controller
      */
     public function create()
     {
-        return view('relatorios.create');
+        return view('admin.relatorios.create');
     }
 
     /**
@@ -63,7 +63,7 @@ class RelatorioController extends Controller
      */
     public function edit(Relatorio $relatorio)
     {
-        return view('relatorios.edit', compact('relatorio'));
+        return view('admin.relatorios.edit', compact('relatorio'));
     }
 
     /**
