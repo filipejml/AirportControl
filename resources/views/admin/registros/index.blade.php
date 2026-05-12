@@ -86,7 +86,7 @@
                 Ver lista
             </a>
 
-            <a href="{{ route('aeroportos.create') }}" class="btn btn-primary btn-sm">
+            <a href="{{ route('aeroportos.create.step1') }}" class="btn btn-primary btn-sm">
                 + Novo Aeroporto
             </a>
         </div>

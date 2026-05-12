@@ -167,9 +167,9 @@
                     </li>
                 @endif
 
-                <!-- 📊 DASHBOARD com Dropdown -->
+                <!-- 📊 DASHBOARD com Dropdown (incluindo Relatórios) -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle {{ request()->routeIs('dashboard.*') ? 'active' : '' }}" 
+                    <a class="nav-link dropdown-toggle {{ request()->routeIs('dashboard.*') || request()->routeIs('relatorios') || request()->routeIs('admin.relatorios.*') ? 'active' : '' }}" 
                     href="#" 
                     id="dashboardDropdown" 
                     role="button" 
@@ -190,37 +190,31 @@
                                 <i class="bi bi-graph-up me-2"></i>Gráficos
                             </a>
                         </li>
+                        
+                        <!-- Separador antes dos relatórios -->
+                        <li><hr class="dropdown-divider"></li>
+                        
+                        <!-- Relatórios Disponíveis (para todos) -->
+                        <li>
+                            <a class="dropdown-item {{ request()->routeIs('relatorios') ? 'active' : '' }}" 
+                            href="{{ route('relatorios') }}">
+                                <i class="bi bi-file-text me-2"></i>📈 Relatórios Disponíveis
+                            </a>
+                        </li>
+                        
+                        <!-- Controle de Relatórios (apenas admin) -->
+                        @if(auth()->user()->tipo == 0)
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('admin.relatorios.*') ? 'active' : '' }}" 
+                                href="{{ route('admin.relatorios.index') }}">
+                                    <i class="bi bi-gear me-2"></i>⚙️ Controle de Relatórios
+                                </a>
+                            </li>
+                        @endif
                     </ul>
                 </li>
 
-                <!-- Relatórios - Visível para todos, mas com controle de acesso -->
-                @auth
-                    @if(auth()->user()->tipo == 0) {{-- Admin --}}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="relatoriosDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                📊 Relatórios
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="relatoriosDropdown">
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('relatorios') }}">
-                                        📈 Relatórios Disponíveis
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('admin.relatorios.index') }}">
-                                        ⚙️ Controle de Relatórios
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-                    @else {{-- Usuário comum --}}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('relatorios') }}">
-                                📊 Relatórios
-                            </a>
-                        </li>
-                    @endif
-                @endauth
+                
 
                 <!-- ADMIN - Registros (apenas tipo 0) -->
                 @if(auth()->user()->tipo == 0)
