@@ -4,68 +4,76 @@
 @section('title', 'Relatório - Companhias por Aeroporto')
 
 @section('content')
-<div class="container">
-    <div class="mb-4">
-        <h3 class="fw-bold">
-            <i class="bi bi-building"></i> Companhias Aéreas por Aeroporto
-        </h3>
-        <p class="text-muted">Visualize quais companhias operam em cada aeroporto</p>
-    </div>
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h3 class="fw-bold">
+                    <i class="bi bi-building"></i> Companhias Aéreas por Aeroporto
+                </h3>
+                <p class="text-muted">Visualize quais companhias operam em cada aeroporto</p>
+            </div>
+            
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-success" id="btnExportCSV">
+                    <i class="bi bi-file-spreadsheet"></i> Exportar CSV
+                </button>
+                <button class="btn btn-danger" id="btnExportPDF">
+                    <i class="bi bi-file-pdf"></i> Exportar PDF
+                </button>
+            </div>
+        </div>
 
-    <!-- Filtros Melhorados -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-5">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-building"></i> Aeroporto
-                    </label>
-                    <select id="filterAeroporto" class="form-select">
-                        <option value="">📊 TODOS OS AEROPORTOS</option>
-                        @foreach($aeroportos as $aeroporto)
-                            <option value="{{ $aeroporto->id }}">
-                                ✈️ {{ $aeroporto->nome_aeroporto }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-airplane"></i> Companhia Aérea
-                    </label>
-                    <select id="filterCompanhia" class="form-select">
-                        <option value="">🌍 TODAS AS COMPANHIAS</option>
-                        @foreach($companhias as $companhia)
-                            <option value="{{ $companhia->id }}">
-                                🏢 {{ $companhia->nome }} @if($companhia->codigo) ({{ $companhia->codigo }}) @endif
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <div class="d-grid gap-2 w-100">
-                        <button id="clearButton" class="btn btn-outline-secondary">
-                            <i class="bi bi-eraser"></i> Limpar Filtros
+        <!-- Filtros -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12 col-md-5">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-building"></i> Aeroporto
+                        </label>
+                        <select id="filterAeroporto" class="form-select">
+                            <option value="">📊 TODOS OS AEROPORTOS</option>
+                            @foreach($aeroportos as $aeroporto)
+                                <option value="{{ $aeroporto->id }}">
+                                    ✈️ {{ $aeroporto->nome_aeroporto }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-airplane"></i> Companhia Aérea
+                        </label>
+                        <select id="filterCompanhia" class="form-select">
+                            <option value="">🌍 TODAS AS COMPANHIAS</option>
+                            @foreach($companhias as $companhia)
+                                <option value="{{ $companhia->id }}">
+                                    🏢 {{ $companhia->nome }} @if($companhia->codigo) ({{ $companhia->codigo }}) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2 d-flex align-items-end">
+                        <button id="clearButton" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-eraser"></i> Limpar
                         </button>
                     </div>
                 </div>
+                
+                <div id="filtersStatus" class="mt-3"></div>
             </div>
-            
-            <!-- Status dos filtros -->
-            <div id="filtersStatus" class="mt-3"></div>
         </div>
-    </div>
 
-    <!-- Contador de resultados -->
-    <div id="totalResultados" class="mb-3 text-end"></div>
+        <div id="totalResultados" class="mb-3 text-end"></div>
 
-    <!-- Cards -->
-    <div id="cardsContainer">
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Carregando...</span>
+        <div id="cardsContainer">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <p class="mt-2 text-muted">Carregando dados...</p>
             </div>
-            <p class="mt-2 text-muted">Carregando dados...</p>
         </div>
     </div>
 </div>
@@ -73,7 +81,6 @@
 
 @push('scripts')
 <script>
-// Dados dos filtros passados do PHP para JavaScript
 const aeroportosList = @json($aeroportos);
 const companhiasList = @json($companhias);
 
@@ -100,6 +107,8 @@ class UserRelatorioCompanhias {
         this.clearButton = document.getElementById('clearButton');
         this.totalResultados = document.getElementById('totalResultados');
         this.filtersStatus = document.getElementById('filtersStatus');
+        this.btnExportCSV = document.getElementById('btnExportCSV');
+        this.btnExportPDF = document.getElementById('btnExportPDF');
     }
     
     async carregarDados() {
@@ -107,11 +116,9 @@ class UserRelatorioCompanhias {
             this.mostrarLoading();
         }
         
-        // Pegar filtros atuais
         const aeroportoId = this.filterAeroporto?.value || '';
         const companhiaId = this.filterCompanhia?.value || '';
         
-        // Construir URL com filtros
         let url = this.apiUrl;
         const params = [];
         if (aeroportoId) params.push(`aeroporto_id=${aeroportoId}`);
@@ -149,6 +156,14 @@ class UserRelatorioCompanhias {
         if (this.clearButton) {
             this.clearButton.addEventListener('click', () => this.limparFiltros());
         }
+        
+        if (this.btnExportCSV) {
+            this.btnExportCSV.addEventListener('click', () => this.exportarCSV());
+        }
+        
+        if (this.btnExportPDF) {
+            this.btnExportPDF.addEventListener('click', () => this.exportarPDF());
+        }
     }
     
     limparFiltros() {
@@ -178,12 +193,12 @@ class UserRelatorioCompanhias {
         
         if (aeroportoSelecionado) {
             const aeroporto = aeroportosList.find(a => a.id == aeroportoSelecionado);
-            if (aeroporto) filtros.push(`<span class="badge bg-primary">Aeroporto: ${aeroporto.nome_aeroporto}</span>`);
+            if (aeroporto) filtros.push(`<span class="badge bg-primary">Aeroporto: ${this.escapeHtml(aeroporto.nome_aeroporto)}</span>`);
         }
         
         if (companhiaSelecionada) {
             const companhia = companhiasList.find(c => c.id == companhiaSelecionada);
-            if (companhia) filtros.push(`<span class="badge bg-primary">Companhia: ${companhia.nome}</span>`);
+            if (companhia) filtros.push(`<span class="badge bg-primary">Companhia: ${this.escapeHtml(companhia.nome)}</span>`);
         }
         
         html += filtros.join(' ') + '</div>';
@@ -228,12 +243,12 @@ class UserRelatorioCompanhias {
         }
         
         this.cardsContainer.innerHTML = `
-            <div class="row">
+            <div class="row g-4">
                 ${this.dadosFiltrados.map(item => `
-                    <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="col-12 col-md-6 col-lg-4">
                         <div class="card h-100 shadow-sm hover-card">
                             <div class="card-header bg-gradient-primary text-white">
-                                <div class="d-flex justify-content-between align-items-start">
+                                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                                     <div>
                                         <i class="bi bi-building fs-4"></i>
                                         <h5 class="mb-0 mt-2">${this.escapeHtml(item.aeroporto)}</h5>
@@ -248,13 +263,13 @@ class UserRelatorioCompanhias {
                                     <div class="companhias-list">
                                         ${item.companhias.map(c => `
                                             <div class="companhia-card mb-2 p-2 border rounded">
-                                                <div class="d-flex justify-content-between align-items-center">
+                                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                                     <div class="flex-grow-1">
                                                         <i class="bi bi-building text-primary me-2"></i>
                                                         <strong>${this.escapeHtml(c.nome)}</strong>
                                                     </div>
                                                     ${c.codigo ? `
-                                                        <span class="badge bg-secondary ms-2">${this.escapeHtml(c.codigo)}</span>
+                                                        <span class="badge bg-secondary">${this.escapeHtml(c.codigo)}</span>
                                                     ` : ''}
                                                 </div>
                                             </div>
@@ -292,6 +307,115 @@ class UserRelatorioCompanhias {
         }
     }
     
+    exportarCSV() {
+        if (this.dadosFiltrados.length === 0) {
+            alert('Não há dados para exportar!');
+            return;
+        }
+        
+        const headers = ['Aeroporto', 'Quantidade de Companhias', 'Companhias'];
+        const rows = this.dadosFiltrados.map(item => [
+            item.aeroporto,
+            item.quantidade_companhias,
+            item.companhias.map(c => c.nome).join('; ')
+        ]);
+        
+        const csvContent = [headers, ...rows]
+            .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+            .join('\n');
+        
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.setAttribute('download', `relatorio_companhias_por_aeroporto_${this.formatarDataArquivo()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+    
+    exportarPDF() {
+        if (this.dadosFiltrados.length === 0) {
+            alert('Não há dados para exportar!');
+            return;
+        }
+        
+        const printWindow = window.open('', '_blank');
+        
+        let htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Relatório - Companhias por Aeroporto</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    h1 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .filters-info { background: #f0f0f0; padding: 10px; margin-bottom: 20px; border-radius: 5px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+                    th { background: #667eea; color: white; }
+                    .badge { display: inline-block; padding: 2px 6px; margin: 2px; background: #764ba2; color: white; border-radius: 12px; font-size: 11px; }
+                    .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>✈️ Relatório: Companhias Aéreas por Aeroporto</h1>
+                    <p>Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+                </div>
+        `;
+        
+        const aeroportoSelecionado = this.filterAeroporto?.value;
+        const companhiaSelecionada = this.filterCompanhia?.value;
+        
+        if (aeroportoSelecionado || companhiaSelecionada) {
+            htmlContent += `<div class="filters-info"><strong>📊 Filtros aplicados:</strong><br>`;
+            if (aeroportoSelecionado) {
+                const aeroporto = aeroportosList.find(a => a.id == aeroportoSelecionado);
+                if (aeroporto) htmlContent += `• Aeroporto: ${aeroporto.nome_aeroporto}<br>`;
+            }
+            if (companhiaSelecionada) {
+                const companhia = companhiasList.find(c => c.id == companhiaSelecionada);
+                if (companhia) htmlContent += `• Companhia: ${companhia.nome}<br>`;
+            }
+            htmlContent += `</div>`;
+        }
+        
+        htmlContent += `
+            <table>
+                <thead><tr><th>Aeroporto</th><th width="80">Qtd</th><th>Companhias Aéreas</th></tr></thead>
+                <tbody>
+        `;
+        
+        this.dadosFiltrados.forEach(item => {
+            htmlContent += `
+                <tr>
+                    <td><strong>${this.escapeHtml(item.aeroporto)}</strong></td>
+                    <td style="text-align:center">${item.quantidade_companhias}</td>
+                    <td>${item.companhias.map(c => `<span class="badge">${this.escapeHtml(c.nome)}</span>`).join('')}</td>
+                </tr>
+            `;
+        });
+        
+        htmlContent += `
+                </tbody>
+            </table>
+            <div class="footer">
+                <p>Total de aeroportos listados: ${this.dadosFiltrados.length}</p>
+                <p>Relatório gerado automaticamente pelo sistema</p>
+            </div>
+            </body>
+            </html>
+        `;
+        
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.onload = () => printWindow.print();
+    }
+    
     formatarData() {
         return new Date().toLocaleDateString('pt-BR', {
             day: '2-digit',
@@ -302,6 +426,10 @@ class UserRelatorioCompanhias {
         });
     }
     
+    formatarDataArquivo() {
+        return new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+    }
+    
     escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -310,11 +438,15 @@ class UserRelatorioCompanhias {
     }
 }
 
-// Inicializar
 new UserRelatorioCompanhias();
 </script>
 
 <style>
+.alert-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
 .bg-gradient-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
@@ -325,8 +457,8 @@ new UserRelatorioCompanhias();
 }
 
 .hover-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
 .companhia-card {
@@ -336,7 +468,6 @@ new UserRelatorioCompanhias();
 
 .companhia-card:hover {
     background-color: #e9ecef;
-    transform: translateX(5px);
 }
 
 .card-header {
@@ -347,14 +478,17 @@ new UserRelatorioCompanhias();
     border-top: 1px solid rgba(0,0,0,0.05);
 }
 
-.alert-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-}
-
 @media (max-width: 768px) {
     .hover-card:hover {
-        transform: translateY(-4px);
+        transform: translateY(-3px);
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
     }
 }
 </style>

@@ -181,4 +181,27 @@ class RelatorioController extends Controller
         
         return view('relatorios.companhias-por-aeroporto', compact('relatorio', 'aeroportos', 'companhias'));
     }
+
+    /**
+     * Toggle a visibilidade do relatório (AJAX)
+     */
+    public function toggleVisibilidade(Request $request, Relatorio $relatorio)
+    {
+        try {
+            $novoStatus = $request->input('visivel_usuario', false);
+            $relatorio->visivel_usuario = $novoStatus;
+            $relatorio->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Status atualizado com sucesso!',
+                'visivel_usuario' => $relatorio->visivel_usuario
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao atualizar status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

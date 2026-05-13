@@ -4,86 +4,89 @@
 @section('title', 'Relatório - Companhias por Aeroporto')
 
 @section('content')
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold">✈️ Relatório: Companhias por Aeroporto</h3>
-            <p class="text-muted">Visualize todas as companhias aéreas operando em cada aeroporto</p>
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h3 class="fw-bold">✈️ Relatório: Companhias por Aeroporto</h3>
+                <p class="text-muted">Visualize todas as companhias aéreas operando em cada aeroporto</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-success" id="btnExportCSV">
+                    <i class="bi bi-file-spreadsheet"></i> Exportar CSV
+                </button>
+                <button class="btn btn-danger" id="btnExportPDF">
+                    <i class="bi bi-file-pdf"></i> Exportar PDF
+                </button>
+            </div>
         </div>
-        <div>
-            <button class="btn btn-success me-2" id="btnExportCSV">
-                <i class="bi bi-file-spreadsheet"></i> Exportar CSV
-            </button>
-            <button class="btn btn-danger" id="btnExportPDF">
-                <i class="bi bi-file-pdf"></i> Exportar PDF
-            </button>
-        </div>
-    </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <!-- Filtros Melhorados -->
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-building"></i> Aeroporto
-                    </label>
-                    <select id="filterAeroporto" class="form-select">
-                        <option value="">📊 TODOS OS AEROPORTOS</option>
-                        @foreach($aeroportos as $aeroporto)
-                            <option value="{{ $aeroporto->id }}">
-                                ✈️ {{ $aeroporto->nome_aeroporto }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-airplane"></i> Companhia Aérea
-                    </label>
-                    <select id="filterCompanhia" class="form-select">
-                        <option value="">🌍 TODAS AS COMPANHIAS</option>
-                        @foreach($companhias as $companhia)
-                            <option value="{{ $companhia->id }}">
-                                🏢 {{ $companhia->nome }} @if($companhia->codigo) ({{ $companhia->codigo }}) @endif
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <div class="d-grid gap-2 w-100">
-                        <button id="clearButton" class="btn btn-outline-secondary">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <!-- Filtros -->
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-building"></i> Aeroporto
+                        </label>
+                        <select id="filterAeroporto" class="form-select">
+                            <option value="">📊 TODOS OS AEROPORTOS</option>
+                            @foreach($aeroportos as $aeroporto)
+                                <option value="{{ $aeroporto->id }}">
+                                    ✈️ {{ $aeroporto->nome_aeroporto }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-airplane"></i> Companhia Aérea
+                        </label>
+                        <select id="filterCompanhia" class="form-select">
+                            <option value="">🌍 TODAS AS COMPANHIAS</option>
+                            @foreach($companhias as $companhia)
+                                <option value="{{ $companhia->id }}">
+                                    🏢 {{ $companhia->nome }} @if($companhia->codigo) ({{ $companhia->codigo }}) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4 d-flex align-items-end">
+                        <button id="clearButton" class="btn btn-outline-secondary w-100">
                             <i class="bi bi-eraser"></i> Limpar Filtros
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <div id="filtersStatus" class="mb-3"></div>
+                <div id="filtersStatus" class="mb-3"></div>
 
-            <div class="table-responsive">
-                <table class="table table-hover" id="relatorioTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Aeroporto</th>
-                            <th class="text-center">Qtd</th>
-                            <th>Companhias Aéreas</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <tr>
-                            <td colspan="3" class="text-center">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Carregando...</span>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- Tabela responsiva -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="min-width: 150px;">Aeroporto</th>
+                                <th class="text-center" style="width: 80px;">Qtd</th>
+                                <th>Companhias Aéreas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="3" class="text-center py-5">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Carregando...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted">Carregando dados...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
+@endsection
 
 @push('scripts')
 <script>
@@ -164,7 +167,7 @@ class AdminRelatorioCompanhias {
         }
         
         if (this.btnExportPDF) {
-            this.btnExportPDF.addEventListener('click', () => window.print());
+            this.btnExportPDF.addEventListener('click', () => this.exportarPDF());
         }
     }
     
@@ -195,12 +198,12 @@ class AdminRelatorioCompanhias {
         
         if (aeroportoSelecionado) {
             const aeroporto = aeroportosList.find(a => a.id == aeroportoSelecionado);
-            if (aeroporto) filtros.push(`<span class="badge bg-primary">Aeroporto: ${aeroporto.nome_aeroporto}</span>`);
+            if (aeroporto) filtros.push(`<span class="badge bg-primary">Aeroporto: ${this.escapeHtml(aeroporto.nome_aeroporto)}</span>`);
         }
         
         if (companhiaSelecionada) {
             const companhia = companhiasList.find(c => c.id == companhiaSelecionada);
-            if (companhia) filtros.push(`<span class="badge bg-primary">Companhia: ${companhia.nome}</span>`);
+            if (companhia) filtros.push(`<span class="badge bg-primary">Companhia: ${this.escapeHtml(companhia.nome)}</span>`);
         }
         
         html += filtros.join(' ') + '</div>';
@@ -262,7 +265,7 @@ class AdminRelatorioCompanhias {
                 <td class="align-middle">
                     ${item.companhias.map(c => `
                         <div class="companhia-item mb-2 p-2 bg-light rounded">
-                            <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div>
                                     <i class="bi bi-building"></i>
                                     <strong>${this.escapeHtml(c.nome)}</strong>
@@ -281,6 +284,11 @@ class AdminRelatorioCompanhias {
     }
     
     exportarCSV() {
+        if (this.dadosFiltrados.length === 0) {
+            alert('Não há dados para exportar!');
+            return;
+        }
+        
         const headers = ['Aeroporto', 'Quantidade de Companhias', 'Companhias'];
         const rows = this.dadosFiltrados.map(item => [
             item.aeroporto,
@@ -296,11 +304,98 @@ class AdminRelatorioCompanhias {
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.href = url;
-        link.setAttribute('download', 'relatorio_companhias_por_aeroporto.csv');
+        link.setAttribute('download', `relatorio_companhias_por_aeroporto_${this.formatarDataArquivo()}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+    }
+    
+    exportarPDF() {
+        if (this.dadosFiltrados.length === 0) {
+            alert('Não há dados para exportar!');
+            return;
+        }
+        
+        const printWindow = window.open('', '_blank');
+        
+        let htmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Relatório - Companhias por Aeroporto</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    h1 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .filters-info { background: #f0f0f0; padding: 10px; margin-bottom: 20px; border-radius: 5px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+                    th { background: #667eea; color: white; }
+                    .badge { display: inline-block; padding: 2px 6px; margin: 2px; background: #764ba2; color: white; border-radius: 12px; font-size: 11px; }
+                    .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>✈️ Relatório: Companhias Aéreas por Aeroporto</h1>
+                    <p>Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
+                </div>
+        `;
+        
+        const aeroportoSelecionado = this.filterAeroporto?.value;
+        const companhiaSelecionada = this.filterCompanhia?.value;
+        
+        if (aeroportoSelecionado || companhiaSelecionada) {
+            htmlContent += `<div class="filters-info"><strong>📊 Filtros aplicados:</strong><br>`;
+            if (aeroportoSelecionado) {
+                const aeroporto = aeroportosList.find(a => a.id == aeroportoSelecionado);
+                if (aeroporto) htmlContent += `• Aeroporto: ${aeroporto.nome_aeroporto}<br>`;
+            }
+            if (companhiaSelecionada) {
+                const companhia = companhiasList.find(c => c.id == companhiaSelecionada);
+                if (companhia) htmlContent += `• Companhia: ${companhia.nome}<br>`;
+            }
+            htmlContent += `</div>`;
+        }
+        
+        htmlContent += `
+            <table>
+                <thead>
+                    <tr><th>Aeroporto</th><th width="80">Qtd</th><th>Companhias Aéreas</th></tr>
+                </thead>
+                <tbody>
+        `;
+        
+        this.dadosFiltrados.forEach(item => {
+            htmlContent += `
+                <tr>
+                    <td><strong>${this.escapeHtml(item.aeroporto)}</strong></td>
+                    <td style="text-align:center">${item.quantidade_companhias}</td>
+                    <td>${item.companhias.map(c => `<span class="badge">${this.escapeHtml(c.nome)}</span>`).join('')}</td>
+                </tr>
+            `;
+        });
+        
+        htmlContent += `
+                </tbody>
+            </table>
+            <div class="footer">
+                <p>Total de aeroportos listados: ${this.dadosFiltrados.length}</p>
+                <p>Relatório gerado automaticamente pelo sistema</p>
+            </div>
+            </body>
+            </html>
+        `;
+        
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.onload = () => printWindow.print();
+    }
+    
+    formatarDataArquivo() {
+        return new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     }
     
     escapeHtml(text) {
@@ -315,27 +410,37 @@ new AdminRelatorioCompanhias();
 </script>
 
 <style>
-@media print {
-    .btn, .card-header, .d-flex.justify-content-between, .row.mb-3 {
-        display: none !important;
-    }
-    .card {
-        border: none !important;
-        box-shadow: none !important;
-    }
+.alert-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
 }
 
 .companhia-item {
     transition: all 0.2s;
 }
+
 .companhia-item:hover {
     background-color: #e9ecef !important;
-    transform: translateX(5px);
 }
 
-.alert-sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+    .companhia-item .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+    }
 }
 </style>
 @endpush

@@ -223,6 +223,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/relatorios/{relatorio}/edit', [RelatorioController::class, 'edit'])->name('relatorios.edit');
             Route::put('/relatorios/{relatorio}', [RelatorioController::class, 'update'])->name('relatorios.update');
             Route::delete('/relatorios/{relatorio}', [RelatorioController::class, 'destroy'])->name('relatorios.destroy');
+
+            // Rota para toggle de visibilidade
+            Route::patch('/relatorios/{relatorio}/toggle-visibilidade', [RelatorioController::class, 'toggleVisibilidade'])
+                ->name('relatorios.toggle-visibilidade');
             
             // ==================== NOVA ROTA ADMIN PARA RELATÓRIO ====================
             // Rota para admin ver o relatório de Companhias por Aeroporto

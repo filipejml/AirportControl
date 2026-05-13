@@ -32,7 +32,7 @@
                             <th>Nome</th>
                             <th>Tipo</th>
                             <th>Descrição</th>
-                            <th>Visível para Usuários</th>
+                            <th class="text-center">Visível para Usuários</th>
                             <th class="text-end">Ações</th>
                         </tr>
                     </thead>
@@ -49,31 +49,35 @@
                                     @endif
                                 </td>
                                 <td>{{ Str::limit($relatorio->descricao, 50) ?? '—' }}</td>
-                                <td>
-                                    @if($relatorio->visivel_usuario)
-                                        <span class="badge bg-success">✓ Visível</span>
-                                    @else
-                                        <span class="badge bg-secondary">✗ Oculto</span>
-                                    @endif
+                                <td class="text-center">
+                                    <!-- Toggle Switch sem label -->
+                                    <div class="form-check form-switch d-flex justify-content-center">
+                                        <input 
+                                            type="checkbox" 
+                                            class="form-check-input toggle-visibilidade" 
+                                            id="toggle_{{ $relatorio->id }}"
+                                            data-id="{{ $relatorio->id }}"
+                                            {{ $relatorio->visivel_usuario ? 'checked' : '' }}
+                                            style="cursor: pointer; width: 50px; height: 25px;">
+                                    </div>
                                 </td>
                                 <td class="text-end">
+                                    <!-- Botão Visualizar (apenas para relatórios com tipo especial) -->
                                     @if($relatorio->tipo == 'companhias_por_aeroporto')
                                         <a href="{{ route('admin.relatorios.companhias-por-aeroporto') }}" 
                                            class="btn btn-sm btn-outline-info me-1">
                                             <i class="bi bi-eye"></i> Ver
                                         </a>
                                     @endif
-                                    <a href="{{ route('admin.relatorios.edit', $relatorio) }}" 
-                                       class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-pencil"></i> Editar
-                                    </a>
+                                    
+                                    <!-- Botão Excluir -->
                                     <button type="button" 
                                             class="btn btn-sm btn-outline-danger" 
                                             data-bs-toggle="modal" 
                                             data-bs-target="#deleteModal{{ $relatorio->id }}">
                                         <i class="bi bi-trash"></i> Excluir
                                     </button>
-                                </td>
+                                 </td>
                             </tr>
 
                             <!-- Modal de confirmação de exclusão -->
@@ -104,7 +108,7 @@
                                 <td colspan="6" class="text-center text-muted py-4">
                                     Nenhum relatório cadastrado.
                                     <a href="{{ route('admin.relatorios.create') }}" class="text-primary">Criar o primeiro relatório</a>
-                                </td>
+                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -113,4 +117,200 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Aplicar cores iniciais nos toggles
+    const toggles = document.querySelectorAll('.toggle-visibilidade');
+    
+    function updateToggleColor(toggle) {
+        if (toggle.checked) {
+            // Verde quando ativado (visível)
+            toggle.style.backgroundColor = '#198754';
+            toggle.style.borderColor = '#198754';
+        } else {
+            // Vermelho quando desativado (oculto)
+            toggle.style.backgroundColor = '#dc3545';
+            toggle.style.borderColor = '#dc3545';
+        }
+    }
+    
+    // Atualizar cores iniciais
+    toggles.forEach(toggle => {
+        updateToggleColor(toggle);
+        
+        // Adicionar evento de clique para atualizar cor
+        toggle.addEventListener('change', function() {
+            updateToggleColor(this);
+        });
+    });
+    
+    // Evento de mudança dos toggles
+    toggles.forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const relatorioId = this.dataset.id;
+            const isVisible = this.checked;
+            
+            // Mostrar estado de loading
+            this.disabled = true;
+            this.style.opacity = '0.6';
+            
+            // Enviar requisição AJAX
+            fetch(`/admin/relatorios/${relatorioId}/toggle-visibilidade`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    visivel_usuario: isVisible
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Atualizar cor após confirmação
+                    updateToggleColor(this);
+                    
+                    // Feedback visual
+                    if (isVisible) {
+                        showToast('success', `✅ Relatório agora está VISÍVEL para usuários comuns`);
+                    } else {
+                        showToast('warning', `🔒 Relatório agora está OCULTO para usuários comuns`);
+                    }
+                } else {
+                    // Reverter o toggle em caso de erro
+                    this.checked = !isVisible;
+                    updateToggleColor(this);
+                    showToast('danger', '❌ Erro ao atualizar: ' + (data.message || 'Tente novamente'));
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                // Reverter o toggle
+                this.checked = !isVisible;
+                updateToggleColor(this);
+                showToast('danger', '❌ Erro de conexão. Tente novamente.');
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.style.opacity = '1';
+            });
+        });
+    });
+    
+    // Função para mostrar toast de notificação
+    function showToast(type, message) {
+        // Verificar se já existe um container de toast
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            toastContainer.style.zIndex = '1050';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // Criar o toast
+        const toastId = 'toast_' + Date.now();
+        let bgClass, icon;
+        
+        switch(type) {
+            case 'success':
+                bgClass = 'bg-success';
+                icon = '✅';
+                break;
+            case 'warning':
+                bgClass = 'bg-warning';
+                icon = '🔒';
+                break;
+            case 'danger':
+                bgClass = 'bg-danger';
+                icon = '❌';
+                break;
+            default:
+                bgClass = 'bg-info';
+                icon = 'ℹ️';
+        }
+        
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${icon} ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+        
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+        toast.show();
+        
+        // Remover do DOM após fechar
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    }
+});
+</script>
+
+<style>
+/* Estilo para o toggle switch */
+.form-check-input {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #dc3545; /* Vermelho padrão para oculto */
+    border-color: #dc3545;
+}
+
+.form-check-input:checked {
+    background-color: #198754 !important; /* Verde quando ativado */
+    border-color: #198754 !important;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+
+.form-check-input:not(:checked):focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-check-input:hover {
+    transform: scale(1.05);
+}
+
+.form-check-input:disabled {
+    cursor: wait;
+}
+
+/* Centralizar o toggle na tabela */
+.table td.text-center {
+    vertical-align: middle;
+}
+
+/* Toast container */
+.toast-container {
+    z-index: 1050;
+}
+
+/* Animações */
+.btn-sm {
+    transition: all 0.2s;
+}
+
+.btn-sm:hover {
+    transform: translateY(-1px);
+}
+
+/* Badge de tipo */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+}
+</style>
+@endpush
 @endsection
