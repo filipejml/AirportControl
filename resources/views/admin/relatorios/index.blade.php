@@ -27,8 +27,10 @@
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead class="table-light">
+                        <tr>
                             <th>ID</th>
                             <th>Nome</th>
+                            <th>Tipo</th>
                             <th>Descrição</th>
                             <th>Visível para Usuários</th>
                             <th class="text-end">Ações</th>
@@ -39,7 +41,14 @@
                             <tr>
                                 <td>{{ $relatorio->id }}</td>
                                 <td><strong>{{ $relatorio->nome }}</strong></td>
-                                <td>{{ $relatorio->descricao ?? '—' }}</td>
+                                <td>
+                                    @if($relatorio->tipo)
+                                        <span class="badge bg-info">{{ $relatorio->tipo }}</span>
+                                    @else
+                                        <span class="badge bg-secondary">padrão</span>
+                                    @endif
+                                </td>
+                                <td>{{ Str::limit($relatorio->descricao, 50) ?? '—' }}</td>
                                 <td>
                                     @if($relatorio->visivel_usuario)
                                         <span class="badge bg-success">✓ Visível</span>
@@ -48,6 +57,12 @@
                                     @endif
                                 </td>
                                 <td class="text-end">
+                                    @if($relatorio->tipo == 'companhias_por_aeroporto')
+                                        <a href="{{ route('admin.relatorios.companhias-por-aeroporto') }}" 
+                                           class="btn btn-sm btn-outline-info me-1">
+                                            <i class="bi bi-eye"></i> Ver
+                                        </a>
+                                    @endif
                                     <a href="{{ route('admin.relatorios.edit', $relatorio) }}" 
                                        class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil"></i> Editar
@@ -86,7 +101,7 @@
                             </div>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
+                                <td colspan="6" class="text-center text-muted py-4">
                                     Nenhum relatório cadastrado.
                                     <a href="{{ route('admin.relatorios.create') }}" class="text-primary">Criar o primeiro relatório</a>
                                 </td>

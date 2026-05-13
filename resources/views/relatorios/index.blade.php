@@ -28,15 +28,35 @@
             <div class="col-md-6 col-lg-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
-                        <h5 class="card-title">{{ $relatorio->nome }}</h5>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
+                                <i class="bi bi-file-text fs-4 text-primary"></i>
+                            </div>
+                            <h5 class="card-title mb-0">{{ $relatorio->nome }}</h5>
+                        </div>
                         @if($relatorio->descricao)
                             <p class="card-text text-muted">{{ $relatorio->descricao }}</p>
                         @endif
+                        
+                        @if($relatorio->tipo)
+                            <div class="mt-2">
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-tag"></i> {{ ucfirst(str_replace('_', ' ', $relatorio->tipo)) }}
+                                </span>
+                            </div>
+                        @endif
                     </div>
                     <div class="card-footer bg-transparent border-top-0">
-                        <a href="#" class="btn btn-outline-primary btn-sm w-100">
-                            Visualizar Relatório
-                        </a>
+                        @if($relatorio->tipo == 'companhias_por_aeroporto')
+                            <a href="{{ route('relatorios.companhias-por-aeroporto') }}" 
+                               class="btn btn-outline-primary btn-sm w-100">
+                                <i class="bi bi-eye"></i> Visualizar Relatório
+                            </a>
+                        @else
+                            <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                <i class="bi bi-clock"></i> Em breve
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -45,6 +65,9 @@
                 <div class="alert alert-info text-center">
                     @if(auth()->user()->tipo == 0)
                         Nenhum relatório cadastrado no sistema.
+                        <a href="{{ route('admin.relatorios.create') }}" class="alert-link">
+                            Criar o primeiro relatório
+                        </a>
                     @else
                         Nenhum relatório disponível no momento.
                     @endif

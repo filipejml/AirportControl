@@ -1,4 +1,4 @@
-{{-- resources/views/relatorios/create.blade.php --}}
+{{-- resources/views/admin/relatorios/create.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Criar Relatório')
@@ -24,6 +24,25 @@
                                    value="{{ old('nome') }}" 
                                    required>
                             @error('nome')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="tipo" class="form-label">Tipo do Relatório</label>
+                            <select class="form-control @error('tipo') is-invalid @enderror" id="tipo" name="tipo">
+                                <option value="">Selecione um tipo (opcional)</option>
+                                <option value="companhias_por_aeroporto" {{ old('tipo') == 'companhias_por_aeroporto' ? 'selected' : '' }}>
+                                    Companhias por Aeroporto
+                                </option>
+                                <option value="voos_por_periodo" {{ old('tipo') == 'voos_por_periodo' ? 'selected' : '' }}>
+                                    Voos por Período
+                                </option>
+                            </select>
+                            <div class="form-text">
+                                Tipos especiais de relatório com visualizações personalizadas.
+                            </div>
+                            @error('tipo')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

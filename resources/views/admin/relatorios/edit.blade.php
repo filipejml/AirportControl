@@ -1,4 +1,4 @@
-{{-- resources/views/relatorios/edit.blade.php --}}
+{{-- resources/views/admin/relatorios/edit.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Editar Relatório')

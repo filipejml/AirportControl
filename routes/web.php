@@ -62,14 +62,21 @@ Route::middleware('auth')->group(function () {
     // Rotas de visualização de informações (usuário comum)
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios');
     
+    // ==================== NOVAS ROTAS DE RELATÓRIOS ====================
+    // Rota para usuário comum ver o relatório de Companhias por Aeroporto
+    Route::get('/relatorios/companhias-por-aeroporto', 
+        [RelatorioController::class, 'userCompanhiasPorAeroporto']
+    )->name('relatorios.companhias-por-aeroporto');
+    // ================================================================
+    
     // Rotas de informações de companhias aéreas (usuário comum)
     Route::get('/companhias/informacoes', [CompanhiaAereaController::class, 'informacoes'])->name('companhias.informacoes');
     Route::get('/companhias/{companhia}/dashboard', [CompanhiaAereaController::class, 'dashboard'])->name('companhias.dashboard');
     
     // Rotas de informações de aeronaves (usuário comum)
-    Route::get('/aeronaves/informacoes', [AeronaveController::class, 'informacoes'])->name('aeronaves.informacoes'); // rota para informações de aeronaves
-    Route::get('/aeronaves/{aeronave}/dashboard', [AeronaveController::class, 'dashboard'])->name('aeronaves.dashboard'); // rota para dashboard de aeronaves    
-    Route::get('/aeronaves/ranking', [AeronaveController::class, 'ranking'])->name('aeronaves.ranking'); // rota para ranking de aeronaves
+    Route::get('/aeronaves/informacoes', [AeronaveController::class, 'informacoes'])->name('aeronaves.informacoes');
+    Route::get('/aeronaves/{aeronave}/dashboard', [AeronaveController::class, 'dashboard'])->name('aeronaves.dashboard');    
+    Route::get('/aeronaves/ranking', [AeronaveController::class, 'ranking'])->name('aeronaves.ranking');
 
     // Rotas de informações de aeroportos (usuário comum)
     Route::get('/aeroportos/informacoes', [AeroportoController::class, 'informacoes'])->name('aeroportos.informacoes');
@@ -216,6 +223,13 @@ Route::middleware('auth')->group(function () {
             Route::get('/relatorios/{relatorio}/edit', [RelatorioController::class, 'edit'])->name('relatorios.edit');
             Route::put('/relatorios/{relatorio}', [RelatorioController::class, 'update'])->name('relatorios.update');
             Route::delete('/relatorios/{relatorio}', [RelatorioController::class, 'destroy'])->name('relatorios.destroy');
+            
+            // ==================== NOVA ROTA ADMIN PARA RELATÓRIO ====================
+            // Rota para admin ver o relatório de Companhias por Aeroporto
+            Route::get('/relatorios/companhias-por-aeroporto', 
+                [RelatorioController::class, 'adminCompanhiasPorAeroporto']
+            )->name('relatorios.companhias-por-aeroporto');
+            // ====================================================================
 
             // Gerenciamento de usuários
             Route::resource('users', UserController::class);
@@ -227,4 +241,16 @@ Route::middleware('auth')->group(function () {
         // Verificar modelo de aeronave (AJAX)
         Route::get('/api/verificar-modelo', [AeronaveController::class, 'verificarModelo'])->name('verificar.modelo');
     });
+    
+    /*
+    |--------------------------------------------------------------------------
+    | ROTAS DE API PARA RELATÓRIOS (FORA DO GRUPO ADMIN)
+    |--------------------------------------------------------------------------
+    */
+    // ==================== API PARA DADOS DO RELATÓRIO ====================
+    // Endpoint para buscar dados do relatório (usado por ambos admin e user)
+    Route::get('/api/relatorios/companhias-por-aeroporto', 
+        [RelatorioController::class, 'apiCompanhiasPorAeroporto']
+    )->name('api.relatorios.companhias-por-aeroporto');
+    // ====================================================================
 });
