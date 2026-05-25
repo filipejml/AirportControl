@@ -204,4 +204,144 @@ class RelatorioController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * API para dados do relatório de Voos por Aeroporto
+     */
+    public function apiVoosPorAeroporto(Request $request)
+    {
+        $query = Aeroporto::with(['voos' => function($q) {
+            $q->with('companhia');
+        }]);
+        
+        // Filtro por período
+        if ($request->filled('periodo')) {
+            switch ($request->periodo) {
+                case 'hoje':
+                    $query->whereHas('voos', function($q) {
+                        $q->whereDate('created_at', today());
+                    });
+                    break;
+                case 'semana':
+                    $query->whereHas('voos', function($q) {
+                        $q->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    });
+                    break;
+                case 'mes':
+                    $query->whereHas('voos', function($q) {
+                        $q->whereMonth('created_at', now()->month)
+                          ->whereYear('created_at', now()->year);
+                    });
+                    break;
+                case 'ano':
+                    $query->whereHas('voos', function($q) {
+                        $q->whereYear('created_at', now()->year);
+                    });
+                    break;
+            }
+        }
+        
+        $dados = $query->get()->map(function ($aeroporto) {
+            $voos = $aeroporto->voos;
+            $totalVoos = $voos->count();
+            $totalPassageiros = $voos->sum('total_passageiros');
+            
+            // Médias das notas
+            $notaObj = $voos->avg('nota_obj') ?? 0;
+            $notaPontualidade = $voos->avg('nota_pontualidade') ?? 0;
+            $notaServicos = $voos->avg('nota_servicos') ?? 0;
+            $notaPatio = $voos->avg('nota_patio') ?? 0;
+            $mediaGeral = ($notaObj + $notaPontualidade + $notaServicos + $notaPatio) / 4;
+            
+            // Voos por tipo (Regular/Charter)
+            $voosRegulares = $voos->where('tipo_voo', 'Regular')->count();
+            $voosCharter = $voos->where('tipo_voo', 'Charter')->count();
+            
+            // Voos por horário
+            $voosPorHorario = [
+                'EAM' => $voos->where('horario_voo', 'EAM')->count(),
+                'AM' => $voos->where('horario_voo', 'AM')->count(),
+                'AN' => $voos->where('horario_voo', 'AN')->count(),
+                'PM' => $voos->where('horario_voo', 'PM')->count(),
+                'ALL' => $voos->where('horario_voo', 'ALL')->count(),
+            ];
+            
+            // Companhias que operam neste aeroporto
+            $companhias = $voos->groupBy('companhia.id')->map(function($items) {
+                $companhia = $items->first()->companhia;
+                return [
+                    'id' => $companhia->id,
+                    'nome' => $companhia->nome,
+                    'codigo' => $companhia->codigo,
+                    'total_voos' => $items->count(),
+                    'total_passageiros' => $items->sum('total_passageiros'),
+                ];
+            })->values();
+            
+            return [
+                'id' => $aeroporto->id,
+                'aeroporto' => $aeroporto->nome_aeroporto,
+                'total_voos' => $totalVoos,
+                'total_passageiros' => $totalPassageiros,
+                'media_passageiros_por_voo' => $totalVoos > 0 ? round($totalPassageiros / $totalVoos, 0) : 0,
+                'nota_obj' => round($notaObj, 2),
+                'nota_pontualidade' => round($notaPontualidade, 2),
+                'nota_servicos' => round($notaServicos, 2),
+                'nota_patio' => round($notaPatio, 2),
+                'media_geral' => round($mediaGeral, 2),
+                'voos_regulares' => $voosRegulares,
+                'voos_charter' => $voosCharter,
+                'voos_por_horario' => $voosPorHorario,
+                'companhias' => $companhias,
+            ];
+        })->filter(function($item) {
+            // Filtrar aeroportos sem voos
+            return $item['total_voos'] > 0;
+        })->sortByDesc('total_voos')->values();
+        
+        // Totais gerais
+        $totais = [
+            'total_aeroportos' => $dados->count(),
+            'total_voos' => $dados->sum('total_voos'),
+            'total_passageiros' => $dados->sum('total_passageiros'),
+            'media_geral_geral' => round($dados->avg('media_geral'), 2),
+        ];
+        
+        return response()->json([
+            'success' => true,
+            'data' => $dados,
+            'totais' => $totais,
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+    
+    /**
+     * View do relatório para ADMIN (tabela)
+     */
+    public function adminVoosPorAeroporto()
+    {
+        // Verificar se o relatório existe no banco, se não, criar
+        $relatorio = Relatorio::firstOrCreate(
+            ['tipo' => 'voos_por_aeroporto'],
+            [
+                'nome' => 'Voos por Aeroporto',
+                'descricao' => 'Estatísticas de voos, passageiros e notas organizadas por aeroporto',
+                'visivel_usuario' => true
+            ]
+        );
+        
+        return view('admin.relatorios.voos-por-aeroporto', compact('relatorio'));
+    }
+    
+    /**
+     * View do relatório para USUÁRIO COMUM (cards)
+     */
+    public function userVoosPorAeroporto()
+    {
+        $relatorio = Relatorio::where('tipo', 'voos_por_aeroporto')
+            ->where('visivel_usuario', true)
+            ->firstOrFail();
+            
+        return view('relatorios.voos-por-aeroporto', compact('relatorio'));
+    }
 }

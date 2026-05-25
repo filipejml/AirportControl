@@ -62,11 +62,16 @@ Route::middleware('auth')->group(function () {
     // Rotas de visualização de informações (usuário comum)
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios');
     
-    // ==================== NOVAS ROTAS DE RELATÓRIOS ====================
-    // Rota para usuário comum ver o relatório de Companhias por Aeroporto
+    // ==================== RELATÓRIOS DISPONÍVEIS ====================
+    // Relatório: Companhias por Aeroporto (usuário comum)
     Route::get('/relatorios/companhias-por-aeroporto', 
         [RelatorioController::class, 'userCompanhiasPorAeroporto']
     )->name('relatorios.companhias-por-aeroporto');
+    
+    // Relatório: Voos por Aeroporto (usuário comum)
+    Route::get('/relatorios/voos-por-aeroporto', 
+        [RelatorioController::class, 'userVoosPorAeroporto']
+    )->name('relatorios.voos-por-aeroporto');
     // ================================================================
     
     // Rotas de informações de companhias aéreas (usuário comum)
@@ -228,13 +233,18 @@ Route::middleware('auth')->group(function () {
             Route::patch('/relatorios/{relatorio}/toggle-visibilidade', [RelatorioController::class, 'toggleVisibilidade'])
                 ->name('relatorios.toggle-visibilidade');
             
-            // ==================== NOVA ROTA ADMIN PARA RELATÓRIO ====================
-            // Rota para admin ver o relatório de Companhias por Aeroporto
-            Route::get('/relatorios/companhias-por-aeroporto', 
+            // ==================== RELATÓRIOS ADMIN ====================
+            // Relatório: Companhias por Aeroporto (admin)
+            Route::get('/relatorios/companhias-por-aeroporto-admin', 
                 [RelatorioController::class, 'adminCompanhiasPorAeroporto']
-            )->name('relatorios.companhias-por-aeroporto');
-            // ====================================================================
-
+            )->name('admin.relatorios.companhias-por-aeroporto');
+            
+            // Relatório: Voos por Aeroporto (admin)
+            Route::get('/relatorios/voos-por-aeroporto-admin', 
+                [RelatorioController::class, 'adminVoosPorAeroporto']
+            )->name('admin.relatorios.voos-por-aeroporto');
+            // ========================================================
+            
             // Gerenciamento de usuários
             Route::resource('users', UserController::class);
         });
@@ -251,10 +261,15 @@ Route::middleware('auth')->group(function () {
     | ROTAS DE API PARA RELATÓRIOS (FORA DO GRUPO ADMIN)
     |--------------------------------------------------------------------------
     */
-    // ==================== API PARA DADOS DO RELATÓRIO ====================
-    // Endpoint para buscar dados do relatório (usado por ambos admin e user)
+    // ==================== APIS DOS RELATÓRIOS ====================
+    // API para dados do relatório de Companhias por Aeroporto
     Route::get('/api/relatorios/companhias-por-aeroporto', 
         [RelatorioController::class, 'apiCompanhiasPorAeroporto']
     )->name('api.relatorios.companhias-por-aeroporto');
-    // ====================================================================
+    
+    // API para dados do relatório de Voos por Aeroporto
+    Route::get('/api/relatorios/voos-por-aeroporto', 
+        [RelatorioController::class, 'apiVoosPorAeroporto']
+    )->name('api.relatorios.voos-por-aeroporto');
+    // ============================================================
 });

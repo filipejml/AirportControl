@@ -64,7 +64,12 @@
                                 <td class="text-end">
                                     <!-- Botão Visualizar (apenas para relatórios com tipo especial) -->
                                     @if($relatorio->tipo == 'companhias_por_aeroporto')
-                                        <a href="{{ route('admin.relatorios.companhias-por-aeroporto') }}" 
+                                        <a href="{{ url('/admin/relatorios/companhias-por-aeroporto') }}" 
+                                           class="btn btn-sm btn-outline-info me-1">
+                                            <i class="bi bi-eye"></i> Ver
+                                        </a>
+                                    @elseif($relatorio->tipo == 'voos_por_aeroporto')
+                                        <a href="{{ url('/admin/relatorios/voos-por-aeroporto') }}" 
                                            class="btn btn-sm btn-outline-info me-1">
                                             <i class="bi bi-eye"></i> Ver
                                         </a>
@@ -77,7 +82,7 @@
                                             data-bs-target="#deleteModal{{ $relatorio->id }}">
                                         <i class="bi bi-trash"></i> Excluir
                                     </button>
-                                 </td>
+                                </td>
                             </tr>
 
                             <!-- Modal de confirmação de exclusão -->
@@ -108,7 +113,7 @@
                                 <td colspan="6" class="text-center text-muted py-4">
                                     Nenhum relatório cadastrado.
                                     <a href="{{ route('admin.relatorios.create') }}" class="text-primary">Criar o primeiro relatório</a>
-                                 </td>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>

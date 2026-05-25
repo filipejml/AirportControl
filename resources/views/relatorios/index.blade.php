@@ -25,12 +25,19 @@
 
     <div class="row g-4">
         @forelse($relatorios as $relatorio)
+            @if($relatorio->tipo == 'companhias_por_aeroporto' || $relatorio->tipo == 'voos_por_aeroporto')
             <div class="col-md-6 col-lg-4">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <div class="bg-primary bg-opacity-10 p-2 rounded me-3">
-                                <i class="bi bi-file-text fs-4 text-primary"></i>
+                                @if($relatorio->tipo == 'companhias_por_aeroporto')
+                                    <i class="bi bi-building fs-4 text-primary"></i>
+                                @elseif($relatorio->tipo == 'voos_por_aeroporto')
+                                    <i class="bi bi-airplane fs-4 text-primary"></i>
+                                @else
+                                    <i class="bi bi-file-text fs-4 text-primary"></i>
+                                @endif
                             </div>
                             <h5 class="card-title mb-0">{{ $relatorio->nome }}</h5>
                         </div>
@@ -52,14 +59,16 @@
                                class="btn btn-outline-primary btn-sm w-100">
                                 <i class="bi bi-eye"></i> Visualizar Relatório
                             </a>
-                        @else
-                            <button class="btn btn-outline-secondary btn-sm w-100" disabled>
-                                <i class="bi bi-clock"></i> Em breve
-                            </button>
+                        @elseif($relatorio->tipo == 'voos_por_aeroporto')
+                            <a href="{{ route('relatorios.voos-por-aeroporto') }}" 
+                               class="btn btn-outline-primary btn-sm w-100">
+                                <i class="bi bi-eye"></i> Visualizar Relatório
+                            </a>
                         @endif
                     </div>
                 </div>
             </div>
+            @endif
         @empty
             <div class="col-12">
                 <div class="alert alert-info text-center">
