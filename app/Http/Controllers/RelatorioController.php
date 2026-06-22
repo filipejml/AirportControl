@@ -10,12 +10,14 @@ use App\Models\CompanhiaAerea;
 use App\Services\VooMetricasService;
 use App\Services\Relatorios\DesempenhoCompanhiasService;
 use App\Services\Relatorios\MovimentacaoPorPeriodoService;
+use App\Services\Relatorios\RankingAeroportosService;
 
 class RelatorioController extends Controller
 {
     public function __construct(
         private readonly DesempenhoCompanhiasService $desempenhoCompanhiasService,
-        private readonly MovimentacaoPorPeriodoService $movimentacaoPorPeriodoService
+        private readonly MovimentacaoPorPeriodoService $movimentacaoPorPeriodoService,
+        private readonly RankingAeroportosService $rankingAeroportosService
     ) {
     }
 
@@ -365,5 +367,50 @@ class RelatorioController extends Controller
             ->firstOrFail();
 
         return view('relatorios.movimentacao-por-periodo', compact('relatorio'));
+    }
+
+    public function apiRankingAeroportos(Request $request)
+    {
+        $filtros = $request->validate([
+            'periodo' => ['nullable', 'in:hoje,semana,mes,ano'],
+            'ordenacao' => [
+                'nullable',
+                'in:total_voos,total_passageiros,media_passageiros_por_voo,total_companhias,media_geral',
+            ],
+        ]);
+
+        $resultado = $this->rankingAeroportosService->gerar(
+            $filtros['periodo'] ?? null,
+            $filtros['ordenacao'] ?? 'total_voos'
+        );
+
+        return response()->json([
+            'success' => true,
+            ...$resultado,
+            'filtros' => [
+                'periodo' => $filtros['periodo'] ?? null,
+                'ordenacao' => $filtros['ordenacao'] ?? 'total_voos',
+            ],
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
+    public function adminRankingAeroportos()
+    {
+        $relatorio = Relatorio::where(
+            'tipo',
+            Relatorio::TIPO_RANKING_AEROPORTOS
+        )->firstOrFail();
+
+        return view('admin.relatorios.ranking-aeroportos', compact('relatorio'));
+    }
+
+    public function userRankingAeroportos()
+    {
+        $relatorio = Relatorio::visiveis()
+            ->where('tipo', Relatorio::TIPO_RANKING_AEROPORTOS)
+            ->firstOrFail();
+
+        return view('relatorios.ranking-aeroportos', compact('relatorio'));
     }
 }
