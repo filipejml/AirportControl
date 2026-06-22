@@ -96,14 +96,10 @@
     <div class="col-md-4">
         <div class="card shadow-sm p-3 h-100">
             <h5>📊 Relatórios</h5>
-            <p class="text-muted">Gerenciar relatórios e controle de visibilidade</p>
+            <p class="text-muted">Controlar a visibilidade dos relatórios estruturados na aplicação</p>
 
-            <a href="{{ route('admin.relatorios.index') }}" class="btn btn-outline-primary btn-sm mb-2">
-                Ver lista
-            </a>
-
-            <a href="{{ route('admin.relatorios.create') }}" class="btn btn-primary btn-sm">
-                + Novo Relatório
+            <a href="{{ route('admin.relatorios.index') }}" class="btn btn-outline-primary btn-sm">
+                Gerenciar visibilidade
             </a>
         </div>
     </div>

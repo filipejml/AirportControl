@@ -15,11 +15,7 @@ class RelatorioController extends Controller
      */
     public function index()
     {
-        if (auth()->user()->tipo == 0) {
-            $relatorios = Relatorio::all();
-        } else {
-            $relatorios = Relatorio::where('visivel_usuario', true)->get();
-        }
+        $relatorios = Relatorio::visiveis()->get();
 
         return view('relatorios.index', compact('relatorios'));
     }
@@ -33,72 +29,6 @@ class RelatorioController extends Controller
         return view('admin.relatorios.index', compact('relatorios'));
     }
 
-    /**
-     * FORM CREATE (ADMIN)
-     */
-    public function create()
-    {
-        return view('admin.relatorios.create');
-    }
-
-    /**
-     * SALVAR (ADMIN)
-     */
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'nome' => 'required|string|max:255',
-            'descricao' => 'nullable|string',
-            'tipo' => 'nullable|string|max:100', // Adicionar campo tipo
-        ]);
-
-        // TRATAMENTO DO CHECKBOX
-        $data['visivel_usuario'] = $request->has('visivel_usuario');
-
-        Relatorio::create($data);
-
-        return redirect()->route('admin.relatorios.index')
-            ->with('success', 'Relatório criado com sucesso!');
-    }
-
-    /**
-     * FORM EDIT
-     */
-    public function edit(Relatorio $relatorio)
-    {
-        return view('admin.relatorios.edit', compact('relatorio'));
-    }
-
-    /**
-     * UPDATE
-     */
-    public function update(Request $request, Relatorio $relatorio)
-    {
-        $data = $request->validate([
-            'nome' => 'required|string|max:255',
-            'descricao' => 'nullable|string',
-            'tipo' => 'nullable|string|max:100',
-        ]);
-
-        $data['visivel_usuario'] = $request->has('visivel_usuario');
-
-        $relatorio->update($data);
-
-        return redirect()->route('admin.relatorios.index')
-            ->with('success', 'Relatório atualizado!');
-    }
-
-    /**
-     * DELETE
-     */
-    public function destroy(Relatorio $relatorio)
-    {
-        $relatorio->delete();
-
-        return redirect()->route('admin.relatorios.index')
-            ->with('success', 'Relatório removido!');
-    }
-    
     /**
      * API para dados do relatório de Companhias por Aeroporto
      */
@@ -150,14 +80,8 @@ class RelatorioController extends Controller
      */
     public function adminCompanhiasPorAeroporto()
     {
-        $relatorio = Relatorio::firstOrCreate(
-            ['tipo' => 'companhias_por_aeroporto'],
-            [
-                'nome' => 'Companhias por Aeroporto',
-                'descricao' => 'Lista de todas as companhias aéreas organizadas por aeroporto',
-                'visivel_usuario' => true
-            ]
-        );
+        $relatorio = Relatorio::where('tipo', Relatorio::TIPO_COMPANHIAS_POR_AEROPORTO)
+            ->firstOrFail();
         
         // Buscar todos os aeroportos e companhias para os filtros
         $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
@@ -171,8 +95,8 @@ class RelatorioController extends Controller
      */
     public function userCompanhiasPorAeroporto()
     {
-        $relatorio = Relatorio::where('tipo', 'companhias_por_aeroporto')
-            ->where('visivel_usuario', true)
+        $relatorio = Relatorio::visiveis()
+            ->where('tipo', Relatorio::TIPO_COMPANHIAS_POR_AEROPORTO)
             ->firstOrFail();
         
         // Buscar todos os aeroportos e companhias para os filtros
@@ -187,10 +111,12 @@ class RelatorioController extends Controller
      */
     public function toggleVisibilidade(Request $request, Relatorio $relatorio)
     {
+        $data = $request->validate([
+            'visivel_usuario' => ['required', 'boolean'],
+        ]);
+
         try {
-            $novoStatus = $request->input('visivel_usuario', false);
-            $relatorio->visivel_usuario = $novoStatus;
-            $relatorio->save();
+            $relatorio->update($data);
             
             return response()->json([
                 'success' => true,
@@ -200,7 +126,7 @@ class RelatorioController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao atualizar status: ' . $e->getMessage()
+                'message' => 'Não foi possível atualizar a visibilidade do relatório.'
             ], 500);
         }
     }
@@ -211,7 +137,7 @@ class RelatorioController extends Controller
     public function apiVoosPorAeroporto(Request $request)
     {
         $query = Aeroporto::with(['voos' => function($q) {
-            $q->with('companhia');
+            $q->with('companhiaAerea');
         }]);
         
         // Filtro por período
@@ -243,7 +169,7 @@ class RelatorioController extends Controller
         
         $dados = $query->get()->map(function ($aeroporto) {
             $voos = $aeroporto->voos;
-            $totalVoos = $voos->count();
+            $totalVoos = $voos->sum('qtd_voos');
             $totalPassageiros = $voos->sum('total_passageiros');
             
             // Médias das notas
@@ -254,26 +180,26 @@ class RelatorioController extends Controller
             $mediaGeral = ($notaObj + $notaPontualidade + $notaServicos + $notaPatio) / 4;
             
             // Voos por tipo (Regular/Charter)
-            $voosRegulares = $voos->where('tipo_voo', 'Regular')->count();
-            $voosCharter = $voos->where('tipo_voo', 'Charter')->count();
+            $voosRegulares = $voos->where('tipo_voo', 'Regular')->sum('qtd_voos');
+            $voosCharter = $voos->where('tipo_voo', 'Charter')->sum('qtd_voos');
             
             // Voos por horário
             $voosPorHorario = [
-                'EAM' => $voos->where('horario_voo', 'EAM')->count(),
-                'AM' => $voos->where('horario_voo', 'AM')->count(),
-                'AN' => $voos->where('horario_voo', 'AN')->count(),
-                'PM' => $voos->where('horario_voo', 'PM')->count(),
-                'ALL' => $voos->where('horario_voo', 'ALL')->count(),
+                'EAM' => $voos->where('horario_voo', 'EAM')->sum('qtd_voos'),
+                'AM' => $voos->where('horario_voo', 'AM')->sum('qtd_voos'),
+                'AN' => $voos->where('horario_voo', 'AN')->sum('qtd_voos'),
+                'PM' => $voos->where('horario_voo', 'PM')->sum('qtd_voos'),
+                'ALL' => $voos->where('horario_voo', 'ALL')->sum('qtd_voos'),
             ];
             
             // Companhias que operam neste aeroporto
-            $companhias = $voos->groupBy('companhia.id')->map(function($items) {
-                $companhia = $items->first()->companhia;
+            $companhias = $voos->groupBy('companhia_aerea_id')->map(function($items) {
+                $companhia = $items->first()->companhiaAerea;
                 return [
                     'id' => $companhia->id,
                     'nome' => $companhia->nome,
                     'codigo' => $companhia->codigo,
-                    'total_voos' => $items->count(),
+                    'total_voos' => $items->sum('qtd_voos'),
                     'total_passageiros' => $items->sum('total_passageiros'),
                 ];
             })->values();
@@ -320,15 +246,8 @@ class RelatorioController extends Controller
      */
     public function adminVoosPorAeroporto()
     {
-        // Verificar se o relatório existe no banco, se não, criar
-        $relatorio = Relatorio::firstOrCreate(
-            ['tipo' => 'voos_por_aeroporto'],
-            [
-                'nome' => 'Voos por Aeroporto',
-                'descricao' => 'Estatísticas de voos, passageiros e notas organizadas por aeroporto',
-                'visivel_usuario' => true
-            ]
-        );
+        $relatorio = Relatorio::where('tipo', Relatorio::TIPO_VOOS_POR_AEROPORTO)
+            ->firstOrFail();
         
         return view('admin.relatorios.voos-por-aeroporto', compact('relatorio'));
     }
@@ -338,8 +257,8 @@ class RelatorioController extends Controller
      */
     public function userVoosPorAeroporto()
     {
-        $relatorio = Relatorio::where('tipo', 'voos_por_aeroporto')
-            ->where('visivel_usuario', true)
+        $relatorio = Relatorio::visiveis()
+            ->where('tipo', Relatorio::TIPO_VOOS_POR_AEROPORTO)
             ->firstOrFail();
             
         return view('relatorios.voos-por-aeroporto', compact('relatorio'));

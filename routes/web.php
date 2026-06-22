@@ -223,11 +223,6 @@ Route::middleware('auth')->group(function () {
         // Relatórios administrativos
         Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/relatorios', [RelatorioController::class, 'adminIndex'])->name('relatorios.index');
-            Route::get('/relatorios/create', [RelatorioController::class, 'create'])->name('relatorios.create');
-            Route::post('/relatorios', [RelatorioController::class, 'store'])->name('relatorios.store');
-            Route::get('/relatorios/{relatorio}/edit', [RelatorioController::class, 'edit'])->name('relatorios.edit');
-            Route::put('/relatorios/{relatorio}', [RelatorioController::class, 'update'])->name('relatorios.update');
-            Route::delete('/relatorios/{relatorio}', [RelatorioController::class, 'destroy'])->name('relatorios.destroy');
 
             // Rota para toggle de visibilidade
             Route::patch('/relatorios/{relatorio}/toggle-visibilidade', [RelatorioController::class, 'toggleVisibilidade'])
@@ -237,12 +232,12 @@ Route::middleware('auth')->group(function () {
             // Relatório: Companhias por Aeroporto (admin)
             Route::get('/relatorios/companhias-por-aeroporto-admin', 
                 [RelatorioController::class, 'adminCompanhiasPorAeroporto']
-            )->name('admin.relatorios.companhias-por-aeroporto');
+            )->name('relatorios.companhias-por-aeroporto');
             
             // Relatório: Voos por Aeroporto (admin)
             Route::get('/relatorios/voos-por-aeroporto-admin', 
                 [RelatorioController::class, 'adminVoosPorAeroporto']
-            )->name('admin.relatorios.voos-por-aeroporto');
+            )->name('relatorios.voos-por-aeroporto');
             // ========================================================
             
             // Gerenciamento de usuários
