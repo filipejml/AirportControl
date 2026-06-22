@@ -14,6 +14,7 @@ class RelatorioCatalogTest extends TestCase
         $this->assertTrue(Route::has('admin.relatorios.toggle-visibilidade'));
         $this->assertTrue(Route::has('admin.relatorios.companhias-por-aeroporto'));
         $this->assertTrue(Route::has('admin.relatorios.voos-por-aeroporto'));
+        $this->assertTrue(Route::has('admin.relatorios.desempenho-companhias'));
 
         $this->assertFalse(Route::has('admin.relatorios.create'));
         $this->assertFalse(Route::has('admin.relatorios.store'));
@@ -30,10 +31,15 @@ class RelatorioCatalogTest extends TestCase
         $voos = new Relatorio([
             'tipo' => Relatorio::TIPO_VOOS_POR_AEROPORTO,
         ]);
+        $desempenho = new Relatorio([
+            'tipo' => Relatorio::TIPO_DESEMPENHO_COMPANHIAS,
+        ]);
 
         $this->assertSame('relatorios.companhias-por-aeroporto', $companhias->route);
         $this->assertSame('admin.relatorios.companhias-por-aeroporto', $companhias->admin_route);
         $this->assertSame('relatorios.voos-por-aeroporto', $voos->route);
         $this->assertSame('admin.relatorios.voos-por-aeroporto', $voos->admin_route);
+        $this->assertSame('relatorios.desempenho-companhias', $desempenho->route);
+        $this->assertSame('admin.relatorios.desempenho-companhias', $desempenho->admin_route);
     }
 }

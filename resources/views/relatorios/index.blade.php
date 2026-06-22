@@ -21,6 +21,8 @@
                                         <i class="bi bi-building fs-4 text-primary"></i>
                                     @elseif($relatorio->tipo === \App\Models\Relatorio::TIPO_VOOS_POR_AEROPORTO)
                                         <i class="bi bi-airplane fs-4 text-primary"></i>
+                                    @elseif($relatorio->tipo === \App\Models\Relatorio::TIPO_DESEMPENHO_COMPANHIAS)
+                                        <i class="bi bi-graph-up-arrow fs-4 text-primary"></i>
                                     @endif
                                 </div>
                                 <h5 class="card-title mb-0">{{ $relatorio->nome }}</h5>

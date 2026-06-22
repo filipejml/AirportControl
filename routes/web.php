@@ -72,6 +72,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/relatorios/voos-por-aeroporto', 
         [RelatorioController::class, 'userVoosPorAeroporto']
     )->name('relatorios.voos-por-aeroporto');
+    Route::get('/relatorios/desempenho-companhias',
+        [RelatorioController::class, 'userDesempenhoCompanhias']
+    )->name('relatorios.desempenho-companhias');
     // ================================================================
     
     // Rotas de informações de companhias aéreas (usuário comum)
@@ -240,6 +243,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/relatorios/voos-por-aeroporto-admin', 
                 [RelatorioController::class, 'adminVoosPorAeroporto']
             )->name('relatorios.voos-por-aeroporto');
+
+            Route::get('/relatorios/desempenho-companhias-admin',
+                [RelatorioController::class, 'adminDesempenhoCompanhias']
+            )->name('relatorios.desempenho-companhias');
             // ========================================================
             
             // Gerenciamento de usuários
@@ -268,5 +275,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/relatorios/voos-por-aeroporto', 
         [RelatorioController::class, 'apiVoosPorAeroporto']
     )->name('api.relatorios.voos-por-aeroporto');
+
+    Route::get('/api/relatorios/desempenho-companhias',
+        [RelatorioController::class, 'apiDesempenhoCompanhias']
+    )->name('api.relatorios.desempenho-companhias');
     // ============================================================
 });

@@ -8,9 +8,15 @@ use App\Models\Relatorio;
 use App\Models\Aeroporto;
 use App\Models\CompanhiaAerea;
 use App\Services\VooMetricasService;
+use App\Services\Relatorios\DesempenhoCompanhiasService;
 
 class RelatorioController extends Controller
 {
+    public function __construct(
+        private readonly DesempenhoCompanhiasService $desempenhoCompanhiasService
+    ) {
+    }
+
     /**
      * LISTAGEM (ADMIN + USUÁRIO)
      */
@@ -264,5 +270,53 @@ class RelatorioController extends Controller
             ->firstOrFail();
             
         return view('relatorios.voos-por-aeroporto', compact('relatorio'));
+    }
+
+    public function apiDesempenhoCompanhias(Request $request)
+    {
+        $filtros = $request->validate([
+            'periodo' => ['nullable', 'in:hoje,semana,mes,ano'],
+            'companhia_id' => ['nullable', 'integer', 'exists:companhias_aereas,id'],
+        ]);
+
+        $resultado = $this->desempenhoCompanhiasService->gerar(
+            $filtros['periodo'] ?? null,
+            isset($filtros['companhia_id']) ? (int) $filtros['companhia_id'] : null
+        );
+
+        return response()->json([
+            'success' => true,
+            ...$resultado,
+            'filtros' => [
+                'periodo' => $filtros['periodo'] ?? null,
+                'companhia_id' => $filtros['companhia_id'] ?? null,
+            ],
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
+    public function adminDesempenhoCompanhias()
+    {
+        $relatorio = Relatorio::where('tipo', Relatorio::TIPO_DESEMPENHO_COMPANHIAS)
+            ->firstOrFail();
+        $companhias = CompanhiaAerea::orderBy('nome')->get();
+
+        return view(
+            'admin.relatorios.desempenho-companhias',
+            compact('relatorio', 'companhias')
+        );
+    }
+
+    public function userDesempenhoCompanhias()
+    {
+        $relatorio = Relatorio::visiveis()
+            ->where('tipo', Relatorio::TIPO_DESEMPENHO_COMPANHIAS)
+            ->firstOrFail();
+        $companhias = CompanhiaAerea::orderBy('nome')->get();
+
+        return view(
+            'relatorios.desempenho-companhias',
+            compact('relatorio', 'companhias')
+        );
     }
 }
