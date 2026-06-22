@@ -136,48 +136,66 @@ class RelatorioController extends Controller
      */
     public function apiVoosPorAeroporto(Request $request)
     {
-        $query = Aeroporto::with(['voos' => function($q) {
+        $periodo = $request->validate([
+            'periodo' => ['nullable', 'in:hoje,semana,mes,ano'],
+        ])['periodo'] ?? null;
+
+        $carregarVoos = function ($q) use ($periodo) {
             $q->with('companhiaAerea');
-        }]);
-        
-        // Filtro por período
-        if ($request->filled('periodo')) {
-            switch ($request->periodo) {
+
+            switch ($periodo) {
                 case 'hoje':
-                    $query->whereHas('voos', function($q) {
-                        $q->whereDate('created_at', today());
-                    });
+                    $q->whereDate('created_at', today());
                     break;
                 case 'semana':
-                    $query->whereHas('voos', function($q) {
-                        $q->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
-                    });
+                    $q->whereBetween('created_at', [
+                        now()->startOfWeek(),
+                        now()->endOfWeek(),
+                    ]);
                     break;
                 case 'mes':
-                    $query->whereHas('voos', function($q) {
-                        $q->whereMonth('created_at', now()->month)
-                          ->whereYear('created_at', now()->year);
-                    });
+                    $q->whereMonth('created_at', now()->month)
+                        ->whereYear('created_at', now()->year);
                     break;
                 case 'ano':
-                    $query->whereHas('voos', function($q) {
-                        $q->whereYear('created_at', now()->year);
-                    });
+                    $q->whereYear('created_at', now()->year);
                     break;
             }
-        }
+        };
+
+        $query = Aeroporto::with(['voos' => $carregarVoos]);
         
         $dados = $query->get()->map(function ($aeroporto) {
             $voos = $aeroporto->voos;
             $totalVoos = $voos->sum('qtd_voos');
             $totalPassageiros = $voos->sum('total_passageiros');
-            
-            // Médias das notas
-            $notaObj = $voos->avg('nota_obj') ?? 0;
-            $notaPontualidade = $voos->avg('nota_pontualidade') ?? 0;
-            $notaServicos = $voos->avg('nota_servicos') ?? 0;
-            $notaPatio = $voos->avg('nota_patio') ?? 0;
-            $mediaGeral = ($notaObj + $notaPontualidade + $notaServicos + $notaPatio) / 4;
+
+            $mediaPonderada = function (string $campo) use ($voos): float {
+                $voosComNota = $voos->whereNotNull($campo);
+                $pesoTotal = $voosComNota->sum('qtd_voos');
+
+                if ($pesoTotal <= 0) {
+                    return 0;
+                }
+
+                return $voosComNota->sum(
+                    fn ($voo) => $voo->{$campo} * $voo->qtd_voos
+                ) / $pesoTotal;
+            };
+
+            $notaObj = $mediaPonderada('nota_obj');
+            $notaPontualidade = $mediaPonderada('nota_pontualidade');
+            $notaServicos = $mediaPonderada('nota_servicos');
+            $notaPatio = $mediaPonderada('nota_patio');
+            $notasDisponiveis = collect([
+                $notaObj,
+                $notaPontualidade,
+                $notaServicos,
+                $notaPatio,
+            ])->filter(fn ($nota) => $nota > 0);
+            $mediaGeral = $notasDisponiveis->isNotEmpty()
+                ? $notasDisponiveis->avg()
+                : 0;
             
             // Voos por tipo (Regular/Charter)
             $voosRegulares = $voos->where('tipo_voo', 'Regular')->sum('qtd_voos');
@@ -237,6 +255,7 @@ class RelatorioController extends Controller
             'success' => true,
             'data' => $dados,
             'totais' => $totais,
+            'periodo' => $periodo,
             'timestamp' => now()->toIso8601String(),
         ]);
     }
