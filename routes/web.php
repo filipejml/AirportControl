@@ -75,6 +75,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/relatorios/desempenho-companhias',
         [RelatorioController::class, 'userDesempenhoCompanhias']
     )->name('relatorios.desempenho-companhias');
+    Route::get('/relatorios/movimentacao-por-periodo',
+        [RelatorioController::class, 'userMovimentacaoPorPeriodo']
+    )->name('relatorios.movimentacao-por-periodo');
     // ================================================================
     
     // Rotas de informações de companhias aéreas (usuário comum)
@@ -247,6 +250,9 @@ Route::middleware('auth')->group(function () {
             Route::get('/relatorios/desempenho-companhias-admin',
                 [RelatorioController::class, 'adminDesempenhoCompanhias']
             )->name('relatorios.desempenho-companhias');
+            Route::get('/relatorios/movimentacao-por-periodo-admin',
+                [RelatorioController::class, 'adminMovimentacaoPorPeriodo']
+            )->name('relatorios.movimentacao-por-periodo');
             // ========================================================
             
             // Gerenciamento de usuários
@@ -279,5 +285,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/relatorios/desempenho-companhias',
         [RelatorioController::class, 'apiDesempenhoCompanhias']
     )->name('api.relatorios.desempenho-companhias');
+    Route::get('/api/relatorios/movimentacao-por-periodo',
+        [RelatorioController::class, 'apiMovimentacaoPorPeriodo']
+    )->name('api.relatorios.movimentacao-por-periodo');
     // ============================================================
 });

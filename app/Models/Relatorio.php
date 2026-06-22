@@ -9,6 +9,7 @@ class Relatorio extends Model
     public const TIPO_COMPANHIAS_POR_AEROPORTO = 'companhias_por_aeroporto';
     public const TIPO_VOOS_POR_AEROPORTO = 'voos_por_aeroporto';
     public const TIPO_DESEMPENHO_COMPANHIAS = 'desempenho_companhias';
+    public const TIPO_MOVIMENTACAO_POR_PERIODO = 'movimentacao_por_periodo';
 
     protected $fillable = [
         'nome',
@@ -32,6 +33,7 @@ class Relatorio extends Model
             self::TIPO_COMPANHIAS_POR_AEROPORTO => 'relatorios.companhias-por-aeroporto',
             self::TIPO_VOOS_POR_AEROPORTO => 'relatorios.voos-por-aeroporto',
             self::TIPO_DESEMPENHO_COMPANHIAS => 'relatorios.desempenho-companhias',
+            self::TIPO_MOVIMENTACAO_POR_PERIODO => 'relatorios.movimentacao-por-periodo',
         ][$this->tipo] ?? '#';
     }
 
@@ -41,6 +43,7 @@ class Relatorio extends Model
             self::TIPO_COMPANHIAS_POR_AEROPORTO => 'admin.relatorios.companhias-por-aeroporto',
             self::TIPO_VOOS_POR_AEROPORTO => 'admin.relatorios.voos-por-aeroporto',
             self::TIPO_DESEMPENHO_COMPANHIAS => 'admin.relatorios.desempenho-companhias',
+            self::TIPO_MOVIMENTACAO_POR_PERIODO => 'admin.relatorios.movimentacao-por-periodo',
         ][$this->tipo] ?? null;
     }
 }

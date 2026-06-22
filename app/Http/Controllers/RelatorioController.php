@@ -9,11 +9,13 @@ use App\Models\Aeroporto;
 use App\Models\CompanhiaAerea;
 use App\Services\VooMetricasService;
 use App\Services\Relatorios\DesempenhoCompanhiasService;
+use App\Services\Relatorios\MovimentacaoPorPeriodoService;
 
 class RelatorioController extends Controller
 {
     public function __construct(
-        private readonly DesempenhoCompanhiasService $desempenhoCompanhiasService
+        private readonly DesempenhoCompanhiasService $desempenhoCompanhiasService,
+        private readonly MovimentacaoPorPeriodoService $movimentacaoPorPeriodoService
     ) {
     }
 
@@ -318,5 +320,50 @@ class RelatorioController extends Controller
             'relatorios.desempenho-companhias',
             compact('relatorio', 'companhias')
         );
+    }
+
+    public function apiMovimentacaoPorPeriodo(Request $request)
+    {
+        $filtros = $request->validate([
+            'agrupamento' => ['nullable', 'in:dia,semana,mes,ano'],
+            'data_inicio' => ['nullable', 'date'],
+            'data_fim' => ['nullable', 'date', 'after_or_equal:data_inicio'],
+        ]);
+
+        $resultado = $this->movimentacaoPorPeriodoService->gerar(
+            $filtros['agrupamento'] ?? 'mes',
+            $filtros['data_inicio'] ?? null,
+            $filtros['data_fim'] ?? null
+        );
+
+        return response()->json([
+            'success' => true,
+            ...$resultado,
+            'filtros' => [
+                'agrupamento' => $filtros['agrupamento'] ?? 'mes',
+                'data_inicio' => $filtros['data_inicio'] ?? null,
+                'data_fim' => $filtros['data_fim'] ?? null,
+            ],
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
+    public function adminMovimentacaoPorPeriodo()
+    {
+        $relatorio = Relatorio::where(
+            'tipo',
+            Relatorio::TIPO_MOVIMENTACAO_POR_PERIODO
+        )->firstOrFail();
+
+        return view('admin.relatorios.movimentacao-por-periodo', compact('relatorio'));
+    }
+
+    public function userMovimentacaoPorPeriodo()
+    {
+        $relatorio = Relatorio::visiveis()
+            ->where('tipo', Relatorio::TIPO_MOVIMENTACAO_POR_PERIODO)
+            ->firstOrFail();
+
+        return view('relatorios.movimentacao-por-periodo', compact('relatorio'));
     }
 }

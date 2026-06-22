@@ -23,6 +23,8 @@
                                         <i class="bi bi-airplane fs-4 text-primary"></i>
                                     @elseif($relatorio->tipo === \App\Models\Relatorio::TIPO_DESEMPENHO_COMPANHIAS)
                                         <i class="bi bi-graph-up-arrow fs-4 text-primary"></i>
+                                    @elseif($relatorio->tipo === \App\Models\Relatorio::TIPO_MOVIMENTACAO_POR_PERIODO)
+                                        <i class="bi bi-calendar3 fs-4 text-primary"></i>
                                     @endif
                                 </div>
                                 <h5 class="card-title mb-0">{{ $relatorio->nome }}</h5>
