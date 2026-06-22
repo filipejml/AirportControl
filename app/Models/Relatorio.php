@@ -11,6 +11,7 @@ class Relatorio extends Model
     public const TIPO_DESEMPENHO_COMPANHIAS = 'desempenho_companhias';
     public const TIPO_MOVIMENTACAO_POR_PERIODO = 'movimentacao_por_periodo';
     public const TIPO_RANKING_AEROPORTOS = 'ranking_aeroportos';
+    public const TIPO_OCUPACAO_VOOS = 'ocupacao_voos';
 
     protected $fillable = [
         'nome',
@@ -36,6 +37,7 @@ class Relatorio extends Model
             self::TIPO_DESEMPENHO_COMPANHIAS => 'relatorios.desempenho-companhias',
             self::TIPO_MOVIMENTACAO_POR_PERIODO => 'relatorios.movimentacao-por-periodo',
             self::TIPO_RANKING_AEROPORTOS => 'relatorios.ranking-aeroportos',
+            self::TIPO_OCUPACAO_VOOS => 'relatorios.ocupacao-voos',
         ][$this->tipo] ?? '#';
     }
 
@@ -47,6 +49,7 @@ class Relatorio extends Model
             self::TIPO_DESEMPENHO_COMPANHIAS => 'admin.relatorios.desempenho-companhias',
             self::TIPO_MOVIMENTACAO_POR_PERIODO => 'admin.relatorios.movimentacao-por-periodo',
             self::TIPO_RANKING_AEROPORTOS => 'admin.relatorios.ranking-aeroportos',
+            self::TIPO_OCUPACAO_VOOS => 'admin.relatorios.ocupacao-voos',
         ][$this->tipo] ?? null;
     }
 }

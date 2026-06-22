@@ -11,13 +11,15 @@ use App\Services\VooMetricasService;
 use App\Services\Relatorios\DesempenhoCompanhiasService;
 use App\Services\Relatorios\MovimentacaoPorPeriodoService;
 use App\Services\Relatorios\RankingAeroportosService;
+use App\Services\Relatorios\OcupacaoVoosService;
 
 class RelatorioController extends Controller
 {
     public function __construct(
         private readonly DesempenhoCompanhiasService $desempenhoCompanhiasService,
         private readonly MovimentacaoPorPeriodoService $movimentacaoPorPeriodoService,
-        private readonly RankingAeroportosService $rankingAeroportosService
+        private readonly RankingAeroportosService $rankingAeroportosService,
+        private readonly OcupacaoVoosService $ocupacaoVoosService
     ) {
     }
 
@@ -412,5 +414,56 @@ class RelatorioController extends Controller
             ->firstOrFail();
 
         return view('relatorios.ranking-aeroportos', compact('relatorio'));
+    }
+
+    public function apiOcupacaoVoos(Request $request)
+    {
+        $filtros = $request->validate([
+            'periodo' => ['nullable', 'in:hoje,semana,mes,ano'],
+            'companhia_id' => ['nullable', 'integer', 'exists:companhias_aereas,id'],
+            'aeroporto_id' => ['nullable', 'integer', 'exists:aeroportos,id'],
+            'faixa' => ['nullable', 'in:baixa,media,alta,lotado'],
+        ]);
+
+        $resultado = $this->ocupacaoVoosService->gerar(
+            $filtros['periodo'] ?? null,
+            isset($filtros['companhia_id']) ? (int) $filtros['companhia_id'] : null,
+            isset($filtros['aeroporto_id']) ? (int) $filtros['aeroporto_id'] : null,
+            $filtros['faixa'] ?? null
+        );
+
+        return response()->json([
+            'success' => true,
+            ...$resultado,
+            'filtros' => $filtros,
+            'timestamp' => now()->toIso8601String(),
+        ]);
+    }
+
+    public function adminOcupacaoVoos()
+    {
+        $relatorio = Relatorio::where('tipo', Relatorio::TIPO_OCUPACAO_VOOS)
+            ->firstOrFail();
+        $companhias = CompanhiaAerea::orderBy('nome')->get();
+        $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
+
+        return view(
+            'admin.relatorios.ocupacao-voos',
+            compact('relatorio', 'companhias', 'aeroportos')
+        );
+    }
+
+    public function userOcupacaoVoos()
+    {
+        $relatorio = Relatorio::visiveis()
+            ->where('tipo', Relatorio::TIPO_OCUPACAO_VOOS)
+            ->firstOrFail();
+        $companhias = CompanhiaAerea::orderBy('nome')->get();
+        $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
+
+        return view(
+            'relatorios.ocupacao-voos',
+            compact('relatorio', 'companhias', 'aeroportos')
+        );
     }
 }

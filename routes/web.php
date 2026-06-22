@@ -81,6 +81,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/relatorios/ranking-aeroportos',
         [RelatorioController::class, 'userRankingAeroportos']
     )->name('relatorios.ranking-aeroportos');
+    Route::get('/relatorios/ocupacao-voos',
+        [RelatorioController::class, 'userOcupacaoVoos']
+    )->name('relatorios.ocupacao-voos');
     // ================================================================
     
     // Rotas de informações de companhias aéreas (usuário comum)
@@ -259,6 +262,9 @@ Route::middleware('auth')->group(function () {
             Route::get('/relatorios/ranking-aeroportos-admin',
                 [RelatorioController::class, 'adminRankingAeroportos']
             )->name('relatorios.ranking-aeroportos');
+            Route::get('/relatorios/ocupacao-voos-admin',
+                [RelatorioController::class, 'adminOcupacaoVoos']
+            )->name('relatorios.ocupacao-voos');
             // ========================================================
             
             // Gerenciamento de usuários
@@ -297,5 +303,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/relatorios/ranking-aeroportos',
         [RelatorioController::class, 'apiRankingAeroportos']
     )->name('api.relatorios.ranking-aeroportos');
+    Route::get('/api/relatorios/ocupacao-voos',
+        [RelatorioController::class, 'apiOcupacaoVoos']
+    )->name('api.relatorios.ocupacao-voos');
     // ============================================================
 });
