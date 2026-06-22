@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\VooMetricasService;
 use Illuminate\Database\Eloquent\Model;
 
 
@@ -46,14 +47,22 @@ class CompanhiaAerea extends Model
     }
 
     // NOVO: Contagem de voos
-    public function getVoosCountAttribute()
+    public function getVoosCountAttribute($value = null)
     {
-        return $this->voos()->count();
+        if (array_key_exists('voos_sum_qtd_voos', $this->attributes)) {
+            return (int) $this->attributes['voos_sum_qtd_voos'];
+        }
+
+        return $this->voos()->sum('qtd_voos');
     }
 
     // NOVO: Total de passageiros transportados
-    public function getTotalPassageirosAttribute()
+    public function getTotalPassageirosAttribute($value = null)
     {
+        if (array_key_exists('voos_sum_total_passageiros', $this->attributes)) {
+            return (int) $this->attributes['voos_sum_total_passageiros'];
+        }
+
         return $this->voos()->sum('total_passageiros');
     }
 
@@ -66,29 +75,9 @@ class CompanhiaAerea extends Model
             return null;
         }
 
-        $somaNotas = 0;
-        $totalNotas = 0;
+        $media = VooMetricasService::mediaGeral($voos);
 
-        foreach ($voos as $voo) {
-            if ($voo->nota_obj) {
-                $somaNotas += $voo->nota_obj;
-                $totalNotas++;
-            }
-            if ($voo->nota_pontualidade) {
-                $somaNotas += $voo->nota_pontualidade;
-                $totalNotas++;
-            }
-            if ($voo->nota_servicos) {
-                $somaNotas += $voo->nota_servicos;
-                $totalNotas++;
-            }
-            if ($voo->nota_patio) {
-                $somaNotas += $voo->nota_patio;
-                $totalNotas++;
-            }
-        }
-
-        return $totalNotas > 0 ? round($somaNotas / $totalNotas, 1) : null;
+        return $media > 0 ? round($media, 1) : null;
     }
 
     // NOVO: Scope para filtrar companhias com mais de X aeronaves

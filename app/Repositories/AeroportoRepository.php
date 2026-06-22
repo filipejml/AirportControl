@@ -42,14 +42,14 @@ class AeroportoRepository
     public function getMediasNotas($aeroportoId, $ano = null)
     {
         $query = DB::table('voos')
-            ->where('aeroporto_id', $aeroportoId)
-            ->whereNotNull('nota_obj');
+            ->where('aeroporto_id', $aeroportoId);
             
         if ($ano) {
             $query->whereYear('created_at', $ano);
         }
         
         $notaObj = $query->clone()
+            ->whereNotNull('nota_obj')
             ->select(DB::raw('SUM(qtd_voos * nota_obj) / SUM(qtd_voos) as media'))
             ->value('media') ?? 0;
             
@@ -167,11 +167,16 @@ class AeroportoRepository
             ->where('voos.aeroporto_id', $aeroportoId)
             ->select(
                 'companhias_aereas.nome as companhia',
-                DB::raw('AVG(voos.nota_obj) as nota_obj'),
-                DB::raw('AVG(voos.nota_pontualidade) as nota_pontualidade'),
-                DB::raw('AVG(voos.nota_servicos) as nota_servicos'),
-                DB::raw('AVG(voos.nota_patio) as nota_patio'),
-                DB::raw('(AVG(voos.nota_obj) + AVG(voos.nota_pontualidade) + AVG(voos.nota_servicos) + AVG(voos.nota_patio)) / 4 as media_geral')
+                DB::raw('SUM(voos.qtd_voos * voos.nota_obj) / NULLIF(SUM(CASE WHEN voos.nota_obj IS NOT NULL THEN voos.qtd_voos ELSE 0 END), 0) as nota_obj'),
+                DB::raw('SUM(voos.qtd_voos * voos.nota_pontualidade) / NULLIF(SUM(CASE WHEN voos.nota_pontualidade IS NOT NULL THEN voos.qtd_voos ELSE 0 END), 0) as nota_pontualidade'),
+                DB::raw('SUM(voos.qtd_voos * voos.nota_servicos) / NULLIF(SUM(CASE WHEN voos.nota_servicos IS NOT NULL THEN voos.qtd_voos ELSE 0 END), 0) as nota_servicos'),
+                DB::raw('SUM(voos.qtd_voos * voos.nota_patio) / NULLIF(SUM(CASE WHEN voos.nota_patio IS NOT NULL THEN voos.qtd_voos ELSE 0 END), 0) as nota_patio'),
+                DB::raw('(
+                    SUM(voos.qtd_voos * voos.nota_obj) / NULLIF(SUM(CASE WHEN voos.nota_obj IS NOT NULL THEN voos.qtd_voos ELSE 0 END), 0) +
+                    SUM(voos.qtd_voos * voos.nota_pontualidade) / NULLIF(SUM(CASE WHEN voos.nota_pontualidade IS NOT NULL THEN voos.qtd_voos ELSE 0 END), 0) +
+                    SUM(voos.qtd_voos * voos.nota_servicos) / NULLIF(SUM(CASE WHEN voos.nota_servicos IS NOT NULL THEN voos.qtd_voos ELSE 0 END), 0) +
+                    SUM(voos.qtd_voos * voos.nota_patio) / NULLIF(SUM(CASE WHEN voos.nota_patio IS NOT NULL THEN voos.qtd_voos ELSE 0 END), 0)
+                ) / 4 as media_geral')
             )
             ->groupBy('companhias_aereas.id', 'companhias_aereas.nome')
             ->havingRaw('media_geral > 0')

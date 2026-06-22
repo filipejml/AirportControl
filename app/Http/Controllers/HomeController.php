@@ -7,6 +7,7 @@ use App\Models\CompanhiaAerea;
 use App\Models\Aeronave;
 use App\Models\Aeroporto;
 use App\Models\Voo;
+use App\Services\VooMetricasService;
 use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
@@ -47,10 +48,10 @@ class HomeController extends Controller
         
         // Médias das Notas (usando os nomes corretos dos campos)
         $mediasNotas = [
-            'objetivo' => round(Voo::whereNotNull('nota_obj')->avg('nota_obj') ?? 0, 1),
-            'pontualidade' => round(Voo::whereNotNull('nota_pontualidade')->avg('nota_pontualidade') ?? 0, 1),
-            'servicos' => round(Voo::whereNotNull('nota_servicos')->avg('nota_servicos') ?? 0, 1),
-            'patio' => round(Voo::whereNotNull('nota_patio')->avg('nota_patio') ?? 0, 1),
+            'objetivo' => round(VooMetricasService::mediaPonderadaQuery(Voo::query(), 'nota_obj'), 1),
+            'pontualidade' => round(VooMetricasService::mediaPonderadaQuery(Voo::query(), 'nota_pontualidade'), 1),
+            'servicos' => round(VooMetricasService::mediaPonderadaQuery(Voo::query(), 'nota_servicos'), 1),
+            'patio' => round(VooMetricasService::mediaPonderadaQuery(Voo::query(), 'nota_patio'), 1),
         ];
         
         // Melhores Companhias (usando os nomes corretos dos campos)
@@ -90,8 +91,10 @@ class HomeController extends Controller
                 ->join('voos', 'companhias_aereas.id', '=', 'voos.companhia_aerea_id')
                 ->whereNotNull("voos.{$dbField}")
                 ->groupBy('companhias_aereas.id', 'companhias_aereas.nome')
-                ->havingRaw('COUNT(*) >= 3')  // Mínimo de 3 voos para considerar
-                ->orderByRaw('AVG(voos.' . $dbField . ') DESC')
+                ->havingRaw('SUM(voos.qtd_voos) >= 3')
+                ->orderByRaw(
+                    'SUM(voos.qtd_voos * voos.' . $dbField . ') / SUM(voos.qtd_voos) DESC'
+                )
                 ->first();
             
             $melhores[$displayName] = $melhor ? $melhor->nome : 'N/A';
@@ -120,8 +123,10 @@ class HomeController extends Controller
                 ->join('voos', 'aeronaves.id', '=', 'voos.aeronave_id')
                 ->whereNotNull("voos.{$dbField}")
                 ->groupBy('aeronaves.id', 'aeronaves.modelo')
-                ->havingRaw('COUNT(*) >= 3')  // Mínimo de 3 voos para considerar
-                ->orderByRaw('AVG(voos.' . $dbField . ') DESC')
+                ->havingRaw('SUM(voos.qtd_voos) >= 3')
+                ->orderByRaw(
+                    'SUM(voos.qtd_voos * voos.' . $dbField . ') / SUM(voos.qtd_voos) DESC'
+                )
                 ->first();
             
             $melhores[$displayName] = $melhor ? $melhor->modelo : 'N/A';

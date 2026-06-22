@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Relatorio;
 use App\Models\Aeroporto;
 use App\Models\CompanhiaAerea;
+use App\Services\VooMetricasService;
 
 class RelatorioController extends Controller
 {
@@ -165,37 +166,19 @@ class RelatorioController extends Controller
 
         $query = Aeroporto::with(['voos' => $carregarVoos]);
         
-        $dados = $query->get()->map(function ($aeroporto) {
+        $aeroportos = $query->get();
+        $todosVoos = $aeroportos->flatMap->voos;
+
+        $dados = $aeroportos->map(function ($aeroporto) {
             $voos = $aeroporto->voos;
             $totalVoos = $voos->sum('qtd_voos');
             $totalPassageiros = $voos->sum('total_passageiros');
 
-            $mediaPonderada = function (string $campo) use ($voos): float {
-                $voosComNota = $voos->whereNotNull($campo);
-                $pesoTotal = $voosComNota->sum('qtd_voos');
-
-                if ($pesoTotal <= 0) {
-                    return 0;
-                }
-
-                return $voosComNota->sum(
-                    fn ($voo) => $voo->{$campo} * $voo->qtd_voos
-                ) / $pesoTotal;
-            };
-
-            $notaObj = $mediaPonderada('nota_obj');
-            $notaPontualidade = $mediaPonderada('nota_pontualidade');
-            $notaServicos = $mediaPonderada('nota_servicos');
-            $notaPatio = $mediaPonderada('nota_patio');
-            $notasDisponiveis = collect([
-                $notaObj,
-                $notaPontualidade,
-                $notaServicos,
-                $notaPatio,
-            ])->filter(fn ($nota) => $nota > 0);
-            $mediaGeral = $notasDisponiveis->isNotEmpty()
-                ? $notasDisponiveis->avg()
-                : 0;
+            $notaObj = VooMetricasService::mediaPonderada($voos, 'nota_obj');
+            $notaPontualidade = VooMetricasService::mediaPonderada($voos, 'nota_pontualidade');
+            $notaServicos = VooMetricasService::mediaPonderada($voos, 'nota_servicos');
+            $notaPatio = VooMetricasService::mediaPonderada($voos, 'nota_patio');
+            $mediaGeral = VooMetricasService::mediaGeral($voos);
             
             // Voos por tipo (Regular/Charter)
             $voosRegulares = $voos->where('tipo_voo', 'Regular')->sum('qtd_voos');
@@ -248,7 +231,7 @@ class RelatorioController extends Controller
             'total_aeroportos' => $dados->count(),
             'total_voos' => $dados->sum('total_voos'),
             'total_passageiros' => $dados->sum('total_passageiros'),
-            'media_geral_geral' => round($dados->avg('media_geral'), 2),
+            'media_geral_geral' => round(VooMetricasService::mediaGeral($todosVoos), 2),
         ];
         
         return response()->json([

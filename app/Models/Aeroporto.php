@@ -205,9 +205,7 @@ class Aeroporto extends Model
     // CORRIGIDO: Aeroportos mais movimentados (por soma de qtd_voos)
     public function scopeMaisMovimentados($query, $limite = 10)
     {
-        return $query->withCount(['voos as total_voos_sum' => function($q) {
-                $q->select(DB::raw('SUM(qtd_voos)'));
-            }])
+        return $query->withSum('voos as total_voos_sum', 'qtd_voos')
             ->orderBy('total_voos_sum', 'desc')
             ->limit($limite);
     }
@@ -235,10 +233,9 @@ class Aeroporto extends Model
     public function getTopCompanhiasAttribute($limite = 5)
     {
         return $this->companhias()
-            ->withCount(['voos as total_voos_sum' => function($query) {
-                $query->where('aeroporto_id', $this->id)
-                      ->select(DB::raw('SUM(qtd_voos)'));
-            }])
+            ->withSum(['voos as total_voos_sum' => function($query) {
+                $query->where('aeroporto_id', $this->id);
+            }], 'qtd_voos')
             ->orderBy('total_voos_sum', 'desc')
             ->limit($limite)
             ->get();
