@@ -92,9 +92,10 @@ Route::middleware('auth')->group(function () {
     | ROTAS DE CRUD ADMIN (ACESSO COMPLETO)
     |--------------------------------------------------------------------------
     */
-    
-    // Rotas para voos - CRUD completo
-    Route::resource('voos', VooController::class);
+
+    Route::middleware('admin')->group(function () {
+        // Rotas para voos - CRUD completo
+        Route::resource('voos', VooController::class);
     
     // Rotas para companhias aéreas - CRUD completo
     Route::resource('companhias', CompanhiaAereaController::class);
@@ -206,8 +207,9 @@ Route::middleware('auth')->group(function () {
     // Exportar PDF de voos
     Route::get('/voos/export/pdf', [VooController::class, 'exportPDF'])->name('voos.export.pdf');
     
-    // Exportar PDF de voos da companhia
-    Route::get('/companhias/{companhia}/voos-pdf', [CompanhiaAereaController::class, 'exportVoosPdf'])->name('companhias.voos.pdf');
+        // Exportar PDF de voos da companhia
+        Route::get('/companhias/{companhia}/voos-pdf', [CompanhiaAereaController::class, 'exportVoosPdf'])->name('companhias.voos.pdf');
+    });
 
     /*
     |--------------------------------------------------------------------------
