@@ -11,6 +11,7 @@ use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
 use DateTime;
+use App\Services\VooMetricasService;
 
 class CompanhiaAereaController extends Controller
 {
@@ -248,7 +249,9 @@ class CompanhiaAereaController extends Controller
     public function informacoes(Request $request)
     {
         $query = CompanhiaAerea::with(['aeronaves', 'aeroportos', 'voos'])
-            ->withCount('aeronaves', 'voos');
+            ->withCount('aeronaves')
+            ->withSum('voos', 'qtd_voos')
+            ->withSum('voos', 'total_passageiros');
         
         // Aplicar filtro por companhia (selecionar uma companhia específica)
         if ($request->filled('companhia')) {
@@ -271,27 +274,18 @@ class CompanhiaAereaController extends Controller
                 $query->orderBy('nome', 'desc');
                 break;
             case 'mais_voos':
-                $query->orderBy('voos_count', 'desc');
+                $query->orderBy('voos_sum_qtd_voos', 'desc');
                 break;
             case 'mais_passageiros':
-                $query->withSum('voos', 'total_passageiros')
-                    ->orderBy('voos_sum_total_passageiros', 'desc');
+                $query->orderBy('voos_sum_total_passageiros', 'desc');
                 break;
             case 'melhor_objetivo':
-                $query->withAvg('voos', 'nota_obj')
-                    ->orderBy('voos_avg_nota_obj', 'desc');
                 break;
             case 'melhor_pontualidade':
-                $query->withAvg('voos', 'nota_pontualidade')
-                    ->orderBy('voos_avg_nota_pontualidade', 'desc');
                 break;
             case 'melhor_servicos':
-                $query->withAvg('voos', 'nota_servicos')
-                    ->orderBy('voos_avg_nota_servicos', 'desc');
                 break;
             case 'melhor_patio':
-                $query->withAvg('voos', 'nota_patio')
-                    ->orderBy('voos_avg_nota_patio', 'desc');
                 break;
             default:
                 $query->orderBy('nome', 'asc');
@@ -302,35 +296,37 @@ class CompanhiaAereaController extends Controller
         
         // Calcular estatísticas para cada companhia
         foreach ($companhias as $companhia) {
-            // Total de passageiros
-            $companhia->total_passageiros = $companhia->voos()->sum('total_passageiros');
-            
+            $companhia->voos_count = (int) ($companhia->voos_sum_qtd_voos ?? 0);
+
             // Médias das notas por categoria
-            $companhia->nota_obj = $companhia->voos()->avg('nota_obj') ?? 0;
-            $companhia->nota_pontualidade = $companhia->voos()->avg('nota_pontualidade') ?? 0;
-            $companhia->nota_servicos = $companhia->voos()->avg('nota_servicos') ?? 0;
-            $companhia->nota_patio = $companhia->voos()->avg('nota_patio') ?? 0;
-            
-            // Média geral (média das quatro notas)
-            $medias = $companhia->voos()
-                ->select(
-                    DB::raw('COALESCE(AVG(nota_obj), 0) as obj'),
-                    DB::raw('COALESCE(AVG(nota_pontualidade), 0) as pontualidade'),
-                    DB::raw('COALESCE(AVG(nota_servicos), 0) as servicos'),
-                    DB::raw('COALESCE(AVG(nota_patio), 0) as patio')
-                )
-                ->first();
-            
-            $companhia->media_notas = ($medias->obj + $medias->pontualidade + $medias->servicos + $medias->patio) / 4;
+            $companhia->nota_obj = VooMetricasService::mediaPonderada($companhia->voos, 'nota_obj');
+            $companhia->nota_pontualidade = VooMetricasService::mediaPonderada($companhia->voos, 'nota_pontualidade');
+            $companhia->nota_servicos = VooMetricasService::mediaPonderada($companhia->voos, 'nota_servicos');
+            $companhia->nota_patio = VooMetricasService::mediaPonderada($companhia->voos, 'nota_patio');
+            $companhia->media_notas = VooMetricasService::mediaGeral($companhia->voos);
             
             // Aeroportos operados com contagem de voos
             $companhia->aeroportos_com_voos = $companhia->aeroportos->map(function($aeroporto) use ($companhia) {
                 return [
                     'id' => $aeroporto->id,
                     'nome' => $aeroporto->nome_aeroporto,
-                    'voos_count' => $aeroporto->voos()->where('companhia_aerea_id', $companhia->id)->count()
+                    'voos_count' => $aeroporto->voos()
+                        ->where('companhia_aerea_id', $companhia->id)
+                        ->sum('qtd_voos')
                 ];
             });
+        }
+
+        $campoOrdenacao = match ($request->get('ordenacao')) {
+            'melhor_objetivo' => 'nota_obj',
+            'melhor_pontualidade' => 'nota_pontualidade',
+            'melhor_servicos' => 'nota_servicos',
+            'melhor_patio' => 'nota_patio',
+            default => null,
+        };
+
+        if ($campoOrdenacao) {
+            $companhias = $companhias->sortByDesc($campoOrdenacao)->values();
         }
         
         // Buscar todos os aeroportos para os filtros
@@ -360,7 +356,9 @@ class CompanhiaAereaController extends Controller
         $totalPassageiros = $companhias->sum('total_passageiros');
         
         // Média geral de notas (considerando os filtros aplicados)
-        $mediaGeralNotas = $companhias->avg('media_notas') ?? 0;
+        $mediaGeralNotas = VooMetricasService::mediaGeral(
+            $companhias->flatMap->voos
+        );
         
         return view('companhias.informacoes', compact(
             'companhias',
@@ -431,15 +429,15 @@ class CompanhiaAereaController extends Controller
         $voosFiltrados = $queryVoos->get();
         
         // Estatísticas básicas com filtros
-        $totalVoos = $voosFiltrados->count();
+        $totalVoos = $voosFiltrados->sum('qtd_voos');
         $totalPassageiros = $voosFiltrados->sum('total_passageiros');
         
         // Médias das notas com filtros
-        $notaObj = $voosFiltrados->avg('nota_obj') ?? 0;
-        $notaPontualidade = $voosFiltrados->avg('nota_pontualidade') ?? 0;
-        $notaServicos = $voosFiltrados->avg('nota_servicos') ?? 0;
-        $notaPatio = $voosFiltrados->avg('nota_patio') ?? 0;
-        $mediaGeral = ($notaObj + $notaPontualidade + $notaServicos + $notaPatio) / 4;
+        $notaObj = VooMetricasService::mediaPonderada($voosFiltrados, 'nota_obj');
+        $notaPontualidade = VooMetricasService::mediaPonderada($voosFiltrados, 'nota_pontualidade');
+        $notaServicos = VooMetricasService::mediaPonderada($voosFiltrados, 'nota_servicos');
+        $notaPatio = VooMetricasService::mediaPonderada($voosFiltrados, 'nota_patio');
+        $mediaGeral = VooMetricasService::mediaGeral($voosFiltrados);
         
         // Últimos voos com filtros (últimos 5)
         $ultimosVoos = $queryVoos->clone()
@@ -458,7 +456,7 @@ class CompanhiaAereaController extends Controller
         foreach ($companhia->aeroportos as $aeroporto) {
             $quantidadeVoos = $queryVoos->clone()
                 ->where('aeroporto_id', $aeroporto->id)
-                ->count();
+                ->sum('qtd_voos');
             
             if ($quantidadeVoos > 0) {
                 $voosPorAeroporto->put($aeroporto->nome_aeroporto, $quantidadeVoos);
@@ -577,17 +575,17 @@ class CompanhiaAereaController extends Controller
             ->get();
         
         // Estatísticas para o relatório
-        $totalVoos = $voos->count();
+        $totalVoos = $voos->sum('qtd_voos');
         $totalPassageiros = $voos->sum('total_passageiros');
         $totalAeronaves = $companhia->aeronaves()->count();
         $totalAeroportos = $companhia->aeroportos()->count();
         
         // Notas médias
-        $notaObj = $voos->avg('nota_obj') ?? 0;
-        $notaPontualidade = $voos->avg('nota_pontualidade') ?? 0;
-        $notaServicos = $voos->avg('nota_servicos') ?? 0;
-        $notaPatio = $voos->avg('nota_patio') ?? 0;
-        $mediaGeral = ($notaObj + $notaPontualidade + $notaServicos + $notaPatio) / 4;
+        $notaObj = VooMetricasService::mediaPonderada($voos, 'nota_obj');
+        $notaPontualidade = VooMetricasService::mediaPonderada($voos, 'nota_pontualidade');
+        $notaServicos = VooMetricasService::mediaPonderada($voos, 'nota_servicos');
+        $notaPatio = VooMetricasService::mediaPonderada($voos, 'nota_patio');
+        $mediaGeral = VooMetricasService::mediaGeral($voos);
         
         // Data de geração do relatório
         $dataGeracao = Carbon::now()->format('d/m/Y H:i:s');
@@ -595,7 +593,7 @@ class CompanhiaAereaController extends Controller
         // Dados para o gráfico de voos por aeroporto (top 5)
         $voosPorAeroporto = $voos->groupBy('aeroporto.nome_aeroporto')
             ->map(function($grupo) {
-                return $grupo->count();
+                return $grupo->sum('qtd_voos');
             })
             ->sortDesc()
             ->take(5);
@@ -604,7 +602,7 @@ class CompanhiaAereaController extends Controller
         $horarios = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
         $voosPorHorario = [];
         foreach ($horarios as $horario) {
-            $voosPorHorario[$horario] = $voos->where('horario_voo', $horario)->count();
+            $voosPorHorario[$horario] = $voos->where('horario_voo', $horario)->sum('qtd_voos');
         }
         
         // Gerar o PDF

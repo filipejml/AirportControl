@@ -48,10 +48,9 @@ class RankingService
         foreach ($aeronaves as $aeronave) {
             $totalVoos = $aeronave->voos()->sum('qtd_voos');
             $totalPassageiros = $aeronave->voos()->sum('total_passageiros');
-            $numeroRegistrosVoos = $aeronave->voos()->count();
-            $minRecords = 3;
+            $minVoos = 3;
             
-            $hasSufficientData = $numeroRegistrosVoos >= $minRecords;
+            $hasSufficientData = $totalVoos >= $minVoos;
             
             $rankings[] = [
                 'id' => $aeronave->id,
@@ -84,7 +83,14 @@ class RankingService
         $mediaServicos = $this->aeronaveRepository->getAverageRating($aeronaveId, 'nota_servicos');
         $mediaPatio = $this->aeronaveRepository->getAverageRating($aeronaveId, 'nota_patio');
         
-        return round(($mediaObjetivo + $mediaPontualidade + $mediaServicos + $mediaPatio) / 4, 1);
+        $medias = collect([
+            $mediaObjetivo,
+            $mediaPontualidade,
+            $mediaServicos,
+            $mediaPatio,
+        ])->filter(fn ($media) => $media > 0);
+
+        return $medias->isEmpty() ? 0 : round($medias->avg(), 1);
     }
     
     /**
@@ -131,13 +137,19 @@ class RankingService
     private function calculateStatistics(array $rankings, Collection $aeronavesComDados): array
     {
         $collection = collect($rankings);
+        $totalVoosAvaliados = $aeronavesComDados->sum('total_voos');
+        $mediaNotaGeral = $totalVoosAvaliados > 0
+            ? $aeronavesComDados->sum(
+                fn ($aeronave) => $aeronave['nota_geral'] * $aeronave['total_voos']
+            ) / $totalVoosAvaliados
+            : 0;
         
         return [
             'total_aeronaves' => count($rankings),
             'total_fabricantes' => $collection->pluck('fabricante')->unique()->count(),
             'total_voos_geral' => $collection->sum('total_voos'),
             'total_passageiros_geral' => $collection->sum('total_passageiros'),
-            'media_nota_geral' => $aeronavesComDados->avg('nota_geral'),
+            'media_nota_geral' => round($mediaNotaGeral, 1),
             'aeronaves_com_dados' => $collection->where('tem_dados', true)->count(),
             'aeronaves_com_dados_suficientes' => $aeronavesComDados->count(),
             'porte_pequeno' => $collection->where('porte', 'Pequeno Porte (≤100)')->count(),

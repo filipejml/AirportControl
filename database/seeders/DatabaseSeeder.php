@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+<<<<<<< HEAD
         // Criar usuário Admin (tipo = 0)
         User::create([
             'name' => 'Administrador',
@@ -30,5 +31,17 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('123456'),
             'tipo' => 1, // 1 = usuário comum
         ]);
+=======
+        User::updateOrCreate(
+            ['username' => 'admin'],
+            [
+                'name' => 'Administrador',
+                'email' => 'admin@example.com',
+                'password' => Hash::make('password'),
+                'tipo' => 0,
+                'email_verified_at' => now(),
+            ]
+        );
+>>>>>>> c8713da115148d1dd67d7d3440d3b0c29348ce42
     }
 }

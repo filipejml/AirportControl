@@ -6,6 +6,7 @@ namespace App\Repositories;
 use App\Models\Aeronave;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
+use App\Services\VooMetricasService;
 
 class AeronaveRepository
 {
@@ -66,15 +67,12 @@ class AeronaveRepository
             ->where('aeronave_id', $aeronaveId)
             ->whereNotNull($campoNota);
         
-        // Verificar se tem registros suficientes
-        if ($registros->count() < $minRecords) {
+        // Cada registro pode representar vários voos.
+        if ((clone $registros)->sum('qtd_voos') < $minRecords) {
             return 0;
         }
-        
-        $media = $registros->select(DB::raw("AVG($campoNota) as media"))
-            ->value('media');
-            
-        return round($media ?? 0, 1);
+
+        return round(VooMetricasService::mediaPonderadaQuery($registros, $campoNota), 1);
     }
     
     /**
@@ -86,9 +84,9 @@ class AeronaveRepository
             ->whereHas('voos', function($query) use ($minRecords) {
                 $query->select('aeronave_id')
                     ->groupBy('aeronave_id')
-                    ->havingRaw('COUNT(*) >= ?', [$minRecords]);
+                    ->havingRaw('SUM(qtd_voos) >= ?', [$minRecords]);
             })
-            ->withCount('voos')
+            ->withSum('voos', 'qtd_voos')
             ->get();
     }
     
@@ -105,14 +103,14 @@ class AeronaveRepository
         $voosFiltrados = $queryVoos->get();
         
         return [
-            'total_voos' => $voosFiltrados->count(),
+            'total_voos' => $voosFiltrados->sum('qtd_voos'),
             'total_passageiros' => $voosFiltrados->sum('total_passageiros'),
             'total_companhias' => $aeronave->companhias()->count(),
             'total_aeroportos' => $voosFiltrados->pluck('aeroporto_id')->unique()->count(),
-            'nota_obj' => $voosFiltrados->avg('nota_obj') ?? 0,
-            'nota_pontualidade' => $voosFiltrados->avg('nota_pontualidade') ?? 0,
-            'nota_servicos' => $voosFiltrados->avg('nota_servicos') ?? 0,
-            'nota_patio' => $voosFiltrados->avg('nota_patio') ?? 0,
+            'nota_obj' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_obj'),
+            'nota_pontualidade' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_pontualidade'),
+            'nota_servicos' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_servicos'),
+            'nota_patio' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_patio'),
             'ultimos_voos' => $queryVoos->clone()->orderBy('created_at', 'desc')->limit(5)->get(),
             'voos_por_companhia' => $this->getVoosPorCompanhia($aeronave, $filters),
             'passageiros_por_companhia' => $this->getPassageirosPorCompanhia($aeronave, $filters)
@@ -190,7 +188,7 @@ class AeronaveRepository
         foreach ($aeronave->companhias as $companhia) {
             $query = $aeronave->voos()->where('companhia_aerea_id', $companhia->id);
             $this->applyFilters($query, $filters);
-            $quantidade = $query->count();
+            $quantidade = $query->sum('qtd_voos');
             
             if ($quantidade > 0) {
                 $result->put($companhia->nome, $quantidade);

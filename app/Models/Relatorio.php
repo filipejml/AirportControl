@@ -1,5 +1,4 @@
 <?php
-// app/Models/Relatorio.php
 
 namespace App\Models;
 
@@ -7,32 +6,50 @@ use Illuminate\Database\Eloquent\Model;
 
 class Relatorio extends Model
 {
+    public const TIPO_COMPANHIAS_POR_AEROPORTO = 'companhias_por_aeroporto';
+    public const TIPO_VOOS_POR_AEROPORTO = 'voos_por_aeroporto';
+    public const TIPO_DESEMPENHO_COMPANHIAS = 'desempenho_companhias';
+    public const TIPO_MOVIMENTACAO_POR_PERIODO = 'movimentacao_por_periodo';
+    public const TIPO_RANKING_AEROPORTOS = 'ranking_aeroportos';
+    public const TIPO_OCUPACAO_VOOS = 'ocupacao_voos';
+
     protected $fillable = [
         'nome',
         'descricao',
-        'visivel_usuario'
+        'tipo',
+        'visivel_usuario',
     ];
-    
-    /**
-     * Relacionamento com o tipo de relatório
-     * Você pode adicionar um campo 'tipo' ou 'rota' na migration
-     */
+
     protected $casts = [
         'visivel_usuario' => 'boolean',
     ];
-    
-    /**
-     * Get the route for this report
-     */
-    public function getRouteAttribute()
+
+    public function scopeVisiveis($query)
     {
-        // Mapeamento dos tipos de relatório para suas rotas
-        $rotas = [
-            'companhias_por_aeroporto' => 'relatorios.companhias-por-aeroporto',
-            'voos_por_periodo' => 'relatorios.voos-por-periodo',
-            // Adicione outros relatórios aqui
-        ];
-        
-        return $rotas[$this->tipo] ?? '#';
+        return $query->where('visivel_usuario', true);
+    }
+
+    public function getRouteAttribute(): string
+    {
+        return [
+            self::TIPO_COMPANHIAS_POR_AEROPORTO => 'relatorios.companhias-por-aeroporto',
+            self::TIPO_VOOS_POR_AEROPORTO => 'relatorios.voos-por-aeroporto',
+            self::TIPO_DESEMPENHO_COMPANHIAS => 'relatorios.desempenho-companhias',
+            self::TIPO_MOVIMENTACAO_POR_PERIODO => 'relatorios.movimentacao-por-periodo',
+            self::TIPO_RANKING_AEROPORTOS => 'relatorios.ranking-aeroportos',
+            self::TIPO_OCUPACAO_VOOS => 'relatorios.ocupacao-voos',
+        ][$this->tipo] ?? '#';
+    }
+
+    public function getAdminRouteAttribute(): ?string
+    {
+        return [
+            self::TIPO_COMPANHIAS_POR_AEROPORTO => 'admin.relatorios.companhias-por-aeroporto',
+            self::TIPO_VOOS_POR_AEROPORTO => 'admin.relatorios.voos-por-aeroporto',
+            self::TIPO_DESEMPENHO_COMPANHIAS => 'admin.relatorios.desempenho-companhias',
+            self::TIPO_MOVIMENTACAO_POR_PERIODO => 'admin.relatorios.movimentacao-por-periodo',
+            self::TIPO_RANKING_AEROPORTOS => 'admin.relatorios.ranking-aeroportos',
+            self::TIPO_OCUPACAO_VOOS => 'admin.relatorios.ocupacao-voos',
+        ][$this->tipo] ?? null;
     }
 }

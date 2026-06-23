@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\VooMetricasService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,21 +33,12 @@ class Dashboard extends Model
      */
     public function getMediasNotas()
     {
-        $medias = [];
-        
-        // Média de objetivo (nota_obj)
-        $medias['objetivo'] = DB::table('voos')->avg('nota_obj') ?? 0;
-        
-        // Média de pontualidade (nota_pontualidade)
-        $medias['pontualidade'] = DB::table('voos')->avg('nota_pontualidade') ?? 0;
-        
-        // Média de serviços (nota_servicos)
-        $medias['servicos'] = DB::table('voos')->avg('nota_servicos') ?? 0;
-        
-        // Média de patio (nota_patio)
-        $medias['patio'] = DB::table('voos')->avg('nota_patio') ?? 0;
-        
-        return $medias;
+        return [
+            'objetivo' => VooMetricasService::mediaPonderadaQuery(DB::table('voos'), 'nota_obj'),
+            'pontualidade' => VooMetricasService::mediaPonderadaQuery(DB::table('voos'), 'nota_pontualidade'),
+            'servicos' => VooMetricasService::mediaPonderadaQuery(DB::table('voos'), 'nota_servicos'),
+            'patio' => VooMetricasService::mediaPonderadaQuery(DB::table('voos'), 'nota_patio'),
+        ];
     }
     
     /**
@@ -59,9 +51,10 @@ class Dashboard extends Model
         // Melhor companhia por objetivo
         $melhorObjetivo = DB::table('voos')
             ->join('companhias_aereas', 'voos.companhia_aerea_id', '=', 'companhias_aereas.id')
-            ->select('companhias_aereas.nome', DB::raw('AVG(voos.nota_obj) as media'))
+            ->select('companhias_aereas.nome', DB::raw('SUM(voos.qtd_voos * voos.nota_obj) / SUM(voos.qtd_voos) as media'))
             ->whereNotNull('voos.nota_obj')
             ->groupBy('companhias_aereas.id', 'companhias_aereas.nome')
+            ->havingRaw('SUM(voos.qtd_voos) >= 3')
             ->orderBy('media', 'DESC')
             ->first();
             
@@ -70,9 +63,10 @@ class Dashboard extends Model
         // Melhor companhia por pontualidade
         $melhorPontualidade = DB::table('voos')
             ->join('companhias_aereas', 'voos.companhia_aerea_id', '=', 'companhias_aereas.id')
-            ->select('companhias_aereas.nome', DB::raw('AVG(voos.nota_pontualidade) as media'))
+            ->select('companhias_aereas.nome', DB::raw('SUM(voos.qtd_voos * voos.nota_pontualidade) / SUM(voos.qtd_voos) as media'))
             ->whereNotNull('voos.nota_pontualidade')
             ->groupBy('companhias_aereas.id', 'companhias_aereas.nome')
+            ->havingRaw('SUM(voos.qtd_voos) >= 3')
             ->orderBy('media', 'DESC')
             ->first();
             
@@ -81,9 +75,10 @@ class Dashboard extends Model
         // Melhor companhia por serviços
         $melhorServicos = DB::table('voos')
             ->join('companhias_aereas', 'voos.companhia_aerea_id', '=', 'companhias_aereas.id')
-            ->select('companhias_aereas.nome', DB::raw('AVG(voos.nota_servicos) as media'))
+            ->select('companhias_aereas.nome', DB::raw('SUM(voos.qtd_voos * voos.nota_servicos) / SUM(voos.qtd_voos) as media'))
             ->whereNotNull('voos.nota_servicos')
             ->groupBy('companhias_aereas.id', 'companhias_aereas.nome')
+            ->havingRaw('SUM(voos.qtd_voos) >= 3')
             ->orderBy('media', 'DESC')
             ->first();
             
@@ -92,9 +87,10 @@ class Dashboard extends Model
         // Melhor companhia por patio
         $melhorPatio = DB::table('voos')
             ->join('companhias_aereas', 'voos.companhia_aerea_id', '=', 'companhias_aereas.id')
-            ->select('companhias_aereas.nome', DB::raw('AVG(voos.nota_patio) as media'))
+            ->select('companhias_aereas.nome', DB::raw('SUM(voos.qtd_voos * voos.nota_patio) / SUM(voos.qtd_voos) as media'))
             ->whereNotNull('voos.nota_patio')
             ->groupBy('companhias_aereas.id', 'companhias_aereas.nome')
+            ->havingRaw('SUM(voos.qtd_voos) >= 3')
             ->orderBy('media', 'DESC')
             ->first();
             
@@ -113,9 +109,10 @@ class Dashboard extends Model
         // Melhor modelo por objetivo
         $melhorObjetivo = DB::table('voos')
             ->join('aeronaves', 'voos.aeronave_id', '=', 'aeronaves.id')
-            ->select('aeronaves.modelo', DB::raw('AVG(voos.nota_obj) as media'))
+            ->select('aeronaves.modelo', DB::raw('SUM(voos.qtd_voos * voos.nota_obj) / SUM(voos.qtd_voos) as media'))
             ->whereNotNull('voos.nota_obj')
             ->groupBy('aeronaves.modelo')
+            ->havingRaw('SUM(voos.qtd_voos) >= 3')
             ->orderBy('media', 'DESC')
             ->first();
             
@@ -124,9 +121,10 @@ class Dashboard extends Model
         // Melhor modelo por pontualidade
         $melhorPontualidade = DB::table('voos')
             ->join('aeronaves', 'voos.aeronave_id', '=', 'aeronaves.id')
-            ->select('aeronaves.modelo', DB::raw('AVG(voos.nota_pontualidade) as media'))
+            ->select('aeronaves.modelo', DB::raw('SUM(voos.qtd_voos * voos.nota_pontualidade) / SUM(voos.qtd_voos) as media'))
             ->whereNotNull('voos.nota_pontualidade')
             ->groupBy('aeronaves.modelo')
+            ->havingRaw('SUM(voos.qtd_voos) >= 3')
             ->orderBy('media', 'DESC')
             ->first();
             
@@ -135,9 +133,10 @@ class Dashboard extends Model
         // Melhor modelo por serviços
         $melhorServicos = DB::table('voos')
             ->join('aeronaves', 'voos.aeronave_id', '=', 'aeronaves.id')
-            ->select('aeronaves.modelo', DB::raw('AVG(voos.nota_servicos) as media'))
+            ->select('aeronaves.modelo', DB::raw('SUM(voos.qtd_voos * voos.nota_servicos) / SUM(voos.qtd_voos) as media'))
             ->whereNotNull('voos.nota_servicos')
             ->groupBy('aeronaves.modelo')
+            ->havingRaw('SUM(voos.qtd_voos) >= 3')
             ->orderBy('media', 'DESC')
             ->first();
             
@@ -146,9 +145,10 @@ class Dashboard extends Model
         // Melhor modelo por patio
         $melhorPatio = DB::table('voos')
             ->join('aeronaves', 'voos.aeronave_id', '=', 'aeronaves.id')
-            ->select('aeronaves.modelo', DB::raw('AVG(voos.nota_patio) as media'))
+            ->select('aeronaves.modelo', DB::raw('SUM(voos.qtd_voos * voos.nota_patio) / SUM(voos.qtd_voos) as media'))
             ->whereNotNull('voos.nota_patio')
             ->groupBy('aeronaves.modelo')
+            ->havingRaw('SUM(voos.qtd_voos) >= 3')
             ->orderBy('media', 'DESC')
             ->first();
             

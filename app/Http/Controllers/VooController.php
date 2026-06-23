@@ -11,6 +11,7 @@ use App\Helpers\CompanhiaHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use App\Services\VooMetricasService;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -80,8 +81,11 @@ class VooController extends Controller
             'total_voos' => $totalVoosQuantidade,
             'total_passageiros' => $totalPassageiros,
             'media_pax_voo' => $totalQuantidadeVoos > 0 ? round($totalPassageiros / $totalQuantidadeVoos, 0) : 0,
-            'voos_com_notas' => Voo::whereNotNull('media_notas')->count(),
-            'media_geral_notas' => Voo::whereNotNull('media_notas')->avg('media_notas'),
+            'voos_com_notas' => Voo::whereNotNull('media_notas')->sum('qtd_voos'),
+            'media_geral_notas' => VooMetricasService::mediaPonderadaQuery(
+                Voo::query(),
+                'media_notas'
+            ),
             
             // Estatísticas com filtros (opcional - para mostrar na view se necessário)
             'filtrados' => [
@@ -578,8 +582,13 @@ class VooController extends Controller
                 'total_voos' => $voos->sum('qtd_voos'), // SOMA dos qtd_voos, não count()
                 'total_passageiros' => $voos->sum('total_passageiros'),
                 'media_pax_voo' => $voos->sum('qtd_voos') > 0 ? round($voos->sum('total_passageiros') / $voos->sum('qtd_voos'), 0) : 0,
-                'voos_com_notas' => $voos->filter(function($voo) { return $voo->media_notas !== null; })->count(),
-                'media_geral_notas' => $voos->filter(function($voo) { return $voo->media_notas !== null; })->avg('media_notas'),
+                'voos_com_notas' => $voos
+                    ->filter(fn ($voo) => $voo->media_notas !== null)
+                    ->sum('qtd_voos'),
+                'media_geral_notas' => VooMetricasService::mediaPonderada(
+                    collect($voos->items()),
+                    'media_notas'
+                ),
                 'data_exportacao' => now()->format('d/m/Y H:i:s'),
                 'filtros_aplicados' => $this->getFiltrosTexto($request)
             ];
