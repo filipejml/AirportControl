@@ -72,6 +72,19 @@ class AeronaveController extends Controller
     {
         $rankings = $this->rankingService->generateRankings();
         
-        return view('aeronaves.ranking', $rankings);
+        return view('aeronaves.ranking', [
+            'rankingsPorNota' => $rankings['rankings_por_nota'],
+            'rankingsObjetivo' => $rankings['rankings_objetivo'],
+            'rankingsPontualidade' => $rankings['rankings_pontualidade'],
+            'rankingsServicos' => $rankings['rankings_servicos'],
+            'rankingsPatio' => $rankings['rankings_patio'],
+            'rankingsPorVoos' => $rankings['rankings_por_voos'],
+            'rankingsPorPassageiros' => $rankings['rankings_por_passageiros'],
+            'rankingsPorCapacidade' => $rankings['rankings_por_capacidade'],
+            'estatisticas' => $rankings['estatisticas'],
+            'melhorNotaGeral' => $rankings['destaques']['melhor_nota_geral'],
+            'maisVoos' => $rankings['destaques']['mais_voos'],
+            'maisPassageiros' => $rankings['destaques']['mais_passageiros'],
+        ]);
     }
 }
