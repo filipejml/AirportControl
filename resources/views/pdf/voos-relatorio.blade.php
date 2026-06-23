@@ -210,7 +210,7 @@
     <div class="header">
         <h1>{{ $empresa }}</h1>
         <div class="subtitle">{{ $titulo }}</div>
-        <div class="data-geracao">Gerado em: {{ $data_geracao }}</div>
+        <div class="data-geracao">Gerado em: {{ $dataGeracao }}</div>
     </div>
     
     <!-- Cards de Estatísticas -->

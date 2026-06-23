@@ -598,7 +598,7 @@ class VooController extends Controller
                 'estatisticas' => $estatisticas,
                 'titulo' => 'Relatório de Voos',
                 'empresa' => 'Airport Manager',
-                'data_geracao' => now()->format('d/m/Y H:i:s')
+                'dataGeracao' => now()->format('d/m/Y H:i:s')
             ];
             
             $pdf = Pdf::loadView('pdf.voos-relatorio', $data);
