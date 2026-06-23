@@ -13,9 +13,16 @@ class AeronaveRepository
     /**
      * Get all aircrafts with their relationships and counts
      */
-    public function getAllWithRelations(): Collection
+    public function getAllWithRelations(array $filters = []): Collection
     {
-        return Aeronave::with(['fabricante', 'companhias', 'voos.companhiaAerea'])
+        return Aeronave::with([
+            'fabricante',
+            'companhias',
+            'voos' => function ($query) use ($filters) {
+                $query->with(['companhiaAerea', 'aeroporto']);
+                $this->applyFilters($query, $filters);
+            },
+        ])
             ->withCount(['companhias', 'voos'])
             ->get();
     }
@@ -103,17 +110,17 @@ class AeronaveRepository
         $voosFiltrados = $queryVoos->get();
         
         return [
-            'total_voos' => $voosFiltrados->sum('qtd_voos'),
-            'total_passageiros' => $voosFiltrados->sum('total_passageiros'),
-            'total_companhias' => $aeronave->companhias()->count(),
-            'total_aeroportos' => $voosFiltrados->pluck('aeroporto_id')->unique()->count(),
-            'nota_obj' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_obj'),
-            'nota_pontualidade' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_pontualidade'),
-            'nota_servicos' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_servicos'),
-            'nota_patio' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_patio'),
-            'ultimos_voos' => $queryVoos->clone()->orderBy('created_at', 'desc')->limit(5)->get(),
-            'voos_por_companhia' => $this->getVoosPorCompanhia($aeronave, $filters),
-            'passageiros_por_companhia' => $this->getPassageirosPorCompanhia($aeronave, $filters)
+            'totalVoos' => $voosFiltrados->sum('qtd_voos'),
+            'totalPassageiros' => $voosFiltrados->sum('total_passageiros'),
+            'totalCompanhias' => $aeronave->companhias()->count(),
+            'totalAeroportos' => $voosFiltrados->pluck('aeroporto_id')->unique()->count(),
+            'notaObj' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_obj'),
+            'notaPontualidade' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_pontualidade'),
+            'notaServicos' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_servicos'),
+            'notaPatio' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_patio'),
+            'ultimosVoos' => $queryVoos->clone()->orderBy('created_at', 'desc')->limit(5)->get(),
+            'voosPorCompanhia' => $this->getVoosPorCompanhia($aeronave, $filters),
+            'passageirosPorCompanhia' => $this->getPassageirosPorCompanhia($aeronave, $filters)
         ];
     }
     
@@ -123,20 +130,16 @@ class AeronaveRepository
     public function getFilterOptions(Aeronave $aeronave): array
     {
         return [
-            'companhias_disponiveis' => $aeronave->companhias,
-            'semanas_disponiveis' => $this->getAvailableWeeks($aeronave),
-            'anos_disponiveis' => $aeronave->voos()
-                ->select(DB::raw('DISTINCT YEAR(created_at) as ano'))
-                ->orderBy('ano', 'desc')
-                ->pluck('ano')
-                ->toArray()
+            'companhiasDisponiveis' => $aeronave->companhias,
+            'semanasDisponiveis' => $this->getAvailableWeeks($aeronave),
+            'anosDisponiveis' => $this->getAvailableYears($aeronave)
         ];
     }
     
     /**
      * Apply filters to voos query
      */
-    private function applyFilters($query, array $filters): void
+    public function applyFilters($query, array $filters): void
     {
         if (!empty($filters['companhia_id']) && $filters['companhia_id'] !== 'geral') {
             $query->where('companhia_aerea_id', $filters['companhia_id']);
@@ -221,7 +224,7 @@ class AeronaveRepository
     /**
      * Get available weeks for filtering
      */
-    private function getAvailableWeeks(Aeronave $aeronave): \Illuminate\Support\Collection
+    public function getAvailableWeeks(?Aeronave $aeronave = null): \Illuminate\Support\Collection
     {
         $semanas = collect();
         
@@ -235,5 +238,17 @@ class AeronaveRepository
         }
         
         return $semanas->unique('semana');
+    }
+
+    public function getAvailableYears(?Aeronave $aeronave = null): array
+    {
+        $query = $aeronave ? $aeronave->voos() : DB::table('voos');
+
+        return $query
+            ->select(DB::raw('DISTINCT YEAR(created_at) as ano'))
+            ->orderBy('ano', 'desc')
+            ->pluck('ano')
+            ->filter()
+            ->toArray();
     }
 }

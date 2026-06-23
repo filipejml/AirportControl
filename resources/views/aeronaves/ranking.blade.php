@@ -22,6 +22,84 @@
         </div>
     </div>
 
+    {{-- Filtros --}}
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ route('aeronaves.ranking') }}" id="rankingFiltroForm" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="periodo" class="form-label fw-semibold small text-muted">
+                        <i class="bi bi-calendar"></i> Período
+                    </label>
+                    <select name="periodo" id="periodo" class="form-select form-select-sm" onchange="atualizarFiltrosRanking()">
+                        <option value="geral" {{ ($periodoSelecionado ?? 'geral') == 'geral' ? 'selected' : '' }}>Todos os dados</option>
+                        <option value="semanal" {{ ($periodoSelecionado ?? '') == 'semanal' ? 'selected' : '' }}>Semanal</option>
+                        <option value="mensal" {{ ($periodoSelecionado ?? '') == 'mensal' ? 'selected' : '' }}>Mensal</option>
+                        <option value="anual" {{ ($periodoSelecionado ?? '') == 'anual' ? 'selected' : '' }}>Anual</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3" id="filtroSemanalRanking" style="display: none;">
+                    <label for="semana" class="form-label fw-semibold small text-muted">Semana</label>
+                    <select name="semana" id="semana" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">Selecione a semana</option>
+                        @foreach($semanasDisponiveis as $semana)
+                            <option value="{{ $semana->semana }}" {{ ($semanaSelecionada ?? '') == $semana->semana ? 'selected' : '' }}>
+                                Semana {{ $semana->numero_semana }} - {{ $semana->ano }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-4" id="filtroMensalRanking" style="display: none;">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label for="ano" class="form-label fw-semibold small text-muted">Ano</label>
+                            <select name="ano" id="ano" class="form-select form-select-sm" onchange="atualizarMesRanking(this.value)">
+                                <option value="">Selecione</option>
+                                @foreach($anosDisponiveis as $anoOption)
+                                    <option value="{{ $anoOption }}" {{ ($anoFiltro ?? '') == $anoOption ? 'selected' : '' }}>
+                                        {{ $anoOption }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label for="mes" class="form-label fw-semibold small text-muted">Mês</label>
+                            <select name="mes" id="mes" class="form-select form-select-sm" onchange="this.form.submit()" {{ !($anoFiltro ?? null) ? 'disabled' : '' }}>
+                                <option value="">Selecione</option>
+                                @for($i = 1; $i <= 12; $i++)
+                                    <option value="{{ $i }}" {{ ($mesSelecionado ?? '') == $i ? 'selected' : '' }}>
+                                        {{ str_pad($i, 2, '0', STR_PAD_LEFT) }}
+                                    </option>
+                                @endfor
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3" id="filtroAnualRanking" style="display: none;">
+                    <label for="ano_selecionado" class="form-label fw-semibold small text-muted">Ano</label>
+                    <select name="ano_selecionado" id="ano_selecionado" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">Selecione</option>
+                        @foreach($anosDisponiveis as $anoOption)
+                            <option value="{{ $anoOption }}" {{ ($anoSelecionado ?? '') == $anoOption ? 'selected' : '' }}>
+                                {{ $anoOption }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    @if(($periodoSelecionado ?? 'geral') != 'geral')
+                        <a href="{{ route('aeronaves.ranking') }}" class="btn btn-outline-secondary btn-sm w-100">
+                            <i class="bi bi-x-circle"></i> Limpar
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- Estatísticas Gerais --}}
     <div class="row g-4 mb-4">
         <div class="col-md-3">
@@ -56,7 +134,7 @@
                 <div class="card-body">
                     <h6 class="card-title mb-2">Nota Média Geral</h6>
                     <h2 class="mb-0">{{ number_format($estatisticas['media_nota_geral'], 1) }}</h2>
-                    <small>⭐ média de todas as aeronaves</small>
+                    <small> média de todas as aeronaves</small>
                 </div>
             </div>
         </div>
@@ -74,7 +152,7 @@
                         <div class="col-md-4">
                             <div class="p-3 border rounded bg-light">
                                 <i class="bi bi-airplane fs-1 text-secondary"></i>
-                                <h6 class="mt-2">Pequeno Porte (≤100)</h6>
+                                <h6 class="mt-2">Pequeno Porte (<=100)</h6>
                                 <span class="badge bg-secondary rounded-pill fs-6">{{ $estatisticas['porte_pequeno'] }} aeronaves</span>
                             </div>
                         </div>
@@ -88,7 +166,7 @@
                         <div class="col-md-4">
                             <div class="p-3 border rounded bg-light">
                                 <i class="bi bi-airplane-engines fs-1 text-primary"></i>
-                                <h6 class="mt-2">Grande Porte (≥300)</h6>
+                                <h6 class="mt-2">Grande Porte (>=300)</h6>
                                 <span class="badge bg-primary rounded-pill fs-6">{{ $estatisticas['porte_grande'] }} aeronaves</span>
                             </div>
                         </div>
@@ -114,7 +192,7 @@
                                 @if($melhorNotaGeral)
                                     <strong>{{ $melhorNotaGeral['modelo'] ?? 'N/A' }}</strong><br>
                                     <small class="text-muted">{{ $melhorNotaGeral['fabricante'] ?? 'N/A' }}</small><br>
-                                    <span class="badge bg-success mt-2 fs-6">⭐ {{ $melhorNotaGeral['nota_geral'] ?? 0 }}</span>
+                                    <span class="badge bg-success mt-2 fs-6"> {{ $melhorNotaGeral['nota_geral'] ?? 0 }}</span>
                                     <small class="d-block text-muted">{{ number_format($melhorNotaGeral['total_voos'] ?? 0) }} voos</small>
                                 @else
                                     <span class="text-muted">Sem dados suficientes</span>
@@ -178,9 +256,9 @@
                         @forelse($rankingsObjetivo->take(10) as $index => $aeronave)
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    @if($index == 0) 🥇
-                                    @elseif($index == 1) 🥈
-                                    @elseif($index == 2) 🥉
+                                    @if($index == 0) 1º
+                                    @elseif($index == 1) 2º
+                                    @elseif($index == 2) 3º
                                     @else {{ $index + 1 }}º
                                     @endif
                                     <a href="{{ route('aeronaves.dashboard', $aeronave['id']) }}" 
@@ -218,9 +296,9 @@
                         @forelse($rankingsPontualidade->take(10) as $index => $aeronave)
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    @if($index == 0) 🥇
-                                    @elseif($index == 1) 🥈
-                                    @elseif($index == 2) 🥉
+                                    @if($index == 0) 1º
+                                    @elseif($index == 1) 2º
+                                    @elseif($index == 2) 3º
                                     @else {{ $index + 1 }}º
                                     @endif
                                     <a href="{{ route('aeronaves.dashboard', $aeronave['id']) }}" 
@@ -258,9 +336,9 @@
                         @forelse($rankingsServicos->take(10) as $index => $aeronave)
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    @if($index == 0) 🥇
-                                    @elseif($index == 1) 🥈
-                                    @elseif($index == 2) 🥉
+                                    @if($index == 0) 1º
+                                    @elseif($index == 1) 2º
+                                    @elseif($index == 2) 3º
                                     @else {{ $index + 1 }}º
                                     @endif
                                     <a href="{{ route('aeronaves.dashboard', $aeronave['id']) }}" 
@@ -298,9 +376,9 @@
                         @forelse($rankingsPatio->take(10) as $index => $aeronave)
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    @if($index == 0) 🥇
-                                    @elseif($index == 1) 🥈
-                                    @elseif($index == 2) 🥉
+                                    @if($index == 0) 1º
+                                    @elseif($index == 1) 2º
+                                    @elseif($index == 2) 3º
                                     @else {{ $index + 1 }}º
                                     @endif
                                     <a href="{{ route('aeronaves.dashboard', $aeronave['id']) }}" 
@@ -342,9 +420,9 @@
                         @forelse($rankingsPorNota->take(10) as $index => $aeronave)
                             <div class="list-group-item d-flex justify-content-between align-items-center">
                                 <div>
-                                    @if($index == 0) 🥇
-                                    @elseif($index == 1) 🥈
-                                    @elseif($index == 2) 🥉
+                                    @if($index == 0) 1º
+                                    @elseif($index == 1) 2º
+                                    @elseif($index == 2) 3º
                                     @else {{ $index + 1 }}º
                                     @endif
                                     <a href="{{ route('aeronaves.dashboard', $aeronave['id']) }}" 
@@ -358,7 +436,7 @@
                                     </small>
                                 </div>
                                 <span class="badge bg-{{ $aeronave['nota_geral'] >= 8 ? 'success' : ($aeronave['nota_geral'] >= 6 ? 'warning' : 'danger') }} rounded-pill fs-6 px-3 py-2">
-                                    ⭐ {{ number_format($aeronave['nota_geral'], 1) }}
+                                     {{ number_format($aeronave['nota_geral'], 1) }}
                                 </span>
                             </div>
                         @empty
@@ -484,21 +562,21 @@
                                     <th>#</th>
                                     <th>Modelo</th>
                                     <th>Fabricante</th>
-                                    <th class="text-center">🎯 Objetivo</th>
-                                    <th class="text-center">⏰ Pontualidade</th>
-                                    <th class="text-center">🛎️ Serviços</th>
-                                    <th class="text-center">🅿️ Pátio</th>
-                                    <th class="text-center">⭐ Geral</th>
-                                    <th class="text-center">📊 Total Voos</th>
+                                    <th class="text-center"> Objetivo</th>
+                                    <th class="text-center"> Pontualidade</th>
+                                    <th class="text-center"> Serviços</th>
+                                    <th class="text-center"> Pátio</th>
+                                    <th class="text-center"> Geral</th>
+                                    <th class="text-center"> Total Voos</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($rankingsPorNota->take(15) as $index => $aeronave)
                                 <tr>
                                     <td class="text-center">
-                                        @if($index == 0) 🥇
-                                        @elseif($index == 1) 🥈
-                                        @elseif($index == 2) 🥉
+                                        @if($index == 0) 1º
+                                        @elseif($index == 1) 2º
+                                        @elseif($index == 2) 3º
                                         @else {{ $index + 1 }}º
                                         @endif
                                     </td>
@@ -530,7 +608,7 @@
                                     </td>
                                     <td class="text-center">
                                         <span class="badge bg-{{ $aeronave['nota_geral'] >= 8 ? 'success' : ($aeronave['nota_geral'] >= 6 ? 'warning' : 'danger') }} rounded-pill fs-6">
-                                            ⭐ {{ number_format($aeronave['nota_geral'], 1) }}
+                                             {{ number_format($aeronave['nota_geral'], 1) }}
                                         </span>
                                     </td>
                                     <td class="text-center">
@@ -555,6 +633,53 @@
     Desenvolvido por <strong>Airport Manager</strong>
 </p>
 @endsection
+
+@push('scripts')
+<script>
+function atualizarFiltrosRanking() {
+    const periodo = document.getElementById('periodo').value;
+
+    document.getElementById('filtroSemanalRanking').style.display = 'none';
+    document.getElementById('filtroMensalRanking').style.display = 'none';
+    document.getElementById('filtroAnualRanking').style.display = 'none';
+
+    if (periodo === 'semanal') {
+        document.getElementById('filtroSemanalRanking').style.display = 'block';
+    } else if (periodo === 'mensal') {
+        document.getElementById('filtroMensalRanking').style.display = 'block';
+    } else if (periodo === 'anual') {
+        document.getElementById('filtroAnualRanking').style.display = 'block';
+    }
+
+    if (periodo === 'geral') {
+        document.getElementById('rankingFiltroForm').submit();
+    }
+}
+
+function atualizarMesRanking(ano) {
+    const mesSelect = document.getElementById('mes');
+    mesSelect.disabled = !ano;
+
+    if (!ano) {
+        mesSelect.value = '';
+    } else if (mesSelect.value) {
+        document.getElementById('rankingFiltroForm').submit();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const periodo = document.getElementById('periodo').value;
+
+    if (periodo === 'semanal') {
+        document.getElementById('filtroSemanalRanking').style.display = 'block';
+    } else if (periodo === 'mensal') {
+        document.getElementById('filtroMensalRanking').style.display = 'block';
+    } else if (periodo === 'anual') {
+        document.getElementById('filtroAnualRanking').style.display = 'block';
+    }
+});
+</script>
+@endpush
 
 @push('styles')
 <style>

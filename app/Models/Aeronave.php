@@ -43,9 +43,9 @@ class Aeronave extends Model
     public function getPorteDescricaoAttribute()
     {
         return match($this->porte) {
-            'PC' => 'Pequeno Porte (≤100)',
+            'PC' => 'Pequeno Porte (<=100)',
             'MC' => 'Médio Porte (101-299)',
-            'LC' => 'Grande Porte (≥300)',
+            'LC' => 'Grande Porte (>=300)',
             default => 'Não classificado'
         };
     }

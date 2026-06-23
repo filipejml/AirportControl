@@ -155,7 +155,7 @@ class AeronaveController extends Controller
             'semana' => $request->get('semana'),
             'ano' => $request->get('ano'),
             'mes' => $request->get('mes'),
-            'ano_selecionado' => $request->get('ano_selecionado')
+            'ano_selecionado' => $request->get('ano_selecionado'),
         ];
         
         // Get stats using repository
@@ -168,17 +168,51 @@ class AeronaveController extends Controller
             compact('aeronave'),
             $stats,
             $filterOptions,
-            $filters
+            [
+                'companhiaSelecionada' => $filters['companhia_id'],
+                'periodoSelecionado' => $filters['periodo'],
+                'semanaSelecionada' => $filters['semana'],
+                'anoFiltro' => $filters['ano'],
+                'mesSelecionado' => $filters['mes'],
+                'anoSelecionado' => $filters['ano_selecionado'],
+            ]
         ));
     }
     
     /**
      * Display ranking and general data about aircrafts
      */
-    public function ranking()
+    public function ranking(Request $request)
     {
-        $rankings = $this->rankingService->generateRankings();
+        $filters = [
+            'periodo' => $request->get('periodo', 'geral'),
+            'semana' => $request->get('semana'),
+            'ano' => $request->get('ano'),
+            'mes' => $request->get('mes'),
+            'ano_selecionado' => $request->get('ano_selecionado'),
+        ];
+        $rankings = $this->rankingService->generateRankings($filters);
         
-        return view('aeronaves.ranking', $rankings);
+        return view('aeronaves.ranking', [
+            'rankingsPorNota' => $rankings['rankings_por_nota'],
+            'rankingsObjetivo' => $rankings['rankings_objetivo'],
+            'rankingsPontualidade' => $rankings['rankings_pontualidade'],
+            'rankingsServicos' => $rankings['rankings_servicos'],
+            'rankingsPatio' => $rankings['rankings_patio'],
+            'rankingsPorVoos' => $rankings['rankings_por_voos'],
+            'rankingsPorPassageiros' => $rankings['rankings_por_passageiros'],
+            'rankingsPorCapacidade' => $rankings['rankings_por_capacidade'],
+            'estatisticas' => $rankings['estatisticas'],
+            'melhorNotaGeral' => $rankings['destaques']['melhor_nota_geral'],
+            'maisVoos' => $rankings['destaques']['mais_voos'],
+            'maisPassageiros' => $rankings['destaques']['mais_passageiros'],
+            'periodoSelecionado' => $filters['periodo'],
+            'semanaSelecionada' => $filters['semana'],
+            'anoFiltro' => $filters['ano'],
+            'mesSelecionado' => $filters['mes'],
+            'anoSelecionado' => $filters['ano_selecionado'],
+            'semanasDisponiveis' => $this->aeronaveRepository->getAvailableWeeks(),
+            'anosDisponiveis' => $this->aeronaveRepository->getAvailableYears(),
+        ]);
     }
 }

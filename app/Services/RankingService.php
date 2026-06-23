@@ -4,6 +4,7 @@
 namespace App\Services;
 
 use App\Repositories\AeronaveRepository;
+use App\Services\VooMetricasService;
 use Illuminate\Support\Collection;
 
 class RankingService
@@ -18,9 +19,9 @@ class RankingService
     /**
      * Generate complete ranking data
      */
-    public function generateRankings(): array
+    public function generateRankings(array $filters = []): array
     {
-        $aeronaves = $this->aeronaveRepository->getAllWithRelations();
+        $aeronaves = $this->aeronaveRepository->getAllWithRelations($filters);
         $rankings = $this->buildRankingData($aeronaves);
         $aeronavesComDadosSuficientes = $this->filterAircraftsWithSufficientData($rankings);
         
@@ -46,25 +47,39 @@ class RankingService
         $rankings = [];
         
         foreach ($aeronaves as $aeronave) {
-            $totalVoos = $aeronave->voos()->sum('qtd_voos');
-            $totalPassageiros = $aeronave->voos()->sum('total_passageiros');
+            $voos = $aeronave->voos;
+            $totalVoos = $voos->sum('qtd_voos');
+            $totalPassageiros = $voos->sum('total_passageiros');
             $minVoos = 3;
             
             $hasSufficientData = $totalVoos >= $minVoos;
+            $mediaObjetivo = $hasSufficientData ? round(VooMetricasService::mediaPonderada($voos, 'nota_obj'), 1) : 0;
+            $mediaPontualidade = $hasSufficientData ? round(VooMetricasService::mediaPonderada($voos, 'nota_pontualidade'), 1) : 0;
+            $mediaServicos = $hasSufficientData ? round(VooMetricasService::mediaPonderada($voos, 'nota_servicos'), 1) : 0;
+            $mediaPatio = $hasSufficientData ? round(VooMetricasService::mediaPonderada($voos, 'nota_patio'), 1) : 0;
+            $notaGeral = $hasSufficientData
+                ? $this->calculateNotaGeral(collect([
+                    $mediaObjetivo,
+                    $mediaPontualidade,
+                    $mediaServicos,
+                    $mediaPatio,
+                ]))
+                : 0;
             
             $rankings[] = [
                 'id' => $aeronave->id,
                 'modelo' => $aeronave->modelo,
                 'fabricante' => $aeronave->fabricante->nome ?? 'N/A',
                 'capacidade' => $aeronave->capacidade,
+                'porte_codigo' => $aeronave->porte,
                 'porte' => $aeronave->porte_descricao,
                 'total_voos' => $totalVoos,
                 'total_passageiros' => $totalPassageiros,
-                'media_objetivo' => $hasSufficientData ? $this->aeronaveRepository->getAverageRating($aeronave->id, 'nota_obj') : 0,
-                'media_pontualidade' => $hasSufficientData ? $this->aeronaveRepository->getAverageRating($aeronave->id, 'nota_pontualidade') : 0,
-                'media_servicos' => $hasSufficientData ? $this->aeronaveRepository->getAverageRating($aeronave->id, 'nota_servicos') : 0,
-                'media_patio' => $hasSufficientData ? $this->aeronaveRepository->getAverageRating($aeronave->id, 'nota_patio') : 0,
-                'nota_geral' => $hasSufficientData ? $this->calculateNotaGeral($aeronave->id) : 0,
+                'media_objetivo' => $mediaObjetivo,
+                'media_pontualidade' => $mediaPontualidade,
+                'media_servicos' => $mediaServicos,
+                'media_patio' => $mediaPatio,
+                'nota_geral' => $notaGeral,
                 'tem_dados' => $totalVoos > 0,
                 'dados_suficientes' => $hasSufficientData
             ];
@@ -76,19 +91,9 @@ class RankingService
     /**
      * Calculate overall rating for an aircraft
      */
-    private function calculateNotaGeral(int $aeronaveId): float
+    private function calculateNotaGeral(Collection $medias): float
     {
-        $mediaObjetivo = $this->aeronaveRepository->getAverageRating($aeronaveId, 'nota_obj');
-        $mediaPontualidade = $this->aeronaveRepository->getAverageRating($aeronaveId, 'nota_pontualidade');
-        $mediaServicos = $this->aeronaveRepository->getAverageRating($aeronaveId, 'nota_servicos');
-        $mediaPatio = $this->aeronaveRepository->getAverageRating($aeronaveId, 'nota_patio');
-        
-        $medias = collect([
-            $mediaObjetivo,
-            $mediaPontualidade,
-            $mediaServicos,
-            $mediaPatio,
-        ])->filter(fn ($media) => $media > 0);
+        $medias = $medias->filter(fn ($media) => $media > 0);
 
         return $medias->isEmpty() ? 0 : round($medias->avg(), 1);
     }
@@ -152,9 +157,9 @@ class RankingService
             'media_nota_geral' => round($mediaNotaGeral, 1),
             'aeronaves_com_dados' => $collection->where('tem_dados', true)->count(),
             'aeronaves_com_dados_suficientes' => $aeronavesComDados->count(),
-            'porte_pequeno' => $collection->where('porte', 'Pequeno Porte (≤100)')->count(),
-            'porte_medio' => $collection->where('porte', 'Médio Porte (101-299)')->count(),
-            'porte_grande' => $collection->where('porte', 'Grande Porte (≥300)')->count(),
+            'porte_pequeno' => $collection->where('porte_codigo', 'PC')->count(),
+            'porte_medio' => $collection->where('porte_codigo', 'MC')->count(),
+            'porte_grande' => $collection->where('porte_codigo', 'LC')->count(),
             'aviso_sem_dados' => $aeronavesComDados->isEmpty()
         ];
     }
