@@ -47,8 +47,10 @@ class AeronaveRepository
      */
     public function getAircraftAggregatedData(Aeronave $aeronave): array
     {
-        $totalVoos = $aeronave->voos()->sum('qtd_voos');
-        $totalPassageiros = $aeronave->voos()->sum('total_passageiros');
+        $voos = $aeronave->relationLoaded('voos') ? $aeronave->voos : $aeronave->voos()->get();
+        $totalVoos = $voos->sum('qtd_voos');
+        $totalPassageiros = $voos->sum('total_passageiros');
+        $hasSufficientData = $totalVoos >= 3;
         
         return [
             'id' => $aeronave->id,
@@ -57,10 +59,10 @@ class AeronaveRepository
             'porte' => $aeronave->porte_descricao,
             'total_voos' => $totalVoos,
             'total_passageiros' => $totalPassageiros,
-            'media_objetivo' => $this->getAverageRating($aeronave->id, 'nota_obj'),
-            'media_pontualidade' => $this->getAverageRating($aeronave->id, 'nota_pontualidade'),
-            'media_servicos' => $this->getAverageRating($aeronave->id, 'nota_servicos'),
-            'media_patio' => $this->getAverageRating($aeronave->id, 'nota_patio'),
+            'media_objetivo' => $hasSufficientData ? round(VooMetricasService::mediaPonderada($voos, 'nota_obj'), 1) : 0,
+            'media_pontualidade' => $hasSufficientData ? round(VooMetricasService::mediaPonderada($voos, 'nota_pontualidade'), 1) : 0,
+            'media_servicos' => $hasSufficientData ? round(VooMetricasService::mediaPonderada($voos, 'nota_servicos'), 1) : 0,
+            'media_patio' => $hasSufficientData ? round(VooMetricasService::mediaPonderada($voos, 'nota_patio'), 1) : 0,
             'tem_dados' => $totalVoos > 0
         ];
     }
@@ -118,9 +120,9 @@ class AeronaveRepository
             'notaPontualidade' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_pontualidade'),
             'notaServicos' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_servicos'),
             'notaPatio' => VooMetricasService::mediaPonderada($voosFiltrados, 'nota_patio'),
-            'ultimosVoos' => $queryVoos->clone()->orderBy('created_at', 'desc')->limit(5)->get(),
-            'voosPorCompanhia' => $this->getVoosPorCompanhia($aeronave, $filters),
-            'passageirosPorCompanhia' => $this->getPassageirosPorCompanhia($aeronave, $filters)
+            'ultimosVoos' => $voosFiltrados->sortByDesc('created_at')->take(5)->values(),
+            'voosPorCompanhia' => $this->groupVoosPorCompanhia($voosFiltrados, 'qtd_voos'),
+            'passageirosPorCompanhia' => $this->groupVoosPorCompanhia($voosFiltrados, 'total_passageiros')
         ];
     }
     
@@ -181,44 +183,21 @@ class AeronaveRepository
         }
     }
     
-    /**
-     * Get voos por companhia
-     */
-    private function getVoosPorCompanhia(Aeronave $aeronave, array $filters): \Illuminate\Support\Collection
+    private function groupVoosPorCompanhia(\Illuminate\Support\Collection $voos, string $campo): \Illuminate\Support\Collection
     {
-        $result = collect();
-        
-        foreach ($aeronave->companhias as $companhia) {
-            $query = $aeronave->voos()->where('companhia_aerea_id', $companhia->id);
-            $this->applyFilters($query, $filters);
-            $quantidade = $query->sum('qtd_voos');
-            
-            if ($quantidade > 0) {
-                $result->put($companhia->nome, $quantidade);
-            }
-        }
-        
-        return $result->sortDesc();
-    }
-    
-    /**
-     * Get passageiros por companhia
-     */
-    private function getPassageirosPorCompanhia(Aeronave $aeronave, array $filters): \Illuminate\Support\Collection
-    {
-        $result = collect();
-        
-        foreach ($aeronave->companhias as $companhia) {
-            $query = $aeronave->voos()->where('companhia_aerea_id', $companhia->id);
-            $this->applyFilters($query, $filters);
-            $quantidade = $query->sum('total_passageiros');
-            
-            if ($quantidade > 0) {
-                $result->put($companhia->nome, $quantidade);
-            }
-        }
-        
-        return $result->sortDesc();
+        return $voos
+            ->groupBy('companhia_aerea_id')
+            ->mapWithKeys(function ($items) use ($campo) {
+                $companhia = $items->first()->companhiaAerea;
+
+                if (!$companhia) {
+                    return [];
+                }
+
+                return [$companhia->nome => $items->sum($campo)];
+            })
+            ->filter(fn ($quantidade) => $quantidade > 0)
+            ->sortDesc();
     }
     
     /**

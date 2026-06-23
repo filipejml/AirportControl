@@ -87,8 +87,13 @@ class DashboardController extends Controller
         // Buscar apenas companhias que têm voos registrados
         $companhiasComDados = DB::table('voos')
             ->join('companhias_aereas', 'voos.companhia_aerea_id', '=', 'companhias_aereas.id')
-            ->select('companhias_aereas.id', 'companhias_aereas.nome')
-            ->distinct()
+            ->select(
+                'companhias_aereas.id',
+                'companhias_aereas.nome',
+                DB::raw('SUM(voos.qtd_voos) as total_voos'),
+                DB::raw('SUM(voos.total_passageiros) as total_passageiros')
+            )
+            ->groupBy('companhias_aereas.id', 'companhias_aereas.nome')
             ->get();
         
         // Array para armazenar os dados antes da ordenação
@@ -111,24 +116,16 @@ class DashboardController extends Controller
         
         // Coletar dados de voos por companhia
         foreach ($companhiasComDados as $companhia) {
-            $totalVoos = DB::table('voos')
-                ->where('companhia_aerea_id', $companhia->id)
-                ->sum('qtd_voos') ?? 0;
-            
-            $totalPassageiros = DB::table('voos')
-                ->where('companhia_aerea_id', $companhia->id)
-                ->sum('total_passageiros') ?? 0;
-            
             $dadosVoos[] = [
                 'id' => $companhia->id,
                 'nome' => $companhia->nome,
-                'total' => $totalVoos
+                'total' => (int) $companhia->total_voos
             ];
             
             $dadosPassageiros[] = [
                 'id' => $companhia->id,
                 'nome' => $companhia->nome,
-                'total' => $totalPassageiros
+                'total' => (int) $companhia->total_passageiros
             ];
         }
         

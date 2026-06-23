@@ -297,6 +297,7 @@ class CompanhiaAereaController extends Controller
         // Calcular estatísticas para cada companhia
         foreach ($companhias as $companhia) {
             $companhia->voos_count = (int) ($companhia->voos_sum_qtd_voos ?? 0);
+            $companhia->total_passageiros = (int) ($companhia->voos_sum_total_passageiros ?? 0);
 
             // Médias das notas por categoria
             $companhia->nota_obj = VooMetricasService::mediaPonderada($companhia->voos, 'nota_obj');
@@ -306,13 +307,12 @@ class CompanhiaAereaController extends Controller
             $companhia->media_notas = VooMetricasService::mediaGeral($companhia->voos);
             
             // Aeroportos operados com contagem de voos
-            $companhia->aeroportos_com_voos = $companhia->aeroportos->map(function($aeroporto) use ($companhia) {
+            $voosPorAeroporto = $companhia->voos->groupBy('aeroporto_id');
+            $companhia->aeroportos_com_voos = $companhia->aeroportos->map(function($aeroporto) use ($voosPorAeroporto) {
                 return [
                     'id' => $aeroporto->id,
                     'nome' => $aeroporto->nome_aeroporto,
-                    'voos_count' => $aeroporto->voos()
-                        ->where('companhia_aerea_id', $companhia->id)
-                        ->sum('qtd_voos')
+                    'voos_count' => (int) ($voosPorAeroporto->get($aeroporto->id)?->sum('qtd_voos') ?? 0)
                 ];
             });
         }
@@ -440,42 +440,27 @@ class CompanhiaAereaController extends Controller
         $mediaGeral = VooMetricasService::mediaGeral($voosFiltrados);
         
         // Últimos voos com filtros (últimos 5)
-        $ultimosVoos = $queryVoos->clone()
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
+        $ultimosVoos = $voosFiltrados->sortByDesc('created_at')->take(5)->values();
         
         // TOTAL DE AERONAVES
-        $totalAeronaves = $companhia->aeronaves()->count();
+        $totalAeronaves = $companhia->aeronaves->count();
         
         // TOTAL DE AEROPORTOS
-        $totalAeroportos = $companhia->aeroportos()->count();
+        $totalAeroportos = $companhia->aeroportos->count();
         
         // Voos por aeroporto com filtros
-        $voosPorAeroporto = collect();
-        foreach ($companhia->aeroportos as $aeroporto) {
-            $quantidadeVoos = $queryVoos->clone()
-                ->where('aeroporto_id', $aeroporto->id)
-                ->sum('qtd_voos');
-            
-            if ($quantidadeVoos > 0) {
-                $voosPorAeroporto->put($aeroporto->nome_aeroporto, $quantidadeVoos);
-            }
-        }
-        $voosPorAeroporto = $voosPorAeroporto->sortDesc();
+        $voosPorAeroporto = $voosFiltrados
+            ->groupBy('aeroporto.nome_aeroporto')
+            ->map(fn ($items) => $items->sum('qtd_voos'))
+            ->filter(fn ($quantidade) => $quantidade > 0)
+            ->sortDesc();
         
         // Passageiros por aeroporto com filtros
-        $passageirosPorAeroporto = collect();
-        foreach ($companhia->aeroportos as $aeroporto) {
-            $quantidadePassageiros = $queryVoos->clone()
-                ->where('aeroporto_id', $aeroporto->id)
-                ->sum('total_passageiros');
-            
-            if ($quantidadePassageiros > 0) {
-                $passageirosPorAeroporto->put($aeroporto->nome_aeroporto, $quantidadePassageiros);
-            }
-        }
-        $passageirosPorAeroporto = $passageirosPorAeroporto->sortDesc();
+        $passageirosPorAeroporto = $voosFiltrados
+            ->groupBy('aeroporto.nome_aeroporto')
+            ->map(fn ($items) => $items->sum('total_passageiros'))
+            ->filter(fn ($quantidade) => $quantidade > 0)
+            ->sortDesc();
         
         // Voos por Horário
         $voosPorHorario = [
@@ -488,7 +473,7 @@ class CompanhiaAereaController extends Controller
         
         foreach ($voosFiltrados as $voo) {
             if (isset($voosPorHorario[$voo->horario_voo])) {
-                $voosPorHorario[$voo->horario_voo]++;
+                $voosPorHorario[$voo->horario_voo] += (int) $voo->qtd_voos;
             }
         }
         

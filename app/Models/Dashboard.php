@@ -2,28 +2,34 @@
 
 namespace App\Models;
 
-use App\Services\VooMetricasService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
 class Dashboard extends Model
 {
+    private const CATEGORIAS_NOTA = [
+        'objetivo' => 'nota_obj',
+        'pontualidade' => 'nota_pontualidade',
+        'servicos' => 'nota_servicos',
+        'patio' => 'nota_patio',
+    ];
+
     /**
      * Get general statistics
      */
     public function getEstatisticasGerais()
     {
         $stats = [];
+        $voosStats = DB::table('voos')
+            ->selectRaw('COALESCE(SUM(qtd_voos), 0) as total_voos')
+            ->selectRaw('COALESCE(SUM(total_passageiros), 0) as total_passageiros')
+            ->first();
         
         $stats['companhias'] = DB::table('companhias_aereas')->count();
         $stats['modelos'] = DB::table('aeronaves')->distinct('modelo')->count('modelo');
         $stats['aeroportos'] = DB::table('aeroportos')->count();
-        
-        // ALTERAR: somar qtd_voos em vez de contar registros
-        $stats['voos'] = DB::table('voos')->sum('qtd_voos') ?? 0;
-        
-        // ALTERAR: usar total_passageiros
-        $stats['passageiros_total'] = DB::table('voos')->sum('total_passageiros') ?? 0;
+        $stats['voos'] = (int) ($voosStats->total_voos ?? 0);
+        $stats['passageiros_total'] = (int) ($voosStats->total_passageiros ?? 0);
         
         return $stats;
     }
@@ -33,11 +39,18 @@ class Dashboard extends Model
      */
     public function getMediasNotas()
     {
+        $medias = DB::table('voos')
+            ->selectRaw('COALESCE(SUM(qtd_voos * nota_obj) / NULLIF(SUM(CASE WHEN nota_obj IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as objetivo')
+            ->selectRaw('COALESCE(SUM(qtd_voos * nota_pontualidade) / NULLIF(SUM(CASE WHEN nota_pontualidade IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as pontualidade')
+            ->selectRaw('COALESCE(SUM(qtd_voos * nota_servicos) / NULLIF(SUM(CASE WHEN nota_servicos IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as servicos')
+            ->selectRaw('COALESCE(SUM(qtd_voos * nota_patio) / NULLIF(SUM(CASE WHEN nota_patio IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as patio')
+            ->first();
+
         return [
-            'objetivo' => VooMetricasService::mediaPonderadaQuery(DB::table('voos'), 'nota_obj'),
-            'pontualidade' => VooMetricasService::mediaPonderadaQuery(DB::table('voos'), 'nota_pontualidade'),
-            'servicos' => VooMetricasService::mediaPonderadaQuery(DB::table('voos'), 'nota_servicos'),
-            'patio' => VooMetricasService::mediaPonderadaQuery(DB::table('voos'), 'nota_patio'),
+            'objetivo' => (float) ($medias->objetivo ?? 0),
+            'pontualidade' => (float) ($medias->pontualidade ?? 0),
+            'servicos' => (float) ($medias->servicos ?? 0),
+            'patio' => (float) ($medias->patio ?? 0),
         ];
     }
     
@@ -47,6 +60,18 @@ class Dashboard extends Model
     public function getMelhoresCompanhias()
     {
         $melhores = [];
+
+        foreach (self::CATEGORIAS_NOTA as $categoria => $campoNota) {
+            $melhores[$categoria] = $this->buscarMelhorAgrupado(
+                'companhias_aereas',
+                'voos.companhia_aerea_id',
+                'companhias_aereas.id',
+                'companhias_aereas.nome',
+                $campoNota
+            );
+        }
+
+        return $melhores;
         
         // Melhor companhia por objetivo
         $melhorObjetivo = DB::table('voos')
@@ -105,6 +130,18 @@ class Dashboard extends Model
     public function getMelhoresModelos()
     {
         $melhores = [];
+
+        foreach (self::CATEGORIAS_NOTA as $categoria => $campoNota) {
+            $melhores[$categoria] = $this->buscarMelhorAgrupado(
+                'aeronaves',
+                'voos.aeronave_id',
+                'aeronaves.id',
+                'aeronaves.modelo',
+                $campoNota
+            );
+        }
+
+        return $melhores;
         
         // Melhor modelo por objetivo
         $melhorObjetivo = DB::table('voos')
@@ -155,6 +192,26 @@ class Dashboard extends Model
         $melhores['patio'] = $melhorPatio ? $melhorPatio->modelo : 'N/A';
         
         return $melhores;
+    }
+
+    private function buscarMelhorAgrupado(
+        string $tabela,
+        string $vooJoinColumn,
+        string $tabelaJoinColumn,
+        string $nomeColumn,
+        string $campoNota
+    ): string {
+        $melhor = DB::table('voos')
+            ->join($tabela, $vooJoinColumn, '=', $tabelaJoinColumn)
+            ->selectRaw("{$nomeColumn} as nome")
+            ->selectRaw("SUM(voos.qtd_voos * voos.{$campoNota}) / NULLIF(SUM(voos.qtd_voos), 0) as media")
+            ->whereNotNull("voos.{$campoNota}")
+            ->groupBy($tabelaJoinColumn, $nomeColumn)
+            ->havingRaw('SUM(voos.qtd_voos) >= 3')
+            ->orderByDesc('media')
+            ->first();
+
+        return $melhor ? $melhor->nome : 'N/A';
     }
 
     /**

@@ -64,37 +64,44 @@ class AeroportoService
     {
         // Buscar aeroportos com estatísticas
         $aeroportos = $this->aeroportoRepository->getAeroportosComEstatisticas($anoSelecionado);
+        $aeroportoIds = $aeroportos->pluck('id')->all();
+        $mediasPorAeroporto = $this->aeroportoRepository->getMediasNotasPorAeroporto($anoSelecionado, $aeroportoIds);
+        $melhoresPorAeroporto = $this->aeroportoRepository->getMelhoresCompanhiasPorCategoriaPorAeroporto($anoSelecionado, $aeroportoIds);
+        $voosCompanhiasPorAeroporto = $this->aeroportoRepository->getVoosCompanhiasPorAeroporto($anoSelecionado, $aeroportoIds);
         
         // Preparar dados para cada aeroporto
         $aeroportosData = [];
         foreach ($aeroportos as $aeroporto) {
-            $mediasNotas = $this->aeroportoRepository->getMediasNotas($aeroporto->id, $anoSelecionado);
-            $melhoresCompanhias = $this->aeroportoRepository->getMelhoresCompanhiasPorCategoria($aeroporto->id, $anoSelecionado);
+            $mediasNotas = $mediasPorAeroporto[$aeroporto->id] ?? [
+                'nota_obj' => 0,
+                'nota_pontualidade' => 0,
+                'nota_servicos' => 0,
+                'nota_patio' => 0,
+                'media_geral' => 0,
+            ];
+            $melhoresCompanhias = $melhoresPorAeroporto[$aeroporto->id] ?? [];
+            $voosCompanhias = $voosCompanhiasPorAeroporto[$aeroporto->id] ?? collect();
+            $totalVoos = (int) ($aeroporto->total_voos ?? 0);
+            $totalPassageiros = (int) ($aeroporto->total_passageiros ?? 0);
             
             $aeroportosData[] = [
                 'id' => $aeroporto->id,
                 'nome' => $aeroporto->nome_aeroporto,
                 'companhias_count' => $aeroporto->companhias_count ?? 0,
-                'total_voos' => $aeroporto->total_voos ?? 0,
-                'total_passageiros' => $aeroporto->total_passageiros ?? 0,
-                'media_passageiros_por_voo' => $aeroporto->media_passageiros_por_voo ?? 0,
+                'total_voos' => $totalVoos,
+                'total_passageiros' => $totalPassageiros,
+                'media_passageiros_por_voo' => $totalVoos > 0 ? $totalPassageiros / $totalVoos : 0,
                 'media_notas' => $mediasNotas['media_geral'],
                 'nota_obj' => $mediasNotas['nota_obj'],
                 'nota_pontualidade' => $mediasNotas['nota_pontualidade'],
                 'nota_servicos' => $mediasNotas['nota_servicos'],
                 'nota_patio' => $mediasNotas['nota_patio'],
                 'melhores_companhias' => $melhoresCompanhias,
-                'companhias' => $aeroporto->companhias->map(function($c) use ($aeroporto, $anoSelecionado) {
-                    $totalVoosCompanhia = DB::table('voos')
-                        ->where('aeroporto_id', $aeroporto->id)
-                        ->where('companhia_aerea_id', $c->id)
-                        ->whereYear('created_at', $anoSelecionado)
-                        ->sum('qtd_voos');
-                    
+                'companhias' => $aeroporto->companhias->map(function($c) use ($voosCompanhias) {
                     return [
                         'id' => $c->id,
                         'nome' => $c->nome,
-                        'voos_count' => $totalVoosCompanhia
+                        'voos_count' => (int) ($voosCompanhias->get($c->id)->total_voos ?? 0)
                     ];
                 })
             ];

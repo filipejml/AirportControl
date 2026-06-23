@@ -15,25 +15,15 @@ class AeroportoRepository
      */
     public function getAeroportosComEstatisticas($anoSelecionado)
     {
-        $aeroportos = Aeroporto::with(['companhias', 'voos.companhiaAerea'])
+        return Aeroporto::with(['companhias'])
             ->withCount('companhias')
+            ->withSum(['voos as total_voos' => function ($query) use ($anoSelecionado) {
+                $query->whereYear('created_at', $anoSelecionado);
+            }], 'qtd_voos')
+            ->withSum(['voos as total_passageiros' => function ($query) use ($anoSelecionado) {
+                $query->whereYear('created_at', $anoSelecionado);
+            }], 'total_passageiros')
             ->get();
-        
-        foreach ($aeroportos as $aeroporto) {
-            $aeroporto->total_voos = $aeroporto->voos()
-                ->whereYear('created_at', $anoSelecionado)
-                ->sum('qtd_voos');
-                
-            $aeroporto->total_passageiros = $aeroporto->voos()
-                ->whereYear('created_at', $anoSelecionado)
-                ->sum('total_passageiros');
-                
-            $aeroporto->media_passageiros_por_voo = $aeroporto->total_voos > 0 
-                ? $aeroporto->total_passageiros / $aeroporto->total_voos 
-                : 0;
-        }
-        
-        return $aeroportos;
     }
     
     /**
@@ -75,6 +65,44 @@ class AeroportoRepository
             'nota_patio' => $notaPatio,
             'media_geral' => $this->calcularMediaGeral($notaObj, $notaPontualidade, $notaServicos, $notaPatio)
         ];
+    }
+
+    public function getMediasNotasPorAeroporto($ano, array $aeroportoIds = []): array
+    {
+        return DB::table('voos')
+            ->whereYear('created_at', $ano)
+            ->when($aeroportoIds, fn ($query) => $query->whereIn('aeroporto_id', $aeroportoIds))
+            ->select(
+                'aeroporto_id',
+                DB::raw('COALESCE(SUM(qtd_voos * nota_obj) / NULLIF(SUM(CASE WHEN nota_obj IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as nota_obj'),
+                DB::raw('COALESCE(SUM(qtd_voos * nota_pontualidade) / NULLIF(SUM(CASE WHEN nota_pontualidade IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as nota_pontualidade'),
+                DB::raw('COALESCE(SUM(qtd_voos * nota_servicos) / NULLIF(SUM(CASE WHEN nota_servicos IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as nota_servicos'),
+                DB::raw('COALESCE(SUM(qtd_voos * nota_patio) / NULLIF(SUM(CASE WHEN nota_patio IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as nota_patio')
+            )
+            ->groupBy('aeroporto_id')
+            ->get()
+            ->mapWithKeys(function ($item) {
+                $notaObj = (float) $item->nota_obj;
+                $notaPontualidade = (float) $item->nota_pontualidade;
+                $notaServicos = (float) $item->nota_servicos;
+                $notaPatio = (float) $item->nota_patio;
+
+                return [
+                    $item->aeroporto_id => [
+                        'nota_obj' => $notaObj,
+                        'nota_pontualidade' => $notaPontualidade,
+                        'nota_servicos' => $notaServicos,
+                        'nota_patio' => $notaPatio,
+                        'media_geral' => $this->calcularMediaGeral(
+                            $notaObj,
+                            $notaPontualidade,
+                            $notaServicos,
+                            $notaPatio
+                        ),
+                    ],
+                ];
+            })
+            ->all();
     }
     
     /**
@@ -241,6 +269,60 @@ class AeroportoRepository
         
         return $melhores;
     }
+
+    public function getMelhoresCompanhiasPorCategoriaPorAeroporto($ano, array $aeroportoIds = []): array
+    {
+        $categorias = [
+            'Objetivo' => 'nota_obj',
+            'Pontualidade' => 'nota_pontualidade',
+            'Servicos' => 'nota_servicos',
+            'Patio' => 'nota_patio',
+        ];
+
+        $melhores = [];
+
+        foreach ($categorias as $categoria => $campoNota) {
+            $linhas = DB::table('voos')
+                ->join('companhias_aereas', 'voos.companhia_aerea_id', '=', 'companhias_aereas.id')
+                ->select(
+                    'voos.aeroporto_id',
+                    'companhias_aereas.id',
+                    'companhias_aereas.nome',
+                    DB::raw("SUM(voos.qtd_voos * voos.{$campoNota}) / NULLIF(SUM(voos.qtd_voos), 0) as media_nota")
+                )
+                ->whereYear('voos.created_at', $ano)
+                ->when($aeroportoIds, fn ($query) => $query->whereIn('voos.aeroporto_id', $aeroportoIds))
+                ->whereNotNull("voos.{$campoNota}")
+                ->groupBy('voos.aeroporto_id', 'companhias_aereas.id', 'companhias_aereas.nome')
+                ->orderBy('voos.aeroporto_id')
+                ->orderByDesc('media_nota')
+                ->get();
+
+            foreach ($linhas->groupBy('aeroporto_id') as $aeroportoId => $items) {
+                $melhor = $items->first();
+                $melhores[$aeroportoId][$categoria] = $melhor ? [
+                    'id' => $melhor->id,
+                    'nome' => $melhor->nome,
+                    'media' => $melhor->media_nota ?? 0,
+                ] : null;
+            }
+        }
+
+        return $melhores;
+    }
+
+    public function getVoosCompanhiasPorAeroporto($ano, array $aeroportoIds = []): array
+    {
+        return DB::table('voos')
+            ->whereYear('created_at', $ano)
+            ->when($aeroportoIds, fn ($query) => $query->whereIn('aeroporto_id', $aeroportoIds))
+            ->select('aeroporto_id', 'companhia_aerea_id', DB::raw('SUM(qtd_voos) as total_voos'))
+            ->groupBy('aeroporto_id', 'companhia_aerea_id')
+            ->get()
+            ->groupBy('aeroporto_id')
+            ->map(fn ($items) => $items->keyBy('companhia_aerea_id'))
+            ->all();
+    }
     
     /**
      * Busca dados semanais de passageiros para múltiplos aeroportos
@@ -249,6 +331,7 @@ class AeroportoRepository
     {
         $semanasComDados = [];
         $dadosPorAeroporto = [];
+        $aeroportoIds = $aeroportos->pluck('id')->all();
         
         $semanasExistentes = DB::table('voos')
             ->whereYear('created_at', $ano)
@@ -276,17 +359,25 @@ class AeroportoRepository
             ];
         }
         
+        $passageirosPorSemana = DB::table('voos')
+            ->whereYear('created_at', $ano)
+            ->when($aeroportoIds, fn ($query) => $query->whereIn('aeroporto_id', $aeroportoIds))
+            ->select(
+                'aeroporto_id',
+                DB::raw('YEARWEEK(created_at, 1) as semana_ano'),
+                DB::raw('SUM(total_passageiros) as total_passageiros')
+            )
+            ->groupBy('aeroporto_id', 'semana_ano')
+            ->get()
+            ->groupBy('aeroporto_id')
+            ->map(fn ($items) => $items->keyBy('semana_ano'));
+
         foreach ($aeroportos as $aeroporto) {
             $dadosSemanais = [];
-            
+            $dadosAeroporto = $passageirosPorSemana->get($aeroporto->id, collect());
+
             foreach ($semanasComDados as $semana) {
-                $totalPassageiros = DB::table('voos')
-                    ->where('aeroporto_id', $aeroporto->id)
-                    ->whereYear('created_at', $ano)
-                    ->whereBetween('created_at', [$semana['data_inicio'], $semana['data_fim']])
-                    ->sum('total_passageiros');
-                
-                $dadosSemanais[] = $totalPassageiros;
+                $dadosSemanais[] = (int) ($dadosAeroporto->get($semana['semana_ano'])->total_passageiros ?? 0);
             }
             
             if (array_sum($dadosSemanais) > 0) {

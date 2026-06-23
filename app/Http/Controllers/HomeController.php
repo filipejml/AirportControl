@@ -7,20 +7,24 @@ use App\Models\CompanhiaAerea;
 use App\Models\Aeronave;
 use App\Models\Aeroporto;
 use App\Models\Voo;
-use App\Services\VooMetricasService;
 use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
     public function index()
     {
+        $voosStats = Voo::query()
+            ->selectRaw('COALESCE(SUM(qtd_voos), 0) as total_voos')
+            ->selectRaw('COALESCE(SUM(total_passageiros), 0) as total_passageiros')
+            ->first();
+
         // Estatísticas Gerais
         $stats = [
             'companhias' => CompanhiaAerea::count(),
             'modelos' => Aeronave::distinct('modelo')->count('modelo'),
             'aeroportos' => Aeroporto::count(),
-            'voos' => Voo::sum('qtd_voos') ?? 0,
-            'passageiros_total' => Voo::sum('total_passageiros') ?? 0,
+            'voos' => (int) ($voosStats->total_voos ?? 0),
+            'passageiros_total' => (int) ($voosStats->total_passageiros ?? 0),
         ];
         
         // Passageiros por Aeroporto
@@ -33,10 +37,12 @@ class HomeController extends Controller
         
         // Passageiros por Horário
         $horarios = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
-        $passageirosPorHorario = [];
-        foreach ($horarios as $horario) {
-            $passageirosPorHorario[$horario] = Voo::where('horario_voo', $horario)->sum('total_passageiros');
-        }
+        $passageirosPorHorario = Voo::select('horario_voo', DB::raw('SUM(total_passageiros) as total_passageiros'))
+            ->whereIn('horario_voo', $horarios)
+            ->groupBy('horario_voo')
+            ->pluck('total_passageiros', 'horario_voo')
+            ->toArray();
+        $passageirosPorHorario = array_replace(array_fill_keys($horarios, 0), $passageirosPorHorario);
         
         // Voos por Aeroporto
         $voosPorAeroporto = Voo::select('aeroportos.nome_aeroporto', DB::raw('SUM(voos.qtd_voos) as total'))
@@ -47,11 +53,17 @@ class HomeController extends Controller
             ->toArray();
         
         // Médias das Notas (usando os nomes corretos dos campos)
+        $medias = Voo::query()
+            ->selectRaw('COALESCE(SUM(qtd_voos * nota_obj) / NULLIF(SUM(CASE WHEN nota_obj IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as objetivo')
+            ->selectRaw('COALESCE(SUM(qtd_voos * nota_pontualidade) / NULLIF(SUM(CASE WHEN nota_pontualidade IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as pontualidade')
+            ->selectRaw('COALESCE(SUM(qtd_voos * nota_servicos) / NULLIF(SUM(CASE WHEN nota_servicos IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as servicos')
+            ->selectRaw('COALESCE(SUM(qtd_voos * nota_patio) / NULLIF(SUM(CASE WHEN nota_patio IS NOT NULL THEN qtd_voos ELSE 0 END), 0), 0) as patio')
+            ->first();
         $mediasNotas = [
-            'objetivo' => round(VooMetricasService::mediaPonderadaQuery(Voo::query(), 'nota_obj'), 1),
-            'pontualidade' => round(VooMetricasService::mediaPonderadaQuery(Voo::query(), 'nota_pontualidade'), 1),
-            'servicos' => round(VooMetricasService::mediaPonderadaQuery(Voo::query(), 'nota_servicos'), 1),
-            'patio' => round(VooMetricasService::mediaPonderadaQuery(Voo::query(), 'nota_patio'), 1),
+            'objetivo' => round((float) ($medias->objetivo ?? 0), 1),
+            'pontualidade' => round((float) ($medias->pontualidade ?? 0), 1),
+            'servicos' => round((float) ($medias->servicos ?? 0), 1),
+            'patio' => round((float) ($medias->patio ?? 0), 1),
         ];
         
         // Melhores Companhias (usando os nomes corretos dos campos)
