@@ -206,7 +206,6 @@ class AeronaveController extends Controller
             'melhorNotaGeral' => $rankings['destaques']['melhor_nota_geral'],
             'maisVoos' => $rankings['destaques']['mais_voos'],
             'maisPassageiros' => $rankings['destaques']['mais_passageiros'],
-<<<<<<< HEAD
             'periodoSelecionado' => $filters['periodo'],
             'semanaSelecionada' => $filters['semana'],
             'anoFiltro' => $filters['ano'],
@@ -214,8 +213,6 @@ class AeronaveController extends Controller
             'anoSelecionado' => $filters['ano_selecionado'],
             'semanasDisponiveis' => $this->aeronaveRepository->getAvailableWeeks(),
             'anosDisponiveis' => $this->aeronaveRepository->getAvailableYears(),
-=======
->>>>>>> 77d2781762f84f34470fdbfd2eaeda740271f750
         ]);
     }
 }
