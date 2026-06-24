@@ -15,7 +15,7 @@ class HomeController extends Controller
     {
         $voosStats = Voo::query()
             ->selectRaw('COALESCE(SUM(qtd_voos), 0) as total_voos')
-            ->selectRaw('COALESCE(SUM(total_passageiros), 0) as total_passageiros')
+            ->selectRaw('COALESCE(SUM(qtd_voos * qtd_passageiros), 0) as passageiros_total')
             ->first();
 
         // Estatísticas Gerais
@@ -24,7 +24,7 @@ class HomeController extends Controller
             'modelos' => Aeronave::distinct('modelo')->count('modelo'),
             'aeroportos' => Aeroporto::count(),
             'voos' => (int) ($voosStats->total_voos ?? 0),
-            'passageiros_total' => (int) ($voosStats->total_passageiros ?? 0),
+            'passageiros_total' => (int) ($voosStats->passageiros_total ?? 0),
         ];
         
         // Passageiros por Aeroporto
@@ -37,10 +37,10 @@ class HomeController extends Controller
         
         // Passageiros por Horário
         $horarios = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
-        $passageirosPorHorario = Voo::select('horario_voo', DB::raw('SUM(total_passageiros) as total_passageiros'))
+        $passageirosPorHorario = Voo::select('horario_voo', DB::raw('SUM(qtd_voos * qtd_passageiros) as passageiros_total'))
             ->whereIn('horario_voo', $horarios)
             ->groupBy('horario_voo')
-            ->pluck('total_passageiros', 'horario_voo')
+            ->pluck('passageiros_total', 'horario_voo')
             ->toArray();
         $passageirosPorHorario = array_replace(array_fill_keys($horarios, 0), $passageirosPorHorario);
         
