@@ -44,6 +44,8 @@ Route::post('/resetar-senha', [App\Http\Controllers\PasswordResetController::cla
 
 Route::middleware('auth')->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/perfil', [UserController::class, 'editProfile'])->name('profile.edit');
+    Route::put('/perfil', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     /*
