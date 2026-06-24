@@ -58,12 +58,14 @@ const RelatorioUtils = {
     },
     
     // Mostrar sem resultados
-    mostrarSemResultados(containerId, mensagem = 'Nenhum resultado encontrado com os filtros selecionados.') {
+    mostrarSemResultados(containerId, mensagem = 'Sem dados para esse filtro.') {
         const container = document.getElementById(containerId);
         if (container) {
             container.innerHTML = `
                 <div class="alert alert-info text-center">
-                    <i class="bi bi-info-circle"></i> ${mensagem}
+                    <i class="bi bi-info-circle"></i>
+                    <div class="fw-semibold mb-2">${mensagem}</div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-empty-clear>Limpar filtros</button>
                 </div>
             `;
         }

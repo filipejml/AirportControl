@@ -24,6 +24,11 @@ class RelatorioDesempenhoCompanhias {
         this.filtroAeronave?.addEventListener('change', () => this.carregar());
         this.botaoLimpar?.addEventListener('click', () => this.limparFiltros());
         this.botaoExportar?.addEventListener('click', () => this.exportarCsv());
+        this.container.addEventListener('click', (event) => {
+            if (event.target.closest('[data-empty-clear]')) {
+                this.limparFiltros();
+            }
+        });
 
         this.carregar();
     }
@@ -60,8 +65,16 @@ class RelatorioDesempenhoCompanhias {
 
     mostrarVazio() {
         this.container.innerHTML = this.modoAdmin
-            ? '<tr><td colspan="7" class="text-center text-muted py-5">Nenhum voo encontrado para os filtros selecionados.</td></tr>'
-            : '<div class="col-12"><div class="alert alert-info text-center">Nenhum voo encontrado para os filtros selecionados.</div></div>';
+            ? `<tr><td colspan="7" class="text-center text-muted py-5">
+                <div class="mb-2 fw-semibold">Sem dados para esse filtro.</div>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-empty-clear>Limpar filtros</button>
+            </td></tr>`
+            : `<div class="col-12">
+                <div class="alert alert-info text-center mb-0">
+                    <div class="mb-2 fw-semibold">Sem dados para esse filtro.</div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-empty-clear>Limpar filtros</button>
+                </div>
+            </div>`;
     }
 
     mostrarErro(mensagem) {

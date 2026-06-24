@@ -59,6 +59,11 @@ class UserRelatorioCompanhias {
         if (this.clearButton) {
             this.clearButton.addEventListener('click', () => this.limparFiltros());
         }
+        this.cardsContainer?.addEventListener('click', (event) => {
+            if (event.target.closest('[data-empty-clear]')) {
+                this.limparFiltros();
+            }
+        });
     }
     
     filtrar() {

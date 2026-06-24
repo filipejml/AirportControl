@@ -24,6 +24,11 @@ class RelatorioOcupacaoVoos {
             ?.addEventListener('click', () => this.limparFiltros());
         document.getElementById('exportarOcupacaoCsv')
             ?.addEventListener('click', () => this.exportarCsv());
+        this.container.addEventListener('click', (event) => {
+            if (event.target.closest('[data-empty-clear]')) {
+                this.limparFiltros();
+            }
+        });
 
         this.carregar();
     }
@@ -64,12 +69,15 @@ class RelatorioOcupacaoVoos {
             : '<div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div></div>';
     }
 
-    mostrarMensagem(mensagem, erro = false) {
+    mostrarMensagem(mensagem, erro = false, mostrarLimpar = false) {
         const classe = erro ? 'danger' : 'info';
         const texto = this.escapeHtml(mensagem);
+        const acao = mostrarLimpar
+            ? '<div class="mt-2"><button type="button" class="btn btn-outline-primary btn-sm" data-empty-clear>Limpar filtros</button></div>'
+            : '';
         this.container.innerHTML = this.modoAdmin
-            ? `<tr><td colspan="7" class="text-center text-${classe} py-5">${texto}</td></tr>`
-            : `<div class="col-12"><div class="alert alert-${classe} text-center">${texto}</div></div>`;
+            ? `<tr><td colspan="7" class="text-center text-${classe} py-5"><div class="fw-semibold">${texto}</div>${acao}</td></tr>`
+            : `<div class="col-12"><div class="alert alert-${classe} text-center"><div class="fw-semibold">${texto}</div>${acao}</div></div>`;
     }
 
     renderizarTabela() {
@@ -178,7 +186,7 @@ class RelatorioOcupacaoVoos {
             this.renderizarGraficos(resultado.distribuicao);
 
             if (!this.dados.length) {
-                this.mostrarMensagem('Nenhum voo encontrado para os filtros selecionados.');
+                this.mostrarMensagem('Sem dados para esse filtro.', false, true);
                 return;
             }
             this.modoAdmin ? this.renderizarTabela() : this.renderizarCards();

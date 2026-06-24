@@ -13,7 +13,7 @@
                 </h3>
                 <p class="text-muted">Estatísticas de voos, passageiros e notas por aeroporto</p>
             </div>
-            
+
             <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-success" id="btnExportCSV">
                     <i class="bi bi-file-spreadsheet"></i> Exportar CSV
@@ -53,7 +53,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div id="filtersStatus" class="mt-3"></div>
             </div>
         </div>
@@ -77,7 +77,7 @@ class UserRelatorioVoosPorAeroporto {
         this.dados = [];
         this.init();
     }
-    
+
     async init() {
         document.addEventListener('DOMContentLoaded', async () => {
             this.configurarElementos();
@@ -85,7 +85,7 @@ class UserRelatorioVoosPorAeroporto {
             this.configurarEventos();
         });
     }
-    
+
     configurarElementos() {
         this.cardsContainer = document.getElementById('cardsContainer');
         this.filterPeriodo = document.getElementById('filterPeriodo');
@@ -97,21 +97,21 @@ class UserRelatorioVoosPorAeroporto {
         this.btnExportPDF = document.getElementById('btnExportPDF');
         this.filtersStatus = document.getElementById('filtersStatus');
     }
-    
+
     async carregarDados() {
         this.mostrarLoading();
-        
+
         const params = new URLSearchParams();
         if (this.filterPeriodo?.value) params.set('periodo', this.filterPeriodo.value);
         if (this.filterAeroporto?.value) params.set('aeroporto_id', this.filterAeroporto.value);
         if (this.filterCompanhia?.value) params.set('companhia_id', this.filterCompanhia.value);
         if (this.filterAeronave?.value) params.set('aeronave_id', this.filterAeronave.value);
         const url = params.size ? `${this.apiUrl}?${params.toString()}` : this.apiUrl;
-        
+
         try {
             const response = await fetch(url);
             const result = await response.json();
-            
+
             if (result.success) {
                 this.dados = result.data;
                 this.renderizarCards();
@@ -124,7 +124,7 @@ class UserRelatorioVoosPorAeroporto {
             this.mostrarErro();
         }
     }
-    
+
     configurarEventos() {
         if (this.filterPeriodo) {
             this.filterPeriodo.addEventListener('change', () => this.carregarDados());
@@ -132,20 +132,25 @@ class UserRelatorioVoosPorAeroporto {
         [this.filterAeroporto, this.filterCompanhia, this.filterAeronave]
             .filter(Boolean)
             .forEach(elemento => elemento.addEventListener('change', () => this.carregarDados()));
-        
+
         if (this.clearButton) {
             this.clearButton.addEventListener('click', () => this.limparFiltros());
         }
-        
+        this.cardsContainer?.addEventListener('click', (event) => {
+            if (event.target.closest('[data-empty-clear]')) {
+                this.limparFiltros();
+            }
+        });
+
         if (this.btnExportCSV) {
             this.btnExportCSV.addEventListener('click', () => this.exportarCSV());
         }
-        
+
         if (this.btnExportPDF) {
             this.btnExportPDF.addEventListener('click', () => this.exportarPDF());
         }
     }
-    
+
     limparFiltros() {
         if (this.filterPeriodo) this.filterPeriodo.value = '';
         if (this.filterAeroporto) this.filterAeroporto.value = '';
@@ -153,12 +158,12 @@ class UserRelatorioVoosPorAeroporto {
         if (this.filterAeronave) this.filterAeronave.value = '';
         this.carregarDados();
     }
-    
+
     atualizarStatusFiltros() {
         if (!this.filtersStatus) return;
-        
+
         const periodo = this.filterPeriodo?.value;
-        
+
         if (!periodo) {
             this.filtersStatus.innerHTML = `
                 <div class="alert alert-info alert-sm mb-0">
@@ -167,21 +172,21 @@ class UserRelatorioVoosPorAeroporto {
             `;
             return;
         }
-        
+
         const periodoTexto = {
             'hoje': 'Hoje',
             'semana': 'Esta Semana',
             'mes': 'Este Mês',
             'ano': 'Este Ano'
         }[periodo];
-        
+
         this.filtersStatus.innerHTML = `
             <div class="alert alert-primary alert-sm mb-0">
                 <i class="bi bi-funnel"></i> Filtro: <strong>${periodoTexto}</strong>
             </div>
         `;
     }
-    
+
     mostrarLoading() {
         if (this.cardsContainer) {
             this.cardsContainer.innerHTML = `
@@ -194,31 +199,32 @@ class UserRelatorioVoosPorAeroporto {
             `;
         }
     }
-    
+
     mostrarErro() {
         if (this.cardsContainer) {
             this.cardsContainer.innerHTML = `
                 <div class="alert alert-danger text-center">
-                    <i class="bi bi-exclamation-triangle"></i> 
+                    <i class="bi bi-exclamation-triangle"></i>
                     Erro ao carregar dados. Tente novamente.
                 </div>
             `;
         }
     }
-    
+
     renderizarCards() {
         if (!this.cardsContainer) return;
-        
+
         if (this.dados.length === 0) {
             this.cardsContainer.innerHTML = `
                 <div class="alert alert-info text-center">
-                    <i class="bi bi-info-circle"></i> 
-                    Nenhum voo encontrado para o período selecionado.
+                    <i class="bi bi-info-circle"></i>
+                    <div class="fw-semibold mb-2">Sem dados para esse filtro.</div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-empty-clear>Limpar filtros</button>
                 </div>
             `;
             return;
         }
-        
+
         this.cardsContainer.innerHTML = `
             <div class="row g-4">
                 ${this.dados.map(item => `
@@ -268,7 +274,7 @@ class UserRelatorioVoosPorAeroporto {
                             </div>
                             <div class="card-footer bg-transparent">
                                 <small class="text-muted">
-                                    <i class="bi bi-calendar3"></i> 
+                                    <i class="bi bi-calendar3"></i>
                                     Atualizado em ${this.formatarData()}
                                 </small>
                             </div>
@@ -278,13 +284,13 @@ class UserRelatorioVoosPorAeroporto {
             </div>
         `;
     }
-    
+
     exportarCSV() {
         if (this.dados.length === 0) {
             alert('Não há dados para exportar!');
             return;
         }
-        
+
         const headers = ['Aeroporto', 'Total de Voos', 'Total de Passageiros', 'Média/Voo', 'Nota Média'];
         const rows = this.dados.map(item => [
             item.aeroporto,
@@ -293,11 +299,11 @@ class UserRelatorioVoosPorAeroporto {
             item.media_passageiros_por_voo,
             item.media_geral
         ]);
-        
+
         const csvContent = [headers, ...rows]
             .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
             .join('\n');
-        
+
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
@@ -308,15 +314,15 @@ class UserRelatorioVoosPorAeroporto {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     }
-    
+
     exportarPDF() {
         if (this.dados.length === 0) {
             alert('Não há dados para exportar!');
             return;
         }
-        
+
         const printWindow = window.open('', '_blank');
-        
+
         let htmlContent = `
             <!DOCTYPE html>
             <html>
@@ -354,16 +360,16 @@ class UserRelatorioVoosPorAeroporto {
             </body>
             </html>
         `;
-        
+
         printWindow.document.write(htmlContent);
         printWindow.document.close();
         printWindow.onload = () => printWindow.print();
     }
-    
+
     formatarNumero(num) {
         return new Intl.NumberFormat('pt-BR').format(num);
     }
-    
+
     formatarData() {
         return new Date().toLocaleDateString('pt-BR', {
             day: '2-digit',
@@ -373,11 +379,11 @@ class UserRelatorioVoosPorAeroporto {
             minute: '2-digit'
         });
     }
-    
+
     formatarDataArquivo() {
         return new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     }
-    
+
     escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');

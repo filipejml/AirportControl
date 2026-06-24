@@ -106,7 +106,7 @@ class AdminRelatorioCompanhias {
         this.dadosFiltrados = [];
         this.init();
     }
-    
+
     async init() {
         document.addEventListener('DOMContentLoaded', async () => {
             this.configurarElementos();
@@ -114,7 +114,7 @@ class AdminRelatorioCompanhias {
             this.configurarEventos();
         });
     }
-    
+
     configurarElementos() {
         this.tbody = document.getElementById('tableBody');
         this.filterAeroporto = document.getElementById('filterAeroporto');
@@ -126,15 +126,15 @@ class AdminRelatorioCompanhias {
         this.btnExportPDF = document.getElementById('btnExportPDF');
         this.filtersStatus = document.getElementById('filtersStatus');
     }
-    
+
     async carregarDados() {
         this.mostrarLoading();
-        
+
         const aeroportoId = this.filterAeroporto?.value || '';
         const companhiaId = this.filterCompanhia?.value || '';
         const periodo = this.filterPeriodo?.value || '';
         const aeronaveId = this.filterAeronave?.value || '';
-        
+
         let url = this.apiUrl;
         const params = [];
         if (aeroportoId) params.push(`aeroporto_id=${aeroportoId}`);
@@ -142,11 +142,11 @@ class AdminRelatorioCompanhias {
         if (periodo) params.push(`periodo=${periodo}`);
         if (aeronaveId) params.push(`aeronave_id=${aeronaveId}`);
         if (params.length) url += `?${params.join('&')}`;
-        
+
         try {
             const response = await fetch(url);
             const result = await response.json();
-            
+
             if (result.success) {
                 this.dadosOriginais = result.data;
                 this.dadosFiltrados = [...result.data];
@@ -160,32 +160,37 @@ class AdminRelatorioCompanhias {
             this.mostrarErro();
         }
     }
-    
+
     configurarEventos() {
         if (this.filterAeroporto) {
             this.filterAeroporto.addEventListener('change', () => this.carregarDados());
         }
-        
+
         if (this.filterCompanhia) {
             this.filterCompanhia.addEventListener('change', () => this.carregarDados());
         }
         [this.filterPeriodo, this.filterAeronave]
             .filter(Boolean)
             .forEach(elemento => elemento.addEventListener('change', () => this.carregarDados()));
-        
+
         if (this.clearButton) {
             this.clearButton.addEventListener('click', () => this.limparFiltros());
         }
-        
+        this.tbody?.addEventListener('click', (event) => {
+            if (event.target.closest('[data-empty-clear]')) {
+                this.limparFiltros();
+            }
+        });
+
         if (this.btnExportCSV) {
             this.btnExportCSV.addEventListener('click', () => this.exportarCSV());
         }
-        
+
         if (this.btnExportPDF) {
             this.btnExportPDF.addEventListener('click', () => this.exportarPDF());
         }
     }
-    
+
     limparFiltros() {
         if (this.filterAeroporto) this.filterAeroporto.value = '';
         if (this.filterCompanhia) this.filterCompanhia.value = '';
@@ -193,40 +198,40 @@ class AdminRelatorioCompanhias {
         if (this.filterAeronave) this.filterAeronave.value = '';
         this.carregarDados();
     }
-    
+
     atualizarStatusFiltros() {
         if (!this.filtersStatus) return;
-        
+
         const aeroportoSelecionado = this.filterAeroporto?.value;
         const companhiaSelecionada = this.filterCompanhia?.value;
-        
+
         if (!aeroportoSelecionado && !companhiaSelecionada) {
             this.filtersStatus.innerHTML = `
                 <div class="alert alert-info alert-sm mb-0">
-                    <i class="bi bi-info-circle"></i> 
+                    <i class="bi bi-info-circle"></i>
                     Mostrando <strong>TODOS</strong> os aeroportos e companhias
                 </div>
             `;
             return;
         }
-        
+
         let html = '<div class="alert alert-primary alert-sm mb-0"><i class="bi bi-funnel"></i> Filtros ativos: ';
         const filtros = [];
-        
+
         if (aeroportoSelecionado) {
             const aeroporto = aeroportosList.find(a => a.id == aeroportoSelecionado);
             if (aeroporto) filtros.push(`<span class="badge bg-primary">Aeroporto: ${this.escapeHtml(aeroporto.nome_aeroporto)}</span>`);
         }
-        
+
         if (companhiaSelecionada) {
             const companhia = companhiasList.find(c => c.id == companhiaSelecionada);
             if (companhia) filtros.push(`<span class="badge bg-primary">Companhia: ${this.escapeHtml(companhia.nome)}</span>`);
         }
-        
+
         html += filtros.join(' ') + '</div>';
         this.filtersStatus.innerHTML = html;
     }
-    
+
     mostrarLoading() {
         if (this.tbody) {
             this.tbody.innerHTML = `
@@ -241,7 +246,7 @@ class AdminRelatorioCompanhias {
             `;
         }
     }
-    
+
     mostrarErro() {
         if (this.tbody) {
             this.tbody.innerHTML = `
@@ -254,21 +259,23 @@ class AdminRelatorioCompanhias {
             `;
         }
     }
-    
+
     renderizarTabela() {
         if (!this.tbody) return;
-        
+
         if (this.dadosFiltrados.length === 0) {
             this.tbody.innerHTML = `
                 <tr>
                     <td colspan="3" class="text-center text-muted py-4">
-                        <i class="bi bi-inbox"></i> Nenhum resultado encontrado.
+                        <i class="bi bi-inbox"></i>
+                        <div class="fw-semibold my-2">Sem dados para esse filtro.</div>
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-empty-clear>Limpar filtros</button>
                     </td>
                 </tr>
             `;
             return;
         }
-        
+
         this.tbody.innerHTML = this.dadosFiltrados.map(item => `
             <tr>
                 <td class="align-middle">
@@ -299,24 +306,24 @@ class AdminRelatorioCompanhias {
             </tr>
         `).join('');
     }
-    
+
     exportarCSV() {
         if (this.dadosFiltrados.length === 0) {
             alert('Não há dados para exportar!');
             return;
         }
-        
+
         const headers = ['Aeroporto', 'Quantidade de Companhias', 'Companhias'];
         const rows = this.dadosFiltrados.map(item => [
             item.aeroporto,
             item.quantidade_companhias,
             item.companhias.map(c => c.nome).join('; ')
         ]);
-        
+
         const csvContent = [headers, ...rows]
             .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
             .join('\n');
-        
+
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
@@ -327,15 +334,15 @@ class AdminRelatorioCompanhias {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     }
-    
+
     exportarPDF() {
         if (this.dadosFiltrados.length === 0) {
             alert('Não há dados para exportar!');
             return;
         }
-        
+
         const printWindow = window.open('', '_blank');
-        
+
         let htmlContent = `
             <!DOCTYPE html>
             <html>
@@ -360,10 +367,10 @@ class AdminRelatorioCompanhias {
                     <p>Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
                 </div>
         `;
-        
+
         const aeroportoSelecionado = this.filterAeroporto?.value;
         const companhiaSelecionada = this.filterCompanhia?.value;
-        
+
         if (aeroportoSelecionado || companhiaSelecionada) {
             htmlContent += `<div class="filters-info"><strong>📊 Filtros aplicados:</strong><br>`;
             if (aeroportoSelecionado) {
@@ -376,7 +383,7 @@ class AdminRelatorioCompanhias {
             }
             htmlContent += `</div>`;
         }
-        
+
         htmlContent += `
             <table>
                 <thead>
@@ -384,7 +391,7 @@ class AdminRelatorioCompanhias {
                 </thead>
                 <tbody>
         `;
-        
+
         this.dadosFiltrados.forEach(item => {
             htmlContent += `
                 <tr>
@@ -394,7 +401,7 @@ class AdminRelatorioCompanhias {
                 </tr>
             `;
         });
-        
+
         htmlContent += `
                 </tbody>
             </table>
@@ -405,16 +412,16 @@ class AdminRelatorioCompanhias {
             </body>
             </html>
         `;
-        
+
         printWindow.document.write(htmlContent);
         printWindow.document.close();
         printWindow.onload = () => printWindow.print();
     }
-    
+
     formatarDataArquivo() {
         return new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     }
-    
+
     escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -450,11 +457,11 @@ new AdminRelatorioCompanhias();
         flex-direction: column;
         align-items: flex-start !important;
     }
-    
+
     .btn {
         width: 100%;
     }
-    
+
     .d-flex.justify-content-between {
         flex-direction: column;
     }

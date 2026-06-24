@@ -13,7 +13,7 @@
                 </h3>
                 <p class="text-muted">Visualize quais companhias operam em cada aeroporto</p>
             </div>
-            
+
             <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-success" id="btnExportCSV">
                     <i class="bi bi-file-spreadsheet"></i> Exportar CSV
@@ -66,7 +66,7 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <div id="filtersStatus" class="mt-3"></div>
             </div>
         </div>
@@ -97,7 +97,7 @@ class UserRelatorioCompanhias {
         this.dadosFiltrados = [];
         this.init();
     }
-    
+
     async init() {
         document.addEventListener('DOMContentLoaded', async () => {
             this.configurarElementos();
@@ -105,7 +105,7 @@ class UserRelatorioCompanhias {
             this.configurarEventos();
         });
     }
-    
+
     configurarElementos() {
         this.cardsContainer = document.getElementById('cardsContainer');
         this.filterAeroporto = document.getElementById('filterAeroporto');
@@ -118,17 +118,17 @@ class UserRelatorioCompanhias {
         this.btnExportCSV = document.getElementById('btnExportCSV');
         this.btnExportPDF = document.getElementById('btnExportPDF');
     }
-    
+
     async carregarDados() {
         if (this.cardsContainer) {
             this.mostrarLoading();
         }
-        
+
         const aeroportoId = this.filterAeroporto?.value || '';
         const companhiaId = this.filterCompanhia?.value || '';
         const periodo = this.filterPeriodo?.value || '';
         const aeronaveId = this.filterAeronave?.value || '';
-        
+
         let url = this.apiUrl;
         const params = [];
         if (aeroportoId) params.push(`aeroporto_id=${aeroportoId}`);
@@ -136,11 +136,11 @@ class UserRelatorioCompanhias {
         if (periodo) params.push(`periodo=${periodo}`);
         if (aeronaveId) params.push(`aeronave_id=${aeronaveId}`);
         if (params.length) url += `?${params.join('&')}`;
-        
+
         try {
             const response = await fetch(url);
             const result = await response.json();
-            
+
             if (result.success) {
                 this.dadosOriginais = result.data;
                 this.dadosFiltrados = [...result.data];
@@ -155,32 +155,37 @@ class UserRelatorioCompanhias {
             this.mostrarErro();
         }
     }
-    
+
     configurarEventos() {
         if (this.filterAeroporto) {
             this.filterAeroporto.addEventListener('change', () => this.carregarDados());
         }
-        
+
         if (this.filterCompanhia) {
             this.filterCompanhia.addEventListener('change', () => this.carregarDados());
         }
         [this.filterPeriodo, this.filterAeronave]
             .filter(Boolean)
             .forEach(elemento => elemento.addEventListener('change', () => this.carregarDados()));
-        
+
         if (this.clearButton) {
             this.clearButton.addEventListener('click', () => this.limparFiltros());
         }
-        
+        this.cardsContainer?.addEventListener('click', (event) => {
+            if (event.target.closest('[data-empty-clear]')) {
+                this.limparFiltros();
+            }
+        });
+
         if (this.btnExportCSV) {
             this.btnExportCSV.addEventListener('click', () => this.exportarCSV());
         }
-        
+
         if (this.btnExportPDF) {
             this.btnExportPDF.addEventListener('click', () => this.exportarPDF());
         }
     }
-    
+
     limparFiltros() {
         if (this.filterAeroporto) this.filterAeroporto.value = '';
         if (this.filterCompanhia) this.filterCompanhia.value = '';
@@ -188,40 +193,40 @@ class UserRelatorioCompanhias {
         if (this.filterAeronave) this.filterAeronave.value = '';
         this.carregarDados();
     }
-    
+
     atualizarStatusFiltros() {
         if (!this.filtersStatus) return;
-        
+
         const aeroportoSelecionado = this.filterAeroporto?.value;
         const companhiaSelecionada = this.filterCompanhia?.value;
-        
+
         if (!aeroportoSelecionado && !companhiaSelecionada) {
             this.filtersStatus.innerHTML = `
                 <div class="alert alert-info alert-sm mb-0">
-                    <i class="bi bi-info-circle"></i> 
+                    <i class="bi bi-info-circle"></i>
                     Mostrando <strong>TODOS</strong> os aeroportos e companhias
                 </div>
             `;
             return;
         }
-        
+
         let html = '<div class="alert alert-primary alert-sm mb-0"><i class="bi bi-funnel"></i> Filtros ativos: ';
         const filtros = [];
-        
+
         if (aeroportoSelecionado) {
             const aeroporto = aeroportosList.find(a => a.id == aeroportoSelecionado);
             if (aeroporto) filtros.push(`<span class="badge bg-primary">Aeroporto: ${this.escapeHtml(aeroporto.nome_aeroporto)}</span>`);
         }
-        
+
         if (companhiaSelecionada) {
             const companhia = companhiasList.find(c => c.id == companhiaSelecionada);
             if (companhia) filtros.push(`<span class="badge bg-primary">Companhia: ${this.escapeHtml(companhia.nome)}</span>`);
         }
-        
+
         html += filtros.join(' ') + '</div>';
         this.filtersStatus.innerHTML = html;
     }
-    
+
     mostrarLoading() {
         if (this.cardsContainer) {
             this.cardsContainer.innerHTML = `
@@ -234,31 +239,32 @@ class UserRelatorioCompanhias {
             `;
         }
     }
-    
+
     mostrarErro() {
         if (this.cardsContainer) {
             this.cardsContainer.innerHTML = `
                 <div class="alert alert-danger text-center">
-                    <i class="bi bi-exclamation-triangle"></i> 
+                    <i class="bi bi-exclamation-triangle"></i>
                     Erro ao carregar dados. Tente novamente mais tarde.
                 </div>
             `;
         }
     }
-    
+
     renderizarCards() {
         if (!this.cardsContainer) return;
-        
+
         if (this.dadosFiltrados.length === 0) {
             this.cardsContainer.innerHTML = `
                 <div class="alert alert-info text-center">
-                    <i class="bi bi-info-circle"></i> 
-                    Nenhum aeroporto encontrado com os filtros selecionados.
+                    <i class="bi bi-info-circle"></i>
+                    <div class="fw-semibold mb-2">Sem dados para esse filtro.</div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-empty-clear>Limpar filtros</button>
                 </div>
             `;
             return;
         }
-        
+
         this.cardsContainer.innerHTML = `
             <div class="row g-4">
                 ${this.dadosFiltrados.map(item => `
@@ -301,7 +307,7 @@ class UserRelatorioCompanhias {
                             </div>
                             <div class="card-footer bg-transparent">
                                 <small class="text-muted">
-                                    <i class="bi bi-calendar3"></i> 
+                                    <i class="bi bi-calendar3"></i>
                                     Atualizado em ${this.formatarData()}
                                 </small>
                             </div>
@@ -311,7 +317,7 @@ class UserRelatorioCompanhias {
             </div>
         `;
     }
-    
+
     atualizarTotal() {
         if (this.totalResultados) {
             const total = this.dadosFiltrados.length;
@@ -323,24 +329,24 @@ class UserRelatorioCompanhias {
             `;
         }
     }
-    
+
     exportarCSV() {
         if (this.dadosFiltrados.length === 0) {
             alert('Não há dados para exportar!');
             return;
         }
-        
+
         const headers = ['Aeroporto', 'Quantidade de Companhias', 'Companhias'];
         const rows = this.dadosFiltrados.map(item => [
             item.aeroporto,
             item.quantidade_companhias,
             item.companhias.map(c => c.nome).join('; ')
         ]);
-        
+
         const csvContent = [headers, ...rows]
             .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
             .join('\n');
-        
+
         const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
@@ -351,15 +357,15 @@ class UserRelatorioCompanhias {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     }
-    
+
     exportarPDF() {
         if (this.dadosFiltrados.length === 0) {
             alert('Não há dados para exportar!');
             return;
         }
-        
+
         const printWindow = window.open('', '_blank');
-        
+
         let htmlContent = `
             <!DOCTYPE html>
             <html>
@@ -384,10 +390,10 @@ class UserRelatorioCompanhias {
                     <p>Gerado em: ${new Date().toLocaleString('pt-BR')}</p>
                 </div>
         `;
-        
+
         const aeroportoSelecionado = this.filterAeroporto?.value;
         const companhiaSelecionada = this.filterCompanhia?.value;
-        
+
         if (aeroportoSelecionado || companhiaSelecionada) {
             htmlContent += `<div class="filters-info"><strong>📊 Filtros aplicados:</strong><br>`;
             if (aeroportoSelecionado) {
@@ -400,13 +406,13 @@ class UserRelatorioCompanhias {
             }
             htmlContent += `</div>`;
         }
-        
+
         htmlContent += `
             <table>
                 <thead><tr><th>Aeroporto</th><th width="80">Qtd</th><th>Companhias Aéreas</th></tr></thead>
                 <tbody>
         `;
-        
+
         this.dadosFiltrados.forEach(item => {
             htmlContent += `
                 <tr>
@@ -416,7 +422,7 @@ class UserRelatorioCompanhias {
                 </tr>
             `;
         });
-        
+
         htmlContent += `
                 </tbody>
             </table>
@@ -427,12 +433,12 @@ class UserRelatorioCompanhias {
             </body>
             </html>
         `;
-        
+
         printWindow.document.write(htmlContent);
         printWindow.document.close();
         printWindow.onload = () => printWindow.print();
     }
-    
+
     formatarData() {
         return new Date().toLocaleDateString('pt-BR', {
             day: '2-digit',
@@ -442,11 +448,11 @@ class UserRelatorioCompanhias {
             minute: '2-digit'
         });
     }
-    
+
     formatarDataArquivo() {
         return new Date().toISOString().slice(0, 19).replace(/:/g, '-');
     }
-    
+
     escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -499,11 +505,11 @@ new UserRelatorioCompanhias();
     .hover-card:hover {
         transform: translateY(-3px);
     }
-    
+
     .btn {
         width: 100%;
     }
-    
+
     .d-flex.justify-content-between {
         flex-direction: column;
     }
