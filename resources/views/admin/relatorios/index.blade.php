@@ -5,7 +5,7 @@
 @section('content')
 <div class="container">
     <div class="mb-4">
-        <h3 class="fw-bold">📊 Controle de Relatórios</h3>
+        <h3 class="fw-bold"><i class="bi bi-bar-chart"></i> Controle de Relatórios</h3>
         <p class="text-muted mb-0">
             Habilite quais relatórios estruturados na aplicação ficam visíveis para usuários comuns.
         </p>
@@ -20,6 +20,7 @@
                             <th>Nome</th>
                             <th>Tipo</th>
                             <th>Descrição</th>
+                            <th>Status</th>
                             <th class="text-center">Visível para usuários</th>
                             <th class="text-end">Visualização</th>
                         </tr>
@@ -32,6 +33,11 @@
                                     <span class="badge bg-info text-dark">{{ $relatorio->tipo }}</span>
                                 </td>
                                 <td>{{ Str::limit($relatorio->descricao, 70) ?: '—' }}</td>
+                                <td>
+                                    @include('relatorios.partials.status-badges', [
+                                        'relatorio' => $relatorio,
+                                    ])
+                                </td>
                                 <td class="text-center">
                                     <div class="form-check form-switch d-flex justify-content-center">
                                         <input
@@ -56,7 +62,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-4">
+                                <td colspan="6" class="text-center text-muted py-4">
                                     Nenhum relatório estruturado foi registrado na aplicação.
                                 </td>
                             </tr>
@@ -77,6 +83,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const color = toggle.checked ? '#198754' : '#dc3545';
         toggle.style.backgroundColor = color;
         toggle.style.borderColor = color;
+    }
+
+    function updateStatusBadges(row, isVisible) {
+        const visibilityBadge = row.querySelector('.js-relatorio-visibilidade-badge');
+        const accessBadge = row.querySelector('.js-relatorio-acesso-badge');
+
+        if (visibilityBadge) {
+            visibilityBadge.className = `badge ${isVisible ? 'bg-success' : 'bg-secondary'} js-relatorio-visibilidade-badge`;
+            visibilityBadge.innerHTML = `
+                <i class="bi ${isVisible ? 'bi-eye' : 'bi-eye-slash'} me-1"></i>
+                ${isVisible ? 'Visível' : 'Oculto'}
+            `;
+        }
+
+        if (accessBadge) {
+            accessBadge.className = `badge ${isVisible ? 'bg-primary' : 'bg-dark'} js-relatorio-acesso-badge`;
+            accessBadge.innerHTML = `
+                <i class="bi ${isVisible ? 'bi-globe2' : 'bi-shield-lock'} me-1"></i>
+                ${isVisible ? 'Público' : 'Admin'}
+            `;
+        }
     }
 
     function showToast(type, message) {
@@ -109,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         toggle.addEventListener('change', async function () {
             const requestedState = this.checked;
+            const row = this.closest('tr');
             this.disabled = true;
             this.style.opacity = '0.6';
 
@@ -130,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 updateToggleColor(this);
+                updateStatusBadges(row, requestedState);
                 showToast(
                     requestedState ? 'success' : 'warning',
                     requestedState
@@ -139,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 this.checked = !requestedState;
                 updateToggleColor(this);
+                updateStatusBadges(row, this.checked);
                 showToast('danger', error.message || 'Erro de conexão. Tente novamente.');
             } finally {
                 this.disabled = false;

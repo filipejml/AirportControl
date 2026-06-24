@@ -10,6 +10,10 @@
             <div>
                 <h3 class="fw-bold">✈️ Relatório: Companhias por Aeroporto</h3>
                 <p class="text-muted">Visualize todas as companhias aéreas operando em cada aeroporto</p>
+                @include('relatorios.partials.status-badges', [
+                    'relatorio' => $relatorio,
+                    'class' => 'mt-2',
+                ])
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <button class="btn btn-success" id="btnExportCSV">

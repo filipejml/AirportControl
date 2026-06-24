@@ -8,6 +8,10 @@
                 <p class="text-muted mb-0">
                     Compare passageiros transportados com a capacidade oferecida pelas aeronaves.
                 </p>
+                @include('relatorios.partials.status-badges', [
+                    'relatorio' => $relatorio,
+                    'class' => 'mt-2',
+                ])
             </div>
             <button class="btn btn-success" id="exportarOcupacaoCsv">
                 <i class="bi bi-file-spreadsheet"></i> Exportar CSV

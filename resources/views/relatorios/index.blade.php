@@ -5,7 +5,7 @@
 @section('content')
 <div class="container">
     <div class="mb-4">
-        <h3 class="fw-bold">📊 Relatórios Disponíveis</h3>
+        <h3 class="fw-bold"><i class="bi bi-bar-chart"></i> Relatórios Disponíveis</h3>
         <p class="text-muted">Consulte os relatórios habilitados pela administração.</p>
     </div>
 
@@ -37,6 +37,11 @@
                             @if($relatorio->descricao)
                                 <p class="card-text text-muted">{{ $relatorio->descricao }}</p>
                             @endif
+
+                            @include('relatorios.partials.status-badges', [
+                                'relatorio' => $relatorio,
+                                'class' => 'mt-3',
+                            ])
                         </div>
                         <div class="card-footer bg-transparent border-top-0">
                             <a href="{{ route($relatorio->route) }}" class="btn btn-outline-primary btn-sm w-100">

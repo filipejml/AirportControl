@@ -8,6 +8,10 @@
                 <p class="text-muted mb-0">
                     Compare volume operacional, cobertura e avaliações das companhias aéreas.
                 </p>
+                @include('relatorios.partials.status-badges', [
+                    'relatorio' => $relatorio,
+                    'class' => 'mt-2',
+                ])
             </div>
             <button class="btn btn-success" id="exportarCsv">
                 <i class="bi bi-file-spreadsheet"></i> Exportar CSV

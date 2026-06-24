@@ -12,6 +12,10 @@
                     <i class="bi bi-airplane"></i> Voos por Aeroporto
                 </h3>
                 <p class="text-muted">Estatísticas de voos, passageiros e notas por aeroporto</p>
+                @include('relatorios.partials.status-badges', [
+                    'relatorio' => $relatorio,
+                    'class' => 'mt-2',
+                ])
             </div>
 
             <div class="d-flex gap-2 flex-wrap">

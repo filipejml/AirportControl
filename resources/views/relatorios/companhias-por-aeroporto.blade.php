@@ -12,6 +12,10 @@
                     <i class="bi bi-building"></i> Companhias Aéreas por Aeroporto
                 </h3>
                 <p class="text-muted">Visualize quais companhias operam em cada aeroporto</p>
+                @include('relatorios.partials.status-badges', [
+                    'relatorio' => $relatorio,
+                    'class' => 'mt-2',
+                ])
             </div>
 
             <div class="d-flex gap-2 flex-wrap">
