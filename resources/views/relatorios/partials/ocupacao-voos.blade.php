@@ -71,6 +71,11 @@
                             @endforeach
                         </select>
                     </div>
+                    @include('relatorios.partials.filtros-globais', [
+                        'ids' => [
+                            'aeronave' => 'ocupAeronave',
+                        ],
+                    ])
                     <div class="col-md-3">
                         <label for="ocupAeroporto" class="form-label fw-semibold">Aeroporto</label>
                         <select id="ocupAeroporto" class="form-select">

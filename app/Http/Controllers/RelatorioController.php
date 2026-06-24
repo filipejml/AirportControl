@@ -6,9 +6,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Relatorio;
 use App\Models\Aeroporto;
+use App\Models\Aeronave;
 use App\Models\CompanhiaAerea;
 use App\Services\VooMetricasService;
 use App\Services\Relatorios\DesempenhoCompanhiasService;
+use App\Services\Relatorios\FiltrosRelatorioService;
 use App\Services\Relatorios\MovimentacaoPorPeriodoService;
 use App\Services\Relatorios\RankingAeroportosService;
 use App\Services\Relatorios\OcupacaoVoosService;
@@ -21,6 +23,25 @@ class RelatorioController extends Controller
         private readonly RankingAeroportosService $rankingAeroportosService,
         private readonly OcupacaoVoosService $ocupacaoVoosService
     ) {
+    }
+
+    private function validarFiltrosGlobais(Request $request, array $extras = []): array
+    {
+        return $request->validate(array_merge([
+            'periodo' => ['nullable', 'in:hoje,semana,mes,ano'],
+            'aeroporto_id' => ['nullable', 'integer', 'exists:aeroportos,id'],
+            'companhia_id' => ['nullable', 'integer', 'exists:companhias_aereas,id'],
+            'aeronave_id' => ['nullable', 'integer', 'exists:aeronaves,id'],
+        ], $extras));
+    }
+
+    private function opcoesFiltrosRelatorio(): array
+    {
+        return [
+            'aeroportos' => Aeroporto::orderBy('nome_aeroporto')->get(),
+            'companhias' => CompanhiaAerea::orderBy('nome')->get(),
+            'aeronaves' => Aeronave::with('fabricante')->orderBy('modelo')->get(),
+        ];
     }
 
     /**
@@ -47,7 +68,14 @@ class RelatorioController extends Controller
      */
     public function apiCompanhiasPorAeroporto(Request $request)
     {
-        $query = Aeroporto::with('companhias');
+        $filtros = $this->validarFiltrosGlobais($request);
+        $aplicarFiltrosVoos = function ($query) use ($filtros) {
+            $query->with('companhiaAerea');
+            FiltrosRelatorioService::aplicar($query, $filtros);
+        };
+
+        $query = Aeroporto::with(['voos' => $aplicarFiltrosVoos])
+            ->whereHas('voos', fn ($q) => FiltrosRelatorioService::aplicar($q, $filtros));
         
         // Filtro por aeroporto específico
         if ($request->has('aeroporto_id') && $request->aeroporto_id) {
@@ -66,14 +94,16 @@ class RelatorioController extends Controller
                 return [
                     'aeroporto' => $aeroporto->nome_aeroporto,
                     'id_aeroporto' => $aeroporto->id,
-                    'quantidade_companhias' => $aeroporto->companhias->count(),
-                    'companhias' => $aeroporto->companhias->map(function ($companhia) {
+                    'quantidade_companhias' => $aeroporto->voos->pluck('companhia_aerea_id')->filter()->unique()->count(),
+                    'companhias' => $aeroporto->voos->groupBy('companhia_aerea_id')->map(function ($voos) {
+                        $companhia = $voos->first()->companhiaAerea;
+
                         return [
-                            'id' => $companhia->id,
-                            'nome' => $companhia->nome,
-                            'codigo' => $companhia->codigo,
+                            'id' => $companhia?->id,
+                            'nome' => $companhia?->nome ?? 'N/A',
+                            'codigo' => $companhia?->codigo,
                         ];
-                    }),
+                    })->values(),
                 ];
             });
 
@@ -81,10 +111,7 @@ class RelatorioController extends Controller
             'success' => true,
             'data' => $dados,
             'timestamp' => now()->toIso8601String(),
-            'filters' => [
-                'aeroporto_id' => $request->aeroporto_id,
-                'companhia_id' => $request->companhia_id,
-            ]
+            'filters' => $filtros,
         ]);
     }
     
@@ -96,11 +123,9 @@ class RelatorioController extends Controller
         $relatorio = Relatorio::where('tipo', Relatorio::TIPO_COMPANHIAS_POR_AEROPORTO)
             ->firstOrFail();
         
-        // Buscar todos os aeroportos e companhias para os filtros
-        $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
-        $companhias = CompanhiaAerea::orderBy('nome')->get();
+        extract($this->opcoesFiltrosRelatorio());
         
-        return view('admin.relatorios.companhias-por-aeroporto', compact('relatorio', 'aeroportos', 'companhias'));
+        return view('admin.relatorios.companhias-por-aeroporto', compact('relatorio', 'aeroportos', 'companhias', 'aeronaves'));
     }
     
     /**
@@ -112,11 +137,9 @@ class RelatorioController extends Controller
             ->where('tipo', Relatorio::TIPO_COMPANHIAS_POR_AEROPORTO)
             ->firstOrFail();
         
-        // Buscar todos os aeroportos e companhias para os filtros
-        $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
-        $companhias = CompanhiaAerea::orderBy('nome')->get();
+        extract($this->opcoesFiltrosRelatorio());
         
-        return view('relatorios.companhias-por-aeroporto', compact('relatorio', 'aeroportos', 'companhias'));
+        return view('relatorios.companhias-por-aeroporto', compact('relatorio', 'aeroportos', 'companhias', 'aeronaves'));
     }
 
     /**
@@ -149,34 +172,16 @@ class RelatorioController extends Controller
      */
     public function apiVoosPorAeroporto(Request $request)
     {
-        $periodo = $request->validate([
-            'periodo' => ['nullable', 'in:hoje,semana,mes,ano'],
-        ])['periodo'] ?? null;
+        $filtros = $this->validarFiltrosGlobais($request);
 
-        $carregarVoos = function ($q) use ($periodo) {
+        $carregarVoos = function ($q) use ($filtros) {
             $q->with('companhiaAerea');
-
-            switch ($periodo) {
-                case 'hoje':
-                    $q->whereDate('created_at', today());
-                    break;
-                case 'semana':
-                    $q->whereBetween('created_at', [
-                        now()->startOfWeek(),
-                        now()->endOfWeek(),
-                    ]);
-                    break;
-                case 'mes':
-                    $q->whereMonth('created_at', now()->month)
-                        ->whereYear('created_at', now()->year);
-                    break;
-                case 'ano':
-                    $q->whereYear('created_at', now()->year);
-                    break;
-            }
+            FiltrosRelatorioService::aplicar($q, $filtros);
         };
 
-        $query = Aeroporto::with(['voos' => $carregarVoos]);
+        $query = Aeroporto::with(['voos' => $carregarVoos])
+            ->when(!empty($filtros['aeroporto_id']), fn ($q) => $q->whereKey((int) $filtros['aeroporto_id']))
+            ->whereHas('voos', fn ($q) => FiltrosRelatorioService::aplicar($q, $filtros));
         
         $aeroportos = $query->get();
         $todosVoos = $aeroportos->flatMap->voos;
@@ -250,7 +255,8 @@ class RelatorioController extends Controller
             'success' => true,
             'data' => $dados,
             'totais' => $totais,
-            'periodo' => $periodo,
+            'periodo' => $filtros['periodo'] ?? null,
+            'filtros' => $filtros,
             'timestamp' => now()->toIso8601String(),
         ]);
     }
@@ -262,8 +268,9 @@ class RelatorioController extends Controller
     {
         $relatorio = Relatorio::where('tipo', Relatorio::TIPO_VOOS_POR_AEROPORTO)
             ->firstOrFail();
+        extract($this->opcoesFiltrosRelatorio());
         
-        return view('admin.relatorios.voos-por-aeroporto', compact('relatorio'));
+        return view('admin.relatorios.voos-por-aeroporto', compact('relatorio', 'aeroportos', 'companhias', 'aeronaves'));
     }
     
     /**
@@ -274,29 +281,21 @@ class RelatorioController extends Controller
         $relatorio = Relatorio::visiveis()
             ->where('tipo', Relatorio::TIPO_VOOS_POR_AEROPORTO)
             ->firstOrFail();
+        extract($this->opcoesFiltrosRelatorio());
             
-        return view('relatorios.voos-por-aeroporto', compact('relatorio'));
+        return view('relatorios.voos-por-aeroporto', compact('relatorio', 'aeroportos', 'companhias', 'aeronaves'));
     }
 
     public function apiDesempenhoCompanhias(Request $request)
     {
-        $filtros = $request->validate([
-            'periodo' => ['nullable', 'in:hoje,semana,mes,ano'],
-            'companhia_id' => ['nullable', 'integer', 'exists:companhias_aereas,id'],
-        ]);
+        $filtros = $this->validarFiltrosGlobais($request);
 
-        $resultado = $this->desempenhoCompanhiasService->gerar(
-            $filtros['periodo'] ?? null,
-            isset($filtros['companhia_id']) ? (int) $filtros['companhia_id'] : null
-        );
+        $resultado = $this->desempenhoCompanhiasService->gerar($filtros);
 
         return response()->json([
             'success' => true,
             ...$resultado,
-            'filtros' => [
-                'periodo' => $filtros['periodo'] ?? null,
-                'companhia_id' => $filtros['companhia_id'] ?? null,
-            ],
+            'filtros' => $filtros,
             'timestamp' => now()->toIso8601String(),
         ]);
     }
@@ -305,11 +304,11 @@ class RelatorioController extends Controller
     {
         $relatorio = Relatorio::where('tipo', Relatorio::TIPO_DESEMPENHO_COMPANHIAS)
             ->firstOrFail();
-        $companhias = CompanhiaAerea::orderBy('nome')->get();
+        extract($this->opcoesFiltrosRelatorio());
 
         return view(
             'admin.relatorios.desempenho-companhias',
-            compact('relatorio', 'companhias')
+            compact('relatorio', 'aeroportos', 'companhias', 'aeronaves')
         );
     }
 
@@ -318,17 +317,17 @@ class RelatorioController extends Controller
         $relatorio = Relatorio::visiveis()
             ->where('tipo', Relatorio::TIPO_DESEMPENHO_COMPANHIAS)
             ->firstOrFail();
-        $companhias = CompanhiaAerea::orderBy('nome')->get();
+        extract($this->opcoesFiltrosRelatorio());
 
         return view(
             'relatorios.desempenho-companhias',
-            compact('relatorio', 'companhias')
+            compact('relatorio', 'aeroportos', 'companhias', 'aeronaves')
         );
     }
 
     public function apiMovimentacaoPorPeriodo(Request $request)
     {
-        $filtros = $request->validate([
+        $filtros = $this->validarFiltrosGlobais($request, [
             'agrupamento' => ['nullable', 'in:dia,semana,mes,ano'],
             'data_inicio' => ['nullable', 'date'],
             'data_fim' => ['nullable', 'date', 'after_or_equal:data_inicio'],
@@ -337,17 +336,14 @@ class RelatorioController extends Controller
         $resultado = $this->movimentacaoPorPeriodoService->gerar(
             $filtros['agrupamento'] ?? 'mes',
             $filtros['data_inicio'] ?? null,
-            $filtros['data_fim'] ?? null
+            $filtros['data_fim'] ?? null,
+            $filtros
         );
 
         return response()->json([
             'success' => true,
             ...$resultado,
-            'filtros' => [
-                'agrupamento' => $filtros['agrupamento'] ?? 'mes',
-                'data_inicio' => $filtros['data_inicio'] ?? null,
-                'data_fim' => $filtros['data_fim'] ?? null,
-            ],
+            'filtros' => $filtros,
             'timestamp' => now()->toIso8601String(),
         ]);
     }
@@ -358,8 +354,9 @@ class RelatorioController extends Controller
             'tipo',
             Relatorio::TIPO_MOVIMENTACAO_POR_PERIODO
         )->firstOrFail();
+        extract($this->opcoesFiltrosRelatorio());
 
-        return view('admin.relatorios.movimentacao-por-periodo', compact('relatorio'));
+        return view('admin.relatorios.movimentacao-por-periodo', compact('relatorio', 'aeroportos', 'companhias', 'aeronaves'));
     }
 
     public function userMovimentacaoPorPeriodo()
@@ -367,14 +364,14 @@ class RelatorioController extends Controller
         $relatorio = Relatorio::visiveis()
             ->where('tipo', Relatorio::TIPO_MOVIMENTACAO_POR_PERIODO)
             ->firstOrFail();
+        extract($this->opcoesFiltrosRelatorio());
 
-        return view('relatorios.movimentacao-por-periodo', compact('relatorio'));
+        return view('relatorios.movimentacao-por-periodo', compact('relatorio', 'aeroportos', 'companhias', 'aeronaves'));
     }
 
     public function apiRankingAeroportos(Request $request)
     {
-        $filtros = $request->validate([
-            'periodo' => ['nullable', 'in:hoje,semana,mes,ano'],
+        $filtros = $this->validarFiltrosGlobais($request, [
             'ordenacao' => [
                 'nullable',
                 'in:total_voos,total_passageiros,media_passageiros_por_voo,total_companhias,media_geral',
@@ -382,17 +379,14 @@ class RelatorioController extends Controller
         ]);
 
         $resultado = $this->rankingAeroportosService->gerar(
-            $filtros['periodo'] ?? null,
+            $filtros,
             $filtros['ordenacao'] ?? 'total_voos'
         );
 
         return response()->json([
             'success' => true,
             ...$resultado,
-            'filtros' => [
-                'periodo' => $filtros['periodo'] ?? null,
-                'ordenacao' => $filtros['ordenacao'] ?? 'total_voos',
-            ],
+            'filtros' => $filtros,
             'timestamp' => now()->toIso8601String(),
         ]);
     }
@@ -403,8 +397,9 @@ class RelatorioController extends Controller
             'tipo',
             Relatorio::TIPO_RANKING_AEROPORTOS
         )->firstOrFail();
+        extract($this->opcoesFiltrosRelatorio());
 
-        return view('admin.relatorios.ranking-aeroportos', compact('relatorio'));
+        return view('admin.relatorios.ranking-aeroportos', compact('relatorio', 'aeroportos', 'companhias', 'aeronaves'));
     }
 
     public function userRankingAeroportos()
@@ -412,23 +407,19 @@ class RelatorioController extends Controller
         $relatorio = Relatorio::visiveis()
             ->where('tipo', Relatorio::TIPO_RANKING_AEROPORTOS)
             ->firstOrFail();
+        extract($this->opcoesFiltrosRelatorio());
 
-        return view('relatorios.ranking-aeroportos', compact('relatorio'));
+        return view('relatorios.ranking-aeroportos', compact('relatorio', 'aeroportos', 'companhias', 'aeronaves'));
     }
 
     public function apiOcupacaoVoos(Request $request)
     {
-        $filtros = $request->validate([
-            'periodo' => ['nullable', 'in:hoje,semana,mes,ano'],
-            'companhia_id' => ['nullable', 'integer', 'exists:companhias_aereas,id'],
-            'aeroporto_id' => ['nullable', 'integer', 'exists:aeroportos,id'],
+        $filtros = $this->validarFiltrosGlobais($request, [
             'faixa' => ['nullable', 'in:baixa,media,alta,lotado'],
         ]);
 
         $resultado = $this->ocupacaoVoosService->gerar(
-            $filtros['periodo'] ?? null,
-            isset($filtros['companhia_id']) ? (int) $filtros['companhia_id'] : null,
-            isset($filtros['aeroporto_id']) ? (int) $filtros['aeroporto_id'] : null,
+            $filtros,
             $filtros['faixa'] ?? null
         );
 
@@ -444,12 +435,11 @@ class RelatorioController extends Controller
     {
         $relatorio = Relatorio::where('tipo', Relatorio::TIPO_OCUPACAO_VOOS)
             ->firstOrFail();
-        $companhias = CompanhiaAerea::orderBy('nome')->get();
-        $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
+        extract($this->opcoesFiltrosRelatorio());
 
         return view(
             'admin.relatorios.ocupacao-voos',
-            compact('relatorio', 'companhias', 'aeroportos')
+            compact('relatorio', 'aeroportos', 'companhias', 'aeronaves')
         );
     }
 
@@ -458,12 +448,11 @@ class RelatorioController extends Controller
         $relatorio = Relatorio::visiveis()
             ->where('tipo', Relatorio::TIPO_OCUPACAO_VOOS)
             ->firstOrFail();
-        $companhias = CompanhiaAerea::orderBy('nome')->get();
-        $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
+        extract($this->opcoesFiltrosRelatorio());
 
         return view(
             'relatorios.ocupacao-voos',
-            compact('relatorio', 'companhias', 'aeroportos')
+            compact('relatorio', 'aeroportos', 'companhias', 'aeronaves')
         );
     }
 }

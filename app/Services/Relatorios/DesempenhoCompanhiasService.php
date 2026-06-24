@@ -8,17 +8,17 @@ use Illuminate\Support\Collection;
 
 class DesempenhoCompanhiasService
 {
-    public function gerar(?string $periodo = null, ?int $companhiaId = null): array
+    public function gerar(array $filtros = []): array
     {
-        $carregarVoos = function ($query) use ($periodo) {
+        $carregarVoos = function ($query) use ($filtros) {
             $query->with(['aeroporto', 'aeronave']);
-            $this->aplicarPeriodo($query, $periodo);
+            FiltrosRelatorioService::aplicar($query, $filtros);
         };
 
         $query = CompanhiaAerea::with(['voos' => $carregarVoos]);
 
-        if ($companhiaId) {
-            $query->whereKey($companhiaId);
+        if (!empty($filtros['companhia_id'])) {
+            $query->whereKey((int) $filtros['companhia_id']);
         }
 
         $companhias = $query->orderBy('nome')->get();
@@ -76,18 +76,4 @@ class DesempenhoCompanhiasService
         ];
     }
 
-    private function aplicarPeriodo($query, ?string $periodo): void
-    {
-        match ($periodo) {
-            'hoje' => $query->whereDate('created_at', today()),
-            'semana' => $query->whereBetween('created_at', [
-                now()->startOfWeek(),
-                now()->endOfWeek(),
-            ]),
-            'mes' => $query->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year),
-            'ano' => $query->whereYear('created_at', now()->year),
-            default => null,
-        };
-    }
 }

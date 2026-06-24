@@ -9,23 +9,13 @@ use Illuminate\Support\Collection;
 class OcupacaoVoosService
 {
     public function gerar(
-        ?string $periodo = null,
-        ?int $companhiaId = null,
-        ?int $aeroportoId = null,
+        array $filtros = [],
         ?string $faixa = null
     ): array {
         $query = Voo::with(['companhiaAerea', 'aeroporto', 'aeronave'])
             ->orderByDesc('created_at');
 
-        $this->aplicarPeriodo($query, $periodo);
-
-        if ($companhiaId) {
-            $query->where('companhia_aerea_id', $companhiaId);
-        }
-
-        if ($aeroportoId) {
-            $query->where('aeroporto_id', $aeroportoId);
-        }
+        FiltrosRelatorioService::aplicar($query, $filtros);
 
         $voos = $query->get();
 
@@ -117,18 +107,4 @@ class OcupacaoVoosService
         };
     }
 
-    private function aplicarPeriodo($query, ?string $periodo): void
-    {
-        match ($periodo) {
-            'hoje' => $query->whereDate('created_at', today()),
-            'semana' => $query->whereBetween('created_at', [
-                now()->startOfWeek(),
-                now()->endOfWeek(),
-            ]),
-            'mes' => $query->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year),
-            'ano' => $query->whereYear('created_at', now()->year),
-            default => null,
-        };
-    }
 }

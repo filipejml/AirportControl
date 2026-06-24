@@ -8,7 +8,9 @@ class RelatorioDesempenhoCompanhias {
     iniciar() {
         this.container = document.getElementById('resultadoRelatorio');
         this.filtroPeriodo = document.getElementById('filtroPeriodo');
+        this.filtroAeroporto = document.getElementById('filtroAeroporto');
         this.filtroCompanhia = document.getElementById('filtroCompanhia');
+        this.filtroAeronave = document.getElementById('filtroAeronave');
         this.botaoLimpar = document.getElementById('limparFiltros');
         this.botaoExportar = document.getElementById('exportarCsv');
 
@@ -17,7 +19,9 @@ class RelatorioDesempenhoCompanhias {
         }
 
         this.filtroPeriodo.addEventListener('change', () => this.carregar());
+        this.filtroAeroporto?.addEventListener('change', () => this.carregar());
         this.filtroCompanhia.addEventListener('change', () => this.carregar());
+        this.filtroAeronave?.addEventListener('change', () => this.carregar());
         this.botaoLimpar?.addEventListener('click', () => this.limparFiltros());
         this.botaoExportar?.addEventListener('click', () => this.exportarCsv());
 
@@ -138,6 +142,12 @@ class RelatorioDesempenhoCompanhias {
         if (this.filtroCompanhia.value) {
             params.set('companhia_id', this.filtroCompanhia.value);
         }
+        if (this.filtroAeroporto?.value) {
+            params.set('aeroporto_id', this.filtroAeroporto.value);
+        }
+        if (this.filtroAeronave?.value) {
+            params.set('aeronave_id', this.filtroAeronave.value);
+        }
 
         const url = params.size
             ? `${this.apiUrl}?${params.toString()}`
@@ -171,7 +181,9 @@ class RelatorioDesempenhoCompanhias {
 
     limparFiltros() {
         this.filtroPeriodo.value = '';
+        if (this.filtroAeroporto) this.filtroAeroporto.value = '';
         this.filtroCompanhia.value = '';
+        if (this.filtroAeronave) this.filtroAeronave.value = '';
         this.carregar();
     }
 

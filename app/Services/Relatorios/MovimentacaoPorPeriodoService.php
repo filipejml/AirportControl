@@ -12,9 +12,26 @@ class MovimentacaoPorPeriodoService
     public function gerar(
         string $agrupamento = 'mes',
         ?string $dataInicio = null,
-        ?string $dataFim = null
+        ?string $dataFim = null,
+        array $filtros = []
     ): array {
         $query = Voo::query()->orderBy('created_at');
+
+        if (!empty($filtros['periodo'])) {
+            FiltrosRelatorioService::aplicarPeriodo($query, $filtros['periodo']);
+        }
+
+        if (!empty($filtros['aeroporto_id'])) {
+            $query->where('aeroporto_id', (int) $filtros['aeroporto_id']);
+        }
+
+        if (!empty($filtros['companhia_id'])) {
+            $query->where('companhia_aerea_id', (int) $filtros['companhia_id']);
+        }
+
+        if (!empty($filtros['aeronave_id'])) {
+            $query->where('aeronave_id', (int) $filtros['aeronave_id']);
+        }
 
         if ($dataInicio) {
             $query->where('created_at', '>=', Carbon::parse($dataInicio)->startOfDay());

@@ -73,6 +73,12 @@
                             @endforeach
                         </select>
                     </div>
+                    @include('relatorios.partials.filtros-globais', [
+                        'ids' => [
+                            'aeroporto' => 'filtroAeroporto',
+                            'aeronave' => 'filtroAeronave',
+                        ],
+                    ])
                     <div class="col-md-4 d-flex align-items-end">
                         <button type="button" id="limparFiltros" class="btn btn-outline-secondary w-100">
                             <i class="bi bi-eraser"></i> Limpar filtros

@@ -9,14 +9,15 @@ use Illuminate\Support\Collection;
 class RankingAeroportosService
 {
     public function gerar(
-        ?string $periodo = null,
+        array $filtros = [],
         string $ordenacao = 'total_voos'
     ): array {
-        $carregarVoos = function ($query) use ($periodo) {
-            $this->aplicarPeriodo($query, $periodo);
+        $carregarVoos = function ($query) use ($filtros) {
+            FiltrosRelatorioService::aplicar($query, $filtros);
         };
 
         $aeroportos = Aeroporto::with(['voos' => $carregarVoos])
+            ->when(!empty($filtros['aeroporto_id']), fn ($query) => $query->whereKey((int) $filtros['aeroporto_id']))
             ->orderBy('nome_aeroporto')
             ->get();
         $todosVoos = $aeroportos->flatMap->voos;
@@ -90,18 +91,4 @@ class RankingAeroportosService
         ];
     }
 
-    private function aplicarPeriodo($query, ?string $periodo): void
-    {
-        match ($periodo) {
-            'hoje' => $query->whereDate('created_at', today()),
-            'semana' => $query->whereBetween('created_at', [
-                now()->startOfWeek(),
-                now()->endOfWeek(),
-            ]),
-            'mes' => $query->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year),
-            'ano' => $query->whereYear('created_at', now()->year),
-            default => null,
-        };
-    }
 }

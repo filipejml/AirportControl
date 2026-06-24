@@ -9,11 +9,17 @@ class RelatorioRankingAeroportos {
     iniciar() {
         this.container = document.getElementById('rankingAeroportosResultado');
         this.periodo = document.getElementById('rankPeriodo');
+        this.aeroporto = document.getElementById('rankAeroporto');
+        this.companhia = document.getElementById('rankCompanhia');
+        this.aeronave = document.getElementById('rankAeronave');
         this.ordenacao = document.getElementById('rankOrdenacao');
 
         if (!this.container || !this.periodo || !this.ordenacao) return;
 
         this.periodo.addEventListener('change', () => this.carregar());
+        this.aeroporto?.addEventListener('change', () => this.carregar());
+        this.companhia?.addEventListener('change', () => this.carregar());
+        this.aeronave?.addEventListener('change', () => this.carregar());
         this.ordenacao.addEventListener('change', () => this.carregar());
         document.getElementById('limparRankingFiltros')
             ?.addEventListener('click', () => this.limparFiltros());
@@ -140,6 +146,9 @@ class RelatorioRankingAeroportos {
         this.mostrarLoading();
         const params = new URLSearchParams({ ordenacao: this.ordenacao.value });
         if (this.periodo.value) params.set('periodo', this.periodo.value);
+        if (this.aeroporto?.value) params.set('aeroporto_id', this.aeroporto.value);
+        if (this.companhia?.value) params.set('companhia_id', this.companhia.value);
+        if (this.aeronave?.value) params.set('aeronave_id', this.aeronave.value);
 
         try {
             const response = await fetch(`${this.apiUrl}?${params.toString()}`, {
@@ -171,6 +180,9 @@ class RelatorioRankingAeroportos {
 
     limparFiltros() {
         this.periodo.value = '';
+        if (this.aeroporto) this.aeroporto.value = '';
+        if (this.companhia) this.companhia.value = '';
+        if (this.aeronave) this.aeronave.value = '';
         this.ordenacao.value = 'total_voos';
         this.carregar();
     }

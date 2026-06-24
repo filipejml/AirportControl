@@ -62,6 +62,13 @@
                             <option value="ano">Este ano</option>
                         </select>
                     </div>
+                    @include('relatorios.partials.filtros-globais', [
+                        'ids' => [
+                            'aeroporto' => 'rankAeroporto',
+                            'companhia' => 'rankCompanhia',
+                            'aeronave' => 'rankAeronave',
+                        ],
+                    ])
                     <div class="col-md-4">
                         <label for="rankOrdenacao" class="form-label fw-semibold">Critério do ranking</label>
                         <select id="rankOrdenacao" class="form-select">

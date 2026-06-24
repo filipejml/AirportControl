@@ -54,6 +54,12 @@
                             @endforeach
                         </select>
                     </div>
+                    @include('relatorios.partials.filtros-globais', [
+                        'ids' => [
+                            'periodo' => 'filterPeriodo',
+                            'aeronave' => 'filterAeronave',
+                        ],
+                    ])
                     <div class="col-12 col-md-2 d-flex align-items-end">
                         <button id="clearButton" class="btn btn-outline-secondary w-100">
                             <i class="bi bi-eraser"></i> Limpar
@@ -104,6 +110,8 @@ class UserRelatorioCompanhias {
         this.cardsContainer = document.getElementById('cardsContainer');
         this.filterAeroporto = document.getElementById('filterAeroporto');
         this.filterCompanhia = document.getElementById('filterCompanhia');
+        this.filterPeriodo = document.getElementById('filterPeriodo');
+        this.filterAeronave = document.getElementById('filterAeronave');
         this.clearButton = document.getElementById('clearButton');
         this.totalResultados = document.getElementById('totalResultados');
         this.filtersStatus = document.getElementById('filtersStatus');
@@ -118,11 +126,15 @@ class UserRelatorioCompanhias {
         
         const aeroportoId = this.filterAeroporto?.value || '';
         const companhiaId = this.filterCompanhia?.value || '';
+        const periodo = this.filterPeriodo?.value || '';
+        const aeronaveId = this.filterAeronave?.value || '';
         
         let url = this.apiUrl;
         const params = [];
         if (aeroportoId) params.push(`aeroporto_id=${aeroportoId}`);
         if (companhiaId) params.push(`companhia_id=${companhiaId}`);
+        if (periodo) params.push(`periodo=${periodo}`);
+        if (aeronaveId) params.push(`aeronave_id=${aeronaveId}`);
         if (params.length) url += `?${params.join('&')}`;
         
         try {
@@ -152,6 +164,9 @@ class UserRelatorioCompanhias {
         if (this.filterCompanhia) {
             this.filterCompanhia.addEventListener('change', () => this.carregarDados());
         }
+        [this.filterPeriodo, this.filterAeronave]
+            .filter(Boolean)
+            .forEach(elemento => elemento.addEventListener('change', () => this.carregarDados()));
         
         if (this.clearButton) {
             this.clearButton.addEventListener('click', () => this.limparFiltros());
@@ -169,6 +184,8 @@ class UserRelatorioCompanhias {
     limparFiltros() {
         if (this.filterAeroporto) this.filterAeroporto.value = '';
         if (this.filterCompanhia) this.filterCompanhia.value = '';
+        if (this.filterPeriodo) this.filterPeriodo.value = '';
+        if (this.filterAeronave) this.filterAeronave.value = '';
         this.carregarDados();
     }
     

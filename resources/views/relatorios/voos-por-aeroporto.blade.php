@@ -40,6 +40,13 @@
                             <option value="ano">📅 Este Ano</option>
                         </select>
                     </div>
+                    @include('relatorios.partials.filtros-globais', [
+                        'ids' => [
+                            'aeroporto' => 'filterAeroporto',
+                            'companhia' => 'filterCompanhia',
+                            'aeronave' => 'filterAeronave',
+                        ],
+                    ])
                     <div class="col-12 col-md-6 d-flex align-items-end">
                         <button id="clearButton" class="btn btn-outline-secondary w-100">
                             <i class="bi bi-eraser"></i> Limpar Filtros
@@ -82,6 +89,9 @@ class UserRelatorioVoosPorAeroporto {
     configurarElementos() {
         this.cardsContainer = document.getElementById('cardsContainer');
         this.filterPeriodo = document.getElementById('filterPeriodo');
+        this.filterAeroporto = document.getElementById('filterAeroporto');
+        this.filterCompanhia = document.getElementById('filterCompanhia');
+        this.filterAeronave = document.getElementById('filterAeronave');
         this.clearButton = document.getElementById('clearButton');
         this.btnExportCSV = document.getElementById('btnExportCSV');
         this.btnExportPDF = document.getElementById('btnExportPDF');
@@ -91,9 +101,12 @@ class UserRelatorioVoosPorAeroporto {
     async carregarDados() {
         this.mostrarLoading();
         
-        const periodo = this.filterPeriodo?.value || '';
-        let url = this.apiUrl;
-        if (periodo) url += `?periodo=${periodo}`;
+        const params = new URLSearchParams();
+        if (this.filterPeriodo?.value) params.set('periodo', this.filterPeriodo.value);
+        if (this.filterAeroporto?.value) params.set('aeroporto_id', this.filterAeroporto.value);
+        if (this.filterCompanhia?.value) params.set('companhia_id', this.filterCompanhia.value);
+        if (this.filterAeronave?.value) params.set('aeronave_id', this.filterAeronave.value);
+        const url = params.size ? `${this.apiUrl}?${params.toString()}` : this.apiUrl;
         
         try {
             const response = await fetch(url);
@@ -116,6 +129,9 @@ class UserRelatorioVoosPorAeroporto {
         if (this.filterPeriodo) {
             this.filterPeriodo.addEventListener('change', () => this.carregarDados());
         }
+        [this.filterAeroporto, this.filterCompanhia, this.filterAeronave]
+            .filter(Boolean)
+            .forEach(elemento => elemento.addEventListener('change', () => this.carregarDados()));
         
         if (this.clearButton) {
             this.clearButton.addEventListener('click', () => this.limparFiltros());
@@ -132,6 +148,9 @@ class UserRelatorioVoosPorAeroporto {
     
     limparFiltros() {
         if (this.filterPeriodo) this.filterPeriodo.value = '';
+        if (this.filterAeroporto) this.filterAeroporto.value = '';
+        if (this.filterCompanhia) this.filterCompanhia.value = '';
+        if (this.filterAeronave) this.filterAeronave.value = '';
         this.carregarDados();
     }
     

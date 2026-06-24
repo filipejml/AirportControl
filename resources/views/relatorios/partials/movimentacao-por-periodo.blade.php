@@ -69,6 +69,14 @@
                         <label for="movDataFim" class="form-label fw-semibold">Data final</label>
                         <input type="date" id="movDataFim" class="form-control">
                     </div>
+                    @include('relatorios.partials.filtros-globais', [
+                        'ids' => [
+                            'periodo' => 'movPeriodo',
+                            'aeroporto' => 'movAeroporto',
+                            'companhia' => 'movCompanhia',
+                            'aeronave' => 'movAeronave',
+                        ],
+                    ])
                     <div class="col-md-3 d-flex align-items-end">
                         <button type="button" id="limparMovimentacaoFiltros" class="btn btn-outline-secondary w-100">
                             <i class="bi bi-eraser"></i> Limpar filtros

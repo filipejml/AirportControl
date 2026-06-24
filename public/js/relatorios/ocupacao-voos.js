@@ -12,11 +12,13 @@ class RelatorioOcupacaoVoos {
         this.periodo = document.getElementById('ocupPeriodo');
         this.companhia = document.getElementById('ocupCompanhia');
         this.aeroporto = document.getElementById('ocupAeroporto');
+        this.aeronave = document.getElementById('ocupAeronave');
         this.faixa = document.getElementById('ocupFaixa');
 
         if (!this.container) return;
 
-        [this.periodo, this.companhia, this.aeroporto, this.faixa]
+        [this.periodo, this.companhia, this.aeroporto, this.aeronave, this.faixa]
+            .filter(Boolean)
             .forEach(elemento => elemento.addEventListener('change', () => this.carregar()));
         document.getElementById('limparOcupacaoFiltros')
             ?.addEventListener('click', () => this.limparFiltros());
@@ -159,6 +161,7 @@ class RelatorioOcupacaoVoos {
         if (this.periodo.value) params.set('periodo', this.periodo.value);
         if (this.companhia.value) params.set('companhia_id', this.companhia.value);
         if (this.aeroporto.value) params.set('aeroporto_id', this.aeroporto.value);
+        if (this.aeronave?.value) params.set('aeronave_id', this.aeronave.value);
         if (this.faixa.value) params.set('faixa', this.faixa.value);
 
         const url = params.size ? `${this.apiUrl}?${params}` : this.apiUrl;
@@ -188,6 +191,7 @@ class RelatorioOcupacaoVoos {
         this.periodo.value = '';
         this.companhia.value = '';
         this.aeroporto.value = '';
+        if (this.aeronave) this.aeronave.value = '';
         this.faixa.value = '';
         this.carregar();
     }

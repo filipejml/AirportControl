@@ -9,6 +9,10 @@ class RelatorioMovimentacaoPorPeriodo {
     iniciar() {
         this.container = document.getElementById('movimentacaoResultado');
         this.agrupamento = document.getElementById('movAgrupamento');
+        this.periodo = document.getElementById('movPeriodo');
+        this.aeroporto = document.getElementById('movAeroporto');
+        this.companhia = document.getElementById('movCompanhia');
+        this.aeronave = document.getElementById('movAeronave');
         this.dataInicio = document.getElementById('movDataInicio');
         this.dataFim = document.getElementById('movDataFim');
 
@@ -17,6 +21,10 @@ class RelatorioMovimentacaoPorPeriodo {
         }
 
         this.agrupamento.addEventListener('change', () => this.carregar());
+        this.periodo?.addEventListener('change', () => this.carregar());
+        this.aeroporto?.addEventListener('change', () => this.carregar());
+        this.companhia?.addEventListener('change', () => this.carregar());
+        this.aeronave?.addEventListener('change', () => this.carregar());
         this.dataInicio.addEventListener('change', () => this.carregar());
         this.dataFim.addEventListener('change', () => this.carregar());
         document.getElementById('limparMovimentacaoFiltros')
@@ -169,6 +177,10 @@ class RelatorioMovimentacaoPorPeriodo {
     async carregar() {
         this.mostrarLoading();
         const params = new URLSearchParams({ agrupamento: this.agrupamento.value });
+        if (this.periodo?.value) params.set('periodo', this.periodo.value);
+        if (this.aeroporto?.value) params.set('aeroporto_id', this.aeroporto.value);
+        if (this.companhia?.value) params.set('companhia_id', this.companhia.value);
+        if (this.aeronave?.value) params.set('aeronave_id', this.aeronave.value);
         if (this.dataInicio.value) params.set('data_inicio', this.dataInicio.value);
         if (this.dataFim.value) params.set('data_fim', this.dataFim.value);
 
@@ -202,6 +214,10 @@ class RelatorioMovimentacaoPorPeriodo {
 
     limparFiltros() {
         this.agrupamento.value = 'mes';
+        if (this.periodo) this.periodo.value = '';
+        if (this.aeroporto) this.aeroporto.value = '';
+        if (this.companhia) this.companhia.value = '';
+        if (this.aeronave) this.aeronave.value = '';
         this.dataInicio.value = '';
         this.dataFim.value = '';
         this.carregar();
