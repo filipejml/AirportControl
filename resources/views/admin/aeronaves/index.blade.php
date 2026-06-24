@@ -66,7 +66,7 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle table-wide">
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>

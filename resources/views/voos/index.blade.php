@@ -180,7 +180,7 @@
                 </div>
             @else
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover align-middle mb-0" id="voosTable">
+                    <table class="table table-sm table-hover align-middle mb-0 table-xl" id="voosTable">
                         <thead class="bg-light">
                             <tr>
                                 <th class="px-2 py-2 text-center" style="width: 30px;">#</th>

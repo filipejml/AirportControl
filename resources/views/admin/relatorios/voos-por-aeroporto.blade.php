@@ -126,7 +126,7 @@
 
                 <!-- Tabela responsiva -->
                 <div class="table-responsive">
-                    <table class="table table-hover table-sm">
+                    <table class="table table-hover table-sm table-xl">
                         <thead class="table-light">
                             <tr>
                                 <th style="min-width: 200px;">Aeroporto</th>
