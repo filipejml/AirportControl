@@ -2,6 +2,8 @@
 
 namespace App\Services\Relatorios;
 
+use App\Services\PeriodoFiltroService;
+
 class FiltrosRelatorioService
 {
     public static function aplicar($query, array $filtros): void
@@ -23,16 +25,6 @@ class FiltrosRelatorioService
 
     public static function aplicarPeriodo($query, ?string $periodo): void
     {
-        match ($periodo) {
-            'hoje' => $query->whereDate('created_at', today()),
-            'semana' => $query->whereBetween('created_at', [
-                now()->startOfWeek(),
-                now()->endOfWeek(),
-            ]),
-            'mes' => $query->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year),
-            'ano' => $query->whereYear('created_at', now()->year),
-            default => null,
-        };
+        PeriodoFiltroService::aplicarPeriodoRelatorio($query, $periodo);
     }
 }

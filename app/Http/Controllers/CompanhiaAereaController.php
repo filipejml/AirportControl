@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
-use DateTime;
+use App\Services\PeriodoFiltroService;
 use App\Services\VooMetricasService;
 
 class CompanhiaAereaController extends Controller

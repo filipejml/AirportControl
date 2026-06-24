@@ -6,6 +6,7 @@ namespace App\Repositories;
 use App\Models\Aeronave;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Collection;
+use App\Services\PeriodoFiltroService;
 use App\Services\VooMetricasService;
 
 class AeronaveRepository
@@ -157,30 +158,7 @@ class AeronaveRepository
      */
     private function applyPeriodFilter($query, array $filters): void
     {
-        switch ($filters['periodo']) {
-            case 'semanal':
-                if (!empty($filters['semana'])) {
-                    list($ano, $semana) = explode('-W', $filters['semana']);
-                    $dataInicio = (new \DateTime())->setISODate($ano, $semana)->format('Y-m-d 00:00:00');
-                    $dataFim = (new \DateTime())->setISODate($ano, $semana)->modify('+6 days')->format('Y-m-d 23:59:59');
-                    $query->whereBetween('created_at', [$dataInicio, $dataFim]);
-                }
-                break;
-            case 'mensal':
-                if (!empty($filters['ano']) && !empty($filters['mes'])) {
-                    $dataInicio = "{$filters['ano']}-{$filters['mes']}-01 00:00:00";
-                    $dataFim = date('Y-m-t 23:59:59', strtotime($dataInicio));
-                    $query->whereBetween('created_at', [$dataInicio, $dataFim]);
-                }
-                break;
-            case 'anual':
-                if (!empty($filters['ano_selecionado'])) {
-                    $dataInicio = "{$filters['ano_selecionado']}-01-01 00:00:00";
-                    $dataFim = "{$filters['ano_selecionado']}-12-31 23:59:59";
-                    $query->whereBetween('created_at', [$dataInicio, $dataFim]);
-                }
-                break;
-        }
+        PeriodoFiltroService::aplicarPeriodoDetalhado($query, $filters);
     }
     
     private function groupVoosPorCompanhia(\Illuminate\Support\Collection $voos, string $campo): \Illuminate\Support\Collection
@@ -205,18 +183,7 @@ class AeronaveRepository
      */
     public function getAvailableWeeks(?Aeronave $aeronave = null): \Illuminate\Support\Collection
     {
-        $semanas = collect();
-        
-        for ($i = 0; $i < 52; $i++) {
-            $data = now()->subWeeks($i);
-            $semanas->push((object)[
-                'semana' => $data->format('Y-\WW'),
-                'numero_semana' => $data->weekOfYear,
-                'ano' => $data->year
-            ]);
-        }
-        
-        return $semanas->unique('semana');
+        return PeriodoFiltroService::semanasDisponiveis();
     }
 
     public function getAvailableYears(?Aeronave $aeronave = null): array

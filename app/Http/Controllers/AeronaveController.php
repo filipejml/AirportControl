@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use App\Models\Aeronave;
 use App\Models\Fabricante;
 use App\Repositories\AeronaveRepository;
+use App\Services\PeriodoFiltroService;
 use App\Services\RankingService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -148,15 +149,9 @@ class AeronaveController extends Controller
     {
         $aeronave->load(['fabricante', 'companhias']);
         
-        // Prepare filters
-        $filters = [
+        $filters = array_merge(PeriodoFiltroService::filtrosDetalhadosFromRequest($request), [
             'companhia_id' => $request->get('companhia', 'geral'),
-            'periodo' => $request->get('periodo', 'geral'),
-            'semana' => $request->get('semana'),
-            'ano' => $request->get('ano'),
-            'mes' => $request->get('mes'),
-            'ano_selecionado' => $request->get('ano_selecionado'),
-        ];
+        ]);
         
         // Get stats using repository
         $stats = $this->aeronaveRepository->getDashboardStats($aeronave, $filters);
@@ -184,13 +179,7 @@ class AeronaveController extends Controller
      */
     public function ranking(Request $request)
     {
-        $filters = [
-            'periodo' => $request->get('periodo', 'geral'),
-            'semana' => $request->get('semana'),
-            'ano' => $request->get('ano'),
-            'mes' => $request->get('mes'),
-            'ano_selecionado' => $request->get('ano_selecionado'),
-        ];
+        $filters = PeriodoFiltroService::filtrosDetalhadosFromRequest($request);
         $rankings = $this->rankingService->generateRankings($filters);
         
         return view('aeronaves.ranking', [
