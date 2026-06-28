@@ -41,14 +41,15 @@ class CompanhiaHelper
         
         // NOVOS CÓDIGOS ADICIONADOS
         'SG' => 'Singapura Airlines',      // Código para Singapura Airlines
-        'AM' => 'American Airways',        // Código para American Airways
+        'AAW' => 'American Airways',        // Código para American Airways
         'CZ' => 'China Southern',          // Código para China Southern
         'PF' => 'PayrionFestival',         // Código para PayrionFestival
-        'RS' => 'Royal Skyways',           // Código para Royal Skyways
+        'RSK' => 'Royal Skyways',           // Código para Royal Skyways
         'RX' => 'Riyadh Air',              // Código para Riyadh Air
         'AS' => 'Asfar',                   // Código para Asfar
         'RS' => 'Reis',
         'LA' => 'LATAM',                    // Código para LATAM
+
     ];
 
     /**

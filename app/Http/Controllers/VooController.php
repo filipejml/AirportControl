@@ -105,7 +105,10 @@ class VooController extends Controller
         $companhias = CompanhiaAerea::orderBy('nome')->get();
 
         $companhiaCodigos = $companhias->mapWithKeys(function ($companhia) {
-            return [$companhia->id => CompanhiaHelper::buscarCodigoPorNome($companhia->nome) ?: ''];
+            return [
+                $companhia->id => strtoupper(trim($companhia->codigo ?? ''))
+                    ?: (CompanhiaHelper::buscarCodigoPorNome($companhia->nome) ?: '')
+            ];
         })->toArray();
         
         $ultimoVoo = Voo::with([
