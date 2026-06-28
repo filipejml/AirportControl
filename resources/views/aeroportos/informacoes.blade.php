@@ -50,8 +50,55 @@
         
         .chart-container {
             position: relative;
-            height: 400px;
-            margin-bottom: 30px;
+            height: 420px;
+        }
+
+        .weekly-chart-card {
+            overflow: hidden;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(23, 52, 88, 0.1) !important;
+        }
+
+        .weekly-chart-header {
+            padding: 1.15rem 1.35rem;
+            color: #fff;
+            border: 0;
+            background: linear-gradient(135deg, #0d5c8b, #1674ac);
+        }
+
+        .weekly-chart-header .text-muted {
+            color: rgba(255, 255, 255, 0.72) !important;
+        }
+
+        .weekly-chart-header .header-icon {
+            display: grid;
+            width: 42px;
+            height: 42px;
+            place-items: center;
+            border-radius: 11px;
+            background: rgba(255, 255, 255, 0.14);
+            font-size: 1.2rem;
+        }
+
+        .chart-filter-panel {
+            padding: 1rem;
+            border: 1px solid #e3eaf2;
+            border-radius: 10px;
+            background: #f7f9fc;
+        }
+
+        .chart-legend-panel {
+            padding: .8rem 1rem;
+            border: 1px solid #e7edf4;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        .chart-surface {
+            padding: 1rem;
+            border: 1px solid #edf1f5;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #fff, #fbfcfe);
         }
         
         .toggle-series-btn {
@@ -64,11 +111,14 @@
         
         .series-badge {
             cursor: pointer;
-            transition: opacity 0.2s;
+            border: 1px solid rgba(255, 255, 255, .35);
+            box-shadow: 0 2px 6px rgba(23, 52, 88, .12);
+            transition: opacity 0.2s, transform 0.2s;
         }
         
         .series-badge:hover {
-            opacity: 0.7;
+            opacity: 0.85;
+            transform: translateY(-1px);
         }
         
         .series-badge.hidden-series {
@@ -78,6 +128,16 @@
         
         .ano-filter {
             max-width: 150px;
+        }
+
+        @media (max-width: 767.98px) {
+            .chart-container {
+                height: 340px;
+            }
+
+            .weekly-chart-header {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -146,7 +206,7 @@
                 <select id="searchSelect" class="form-select">
                     <option value="">Todos os aeroportos</option>
                     @foreach($aeroportosData as $aeroporto)
-                        <option value="{{ strtolower($aeroporto['nome']) }}">{{ $aeroporto['nome'] }}</option>
+                        <option value="{{ $aeroporto['id'] }}">{{ $aeroporto['nome'] }}</option>
                     @endforeach
                 </select>
             </div>
@@ -353,26 +413,69 @@
 
         {{-- GRÁFICO DE PASSAGEIROS POR SEMANA (ABAIXO DOS CARDS) --}}
         @if(isset($dadosSemanais) && count($dadosSemanais['aeroportos']) > 0 && count($dadosSemanais['semanas']) > 0)
-        <div class="card shadow-sm mb-4 mt-4">
-            <div class="card-header bg-white">
+        <div class="card weekly-chart-card border-0 mb-4 mt-4">
+            <div class="card-header weekly-chart-header">
                 <div class="d-flex justify-content-between align-items-center flex-wrap">
-                    <div>
-                        <h5 class="mb-0">
-                            <i class="bi bi-graph-up me-2 text-primary"></i>
-                            Evolução Semanal de Passageiros por Aeroporto - Ano {{ $anoSelecionado }}
-                        </h5>
-                        <small class="text-muted">Semanas com registros de voos</small>
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="header-icon"><i class="bi bi-graph-up-arrow"></i></span>
+                        <div>
+                            <h5 class="mb-1">Evolução Semanal de Passageiros por Aeroporto</h5>
+                            <small class="text-muted">
+                                {{ $dadosSemanais['periodo_label'] ?? "Ano de {$anoSelecionado}" }} · semanas com registros
+                            </small>
+                        </div>
                     </div>
                     <div class="mt-2 mt-md-0">
-                        <button class="btn btn-sm btn-outline-secondary toggle-series-btn" id="toggleAllBtn">
-                            <i class="bi bi-eye"></i> Mostrar Todos
+                        <button class="btn btn-sm btn-light toggle-series-btn" id="toggleAllBtn">
+                            <i class="bi bi-eye-slash"></i> Ocultar Todos
                         </button>
                     </div>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
+                <form method="GET" action="{{ route('aeroportos.informacoes') }}" class="row g-2 align-items-end mb-4 chart-filter-panel" id="graficoPeriodoForm">
+                    <input type="hidden" name="ano" value="{{ $anoSelecionado }}">
+                    <div class="col-md-4">
+                        <label for="graficoPeriodo" class="form-label small fw-semibold text-muted">Intervalo do gráfico</label>
+                        <select name="grafico_periodo" id="graficoPeriodo" class="form-select form-select-sm" onchange="atualizarFiltroPeriodoGrafico()">
+                            <option value="ano" @selected(($filtrosGrafico['periodo'] ?? 'ano') === 'ano')>Ano inteiro</option>
+                            <option value="semestre" @selected(($filtrosGrafico['periodo'] ?? '') === 'semestre')>Por semestre</option>
+                            <option value="trimestre" @selected(($filtrosGrafico['periodo'] ?? '') === 'trimestre')>Por trimestre</option>
+                            <option value="mes" @selected(($filtrosGrafico['periodo'] ?? '') === 'mes')>Por mês</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 grafico-filtro-detalhe" id="graficoFiltroSemestre" hidden>
+                        <label for="graficoSemestre" class="form-label small fw-semibold text-muted">Semestre</label>
+                        <select name="grafico_semestre" id="graficoSemestre" class="form-select form-select-sm">
+                            <option value="1" @selected(($filtrosGrafico['semestre'] ?? 1) == 1)>1º semestre</option>
+                            <option value="2" @selected(($filtrosGrafico['semestre'] ?? 1) == 2)>2º semestre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 grafico-filtro-detalhe" id="graficoFiltroTrimestre" hidden>
+                        <label for="graficoTrimestre" class="form-label small fw-semibold text-muted">Trimestre</label>
+                        <select name="grafico_trimestre" id="graficoTrimestre" class="form-select form-select-sm">
+                            @for($trimestre = 1; $trimestre <= 4; $trimestre++)
+                                <option value="{{ $trimestre }}" @selected(($filtrosGrafico['trimestre'] ?? 1) == $trimestre)>{{ $trimestre }}º trimestre</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-md-3 grafico-filtro-detalhe" id="graficoFiltroMes" hidden>
+                        <label for="graficoMes" class="form-label small fw-semibold text-muted">Mês</label>
+                        <select name="grafico_mes" id="graficoMes" class="form-select form-select-sm">
+                            @foreach(['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'] as $numero => $nomeMes)
+                                <option value="{{ $numero + 1 }}" @selected(($filtrosGrafico['mes'] ?? 1) == $numero + 1)>{{ $nomeMes }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-funnel me-1"></i>Aplicar
+                        </button>
+                    </div>
+                </form>
+
                 {{-- Legenda interativa --}}
-                <div class="mb-3 d-flex flex-wrap gap-2" id="chartLegend">
+                <div class="mb-3 d-flex flex-wrap align-items-center gap-2 chart-legend-panel" id="chartLegend">
                     @foreach($dadosSemanais['aeroportos'] as $index => $aeroporto)
                         <span class="badge series-badge p-2" 
                               data-series-index="{{ $index }}"
@@ -384,32 +487,63 @@
                 </div>
                 
                 {{-- Container do gráfico --}}
-                <div class="chart-container">
+                <div class="chart-container chart-surface">
                     <canvas id="passageirosSemanalChart"></canvas>
-                </div>
-                
-                {{-- Resumo estatístico --}}
-                <div class="alert alert-info mt-3">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <i class="bi bi-info-circle-fill me-2"></i>
-                            <strong>Como interpretar:</strong> O gráfico mostra a evolução do número de passageiros 
-                            transportados por cada aeroporto nas semanas do ano de <strong>{{ $anoSelecionado }}</strong> 
-                            que possuem registros de voos.
-                        </div>
-                        <div class="col-md-6 text-md-end">
-                            <small class="text-muted">
-                                Clique nos badges acima para mostrar/ocultar aeroportos no gráfico
-                            </small>
+                    <div id="chartEmptyMessage" class="h-100 d-none align-items-center justify-content-center text-muted">
+                        <div class="text-center">
+                            <i class="bi bi-funnel fs-2 d-block mb-2"></i>
+                            Nenhum aeroporto do gráfico corresponde aos filtros selecionados.
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         @else
+        <div class="card shadow-sm border-0 mt-4 mb-3">
+            <div class="card-body">
+                <form method="GET" action="{{ route('aeroportos.informacoes') }}" class="row g-2 align-items-end" id="graficoPeriodoForm">
+                    <input type="hidden" name="ano" value="{{ $anoSelecionado }}">
+                    <div class="col-md-4">
+                        <label for="graficoPeriodo" class="form-label small fw-semibold text-muted">Intervalo do gráfico</label>
+                        <select name="grafico_periodo" id="graficoPeriodo" class="form-select form-select-sm" onchange="atualizarFiltroPeriodoGrafico()">
+                            <option value="ano" @selected(($filtrosGrafico['periodo'] ?? 'ano') === 'ano')>Ano inteiro</option>
+                            <option value="semestre" @selected(($filtrosGrafico['periodo'] ?? '') === 'semestre')>Por semestre</option>
+                            <option value="trimestre" @selected(($filtrosGrafico['periodo'] ?? '') === 'trimestre')>Por trimestre</option>
+                            <option value="mes" @selected(($filtrosGrafico['periodo'] ?? '') === 'mes')>Por mês</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 grafico-filtro-detalhe" id="graficoFiltroSemestre" hidden>
+                        <label class="form-label small fw-semibold text-muted">Semestre</label>
+                        <select name="grafico_semestre" class="form-select form-select-sm">
+                            <option value="1" @selected(($filtrosGrafico['semestre'] ?? 1) == 1)>1º semestre</option>
+                            <option value="2" @selected(($filtrosGrafico['semestre'] ?? 1) == 2)>2º semestre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 grafico-filtro-detalhe" id="graficoFiltroTrimestre" hidden>
+                        <label class="form-label small fw-semibold text-muted">Trimestre</label>
+                        <select name="grafico_trimestre" class="form-select form-select-sm">
+                            @for($trimestre = 1; $trimestre <= 4; $trimestre++)
+                                <option value="{{ $trimestre }}" @selected(($filtrosGrafico['trimestre'] ?? 1) == $trimestre)>{{ $trimestre }}º trimestre</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-md-3 grafico-filtro-detalhe" id="graficoFiltroMes" hidden>
+                        <label class="form-label small fw-semibold text-muted">Mês</label>
+                        <select name="grafico_mes" class="form-select form-select-sm">
+                            @foreach(['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'] as $numero => $nomeMes)
+                                <option value="{{ $numero + 1 }}" @selected(($filtrosGrafico['mes'] ?? 1) == $numero + 1)>{{ $nomeMes }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-funnel me-1"></i>Aplicar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
         <div class="alert alert-warning mb-4 mt-4">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            Não há dados suficientes para exibir o gráfico de evolução semanal de passageiros para o ano {{ $anoSelecionado }}.
+            Não há dados para exibir o gráfico no período selecionado de {{ $anoSelecionado }}.
         </div>
         @endif
 
@@ -520,32 +654,36 @@
                 passageirosChart.data.datasets.forEach((dataset, index) => {
                     dataset.hidden = !seriesVisibility[index];
                 });
+
+                const possuiSerieVisivel = Object.values(seriesVisibility).some(Boolean);
+                const canvas = document.getElementById('passageirosSemanalChart');
+                const emptyMessage = document.getElementById('chartEmptyMessage');
+                canvas.classList.toggle('d-none', !possuiSerieVisivel);
+                emptyMessage.classList.toggle('d-none', possuiSerieVisivel);
+                emptyMessage.classList.toggle('d-flex', !possuiSerieVisivel);
+
                 passageirosChart.update();
+            }
+
+            function updateSeriesBadge(index) {
+                const badge = document.querySelector(`.series-badge[data-series-index="${index}"]`);
+                if (!badge) return;
+
+                const visivel = seriesVisibility[index];
+                badge.classList.toggle('hidden-series', !visivel);
+                badge.innerHTML = `<i class="bi bi-eye-${visivel ? 'fill' : 'slash-fill'} me-1"></i> ${dadosSemanais.aeroportos[index].nome}`;
             }
             
             function toggleSeries(index) {
                 seriesVisibility[index] = !seriesVisibility[index];
-                const badge = document.querySelector(`.series-badge[data-series-index="${index}"]`);
-                if (badge) {
-                    if (seriesVisibility[index]) {
-                        badge.classList.remove('hidden-series');
-                        badge.innerHTML = '<i class="bi bi-eye-fill me-1"></i> ' + dadosSemanais.aeroportos[index].nome;
-                    } else {
-                        badge.classList.add('hidden-series');
-                        badge.innerHTML = '<i class="bi bi-eye-slash-fill me-1"></i> ' + dadosSemanais.aeroportos[index].nome;
-                    }
-                }
+                updateSeriesBadge(index);
                 updateChartVisibility();
             }
             
             function showAllSeries() {
                 for (let i = 0; i < dadosSemanais.aeroportos.length; i++) {
                     seriesVisibility[i] = true;
-                    const badge = document.querySelector(`.series-badge[data-series-index="${i}"]`);
-                    if (badge) {
-                        badge.classList.remove('hidden-series');
-                        badge.innerHTML = '<i class="bi bi-eye-fill me-1"></i> ' + dadosSemanais.aeroportos[i].nome;
-                    }
+                    updateSeriesBadge(i);
                 }
                 updateChartVisibility();
             }
@@ -553,12 +691,24 @@
             function hideAllSeries() {
                 for (let i = 0; i < dadosSemanais.aeroportos.length; i++) {
                     seriesVisibility[i] = false;
-                    const badge = document.querySelector(`.series-badge[data-series-index="${i}"]`);
-                    if (badge) {
-                        badge.classList.add('hidden-series');
-                        badge.innerHTML = '<i class="bi bi-eye-slash-fill me-1"></i> ' + dadosSemanais.aeroportos[i].nome;
-                    }
+                    updateSeriesBadge(i);
                 }
+                updateChartVisibility();
+            }
+
+            function filterChartSeries() {
+                const aeroportoId = document.getElementById('searchSelect')?.value || '';
+                const companhiaId = document.getElementById('filterCompanhia')?.value || '';
+
+                dadosSemanais.aeroportos.forEach((aeroporto, index) => {
+                    const correspondeAeroporto = !aeroportoId || String(aeroporto.id) === String(aeroportoId);
+                    const correspondeCompanhia = !companhiaId
+                        || aeroporto.companhias_ids.some(id => String(id) === String(companhiaId));
+
+                    seriesVisibility[index] = correspondeAeroporto && correspondeCompanhia;
+                    updateSeriesBadge(index);
+                });
+
                 updateChartVisibility();
             }
             
@@ -581,15 +731,33 @@
                     const someHidden = Object.values(seriesVisibility).some(v => v === false);
                     if (someHidden) {
                         showAllSeries();
-                        this.innerHTML = '<i class="bi bi-eye"></i> Mostrar Todos';
+                        this.innerHTML = '<i class="bi bi-eye-slash"></i> Ocultar Todos';
                     } else {
                         hideAllSeries();
-                        this.innerHTML = '<i class="bi bi-eye-slash"></i> Ocultar Todos';
+                        this.innerHTML = '<i class="bi bi-eye"></i> Mostrar Todos';
                     }
                 });
             });
         @endif
         
+        // Filtro por ano - redireciona ao selecionar
+        function atualizarFiltroPeriodoGrafico() {
+            const periodo = document.getElementById('graficoPeriodo')?.value || 'ano';
+            document.querySelectorAll('.grafico-filtro-detalhe').forEach(elemento => elemento.hidden = true);
+
+            const filtros = {
+                semestre: 'graficoFiltroSemestre',
+                trimestre: 'graficoFiltroTrimestre',
+                mes: 'graficoFiltroMes'
+            };
+
+            if (filtros[periodo]) {
+                document.getElementById(filtros[periodo]).hidden = false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', atualizarFiltroPeriodoGrafico);
+
         // Filtro por ano - redireciona ao selecionar
         const anoFilter = document.getElementById('anoFilter');
         if (anoFilter) {
@@ -629,19 +797,18 @@
         }
 
         function filterCards() {
-            const searchTerm = document.getElementById('searchSelect') ? document.getElementById('searchSelect').value.toLowerCase() : '';
+            const aeroportoId = document.getElementById('searchSelect') ? document.getElementById('searchSelect').value : '';
             const companhiaFilter = document.getElementById('filterCompanhia') ? document.getElementById('filterCompanhia').value : '';
             
             const cards = document.querySelectorAll('.aeroporto-card');
             
             cards.forEach(card => {
-                const nome = card.dataset.nome;
                 const companhias = JSON.parse(card.dataset.companhias);
                 
                 let showByNome = true;
                 let showByCompanhia = true;
                 
-                if (searchTerm && !nome.includes(searchTerm)) {
+                if (aeroportoId && card.dataset.id !== aeroportoId) {
                     showByNome = false;
                 }
                 
@@ -658,6 +825,10 @@
                     card.style.display = 'none';
                 }
             });
+
+            if (typeof filterChartSeries === 'function') {
+                filterChartSeries();
+            }
         }
 
         function sortCards(sortType) {

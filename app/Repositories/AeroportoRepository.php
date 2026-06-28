@@ -5,6 +5,7 @@ namespace App\Repositories;
 
 use App\Models\Aeroporto;
 use App\Models\CompanhiaAerea;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 
@@ -327,21 +328,27 @@ class AeroportoRepository
     /**
      * Busca dados semanais de passageiros para múltiplos aeroportos
      */
-    public function getDadosPassageirosPorSemana($aeroportos, $ano)
+    public function getDadosPassageirosPorSemana($aeroportos, $ano, array $filtros = [])
     {
         $semanasComDados = [];
         $dadosPorAeroporto = [];
         $aeroportoIds = $aeroportos->pluck('id')->all();
+        [$inicio, $fim, $periodoLabel] = $this->intervaloGrafico((int) $ano, $filtros);
+
+        if (empty($aeroportoIds)) {
+            return ['semanas' => [], 'aeroportos' => [], 'periodo_label' => $periodoLabel];
+        }
         
         $semanasExistentes = DB::table('voos')
-            ->whereYear('created_at', $ano)
+            ->whereBetween('created_at', [$inicio, $fim])
+            ->whereIn('aeroporto_id', $aeroportoIds)
             ->select(DB::raw('YEARWEEK(created_at, 1) as semana_ano'), DB::raw('MIN(created_at) as data_referencia'))
             ->groupBy('semana_ano')
             ->orderBy('semana_ano', 'asc')
             ->get();
         
         if ($semanasExistentes->isEmpty()) {
-            return ['semanas' => [], 'aeroportos' => []];
+            return ['semanas' => [], 'aeroportos' => [], 'periodo_label' => $periodoLabel];
         }
         
         foreach ($semanasExistentes as $semana) {
@@ -360,8 +367,8 @@ class AeroportoRepository
         }
         
         $passageirosPorSemana = DB::table('voos')
-            ->whereYear('created_at', $ano)
-            ->when($aeroportoIds, fn ($query) => $query->whereIn('aeroporto_id', $aeroportoIds))
+            ->whereBetween('created_at', [$inicio, $fim])
+            ->whereIn('aeroporto_id', $aeroportoIds)
             ->select(
                 'aeroporto_id',
                 DB::raw('YEARWEEK(created_at, 1) as semana_ano'),
@@ -382,7 +389,9 @@ class AeroportoRepository
             
             if (array_sum($dadosSemanais) > 0) {
                 $dadosPorAeroporto[] = [
+                    'id' => $aeroporto->id,
                     'nome' => $aeroporto->nome_aeroporto,
+                    'companhias_ids' => $aeroporto->companhias->pluck('id')->values()->all(),
                     'dados' => $dadosSemanais,
                     'cor' => $this->gerarCorAleatoria(count($dadosPorAeroporto))
                 ];
@@ -391,7 +400,44 @@ class AeroportoRepository
         
         return [
             'semanas' => array_column($semanasComDados, 'label'),
-            'aeroportos' => $dadosPorAeroporto
+            'aeroportos' => $dadosPorAeroporto,
+            'periodo_label' => $periodoLabel,
+        ];
+    }
+
+    private function intervaloGrafico(int $ano, array $filtros): array
+    {
+        $periodo = $filtros['periodo'] ?? 'ano';
+
+        if ($periodo === 'mes') {
+            $mes = min(12, max(1, (int) ($filtros['mes'] ?? 1)));
+            $inicio = Carbon::create($ano, $mes, 1)->startOfDay();
+            $nomesMeses = [
+                1 => 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+            ];
+
+            return [$inicio, $inicio->copy()->endOfMonth(), "{$nomesMeses[$mes]} de {$ano}"];
+        }
+
+        if ($periodo === 'trimestre') {
+            $trimestre = min(4, max(1, (int) ($filtros['trimestre'] ?? 1)));
+            $inicio = Carbon::create($ano, (($trimestre - 1) * 3) + 1, 1)->startOfDay();
+
+            return [$inicio, $inicio->copy()->addMonths(2)->endOfMonth(), "{$trimestre}º trimestre de {$ano}"];
+        }
+
+        if ($periodo === 'semestre') {
+            $semestre = min(2, max(1, (int) ($filtros['semestre'] ?? 1)));
+            $inicio = Carbon::create($ano, $semestre === 1 ? 1 : 7, 1)->startOfDay();
+
+            return [$inicio, $inicio->copy()->addMonths(5)->endOfMonth(), "{$semestre}º semestre de {$ano}"];
+        }
+
+        return [
+            Carbon::create($ano, 1, 1)->startOfYear(),
+            Carbon::create($ano, 12, 31)->endOfYear(),
+            "ano de {$ano}",
         ];
     }
     

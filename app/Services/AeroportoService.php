@@ -60,7 +60,7 @@ class AeroportoService
     /**
      * Obtém dados para a página de informações gerais dos aeroportos
      */
-    public function getInformacoesData($anoSelecionado)
+    public function getInformacoesData($anoSelecionado, array $filtrosGrafico = [])
     {
         // Buscar aeroportos com estatísticas
         $aeroportos = $this->aeroportoRepository->getAeroportosComEstatisticas($anoSelecionado);
@@ -114,10 +114,17 @@ class AeroportoService
         $mediaPassageirosPorVoo = $totalVoos > 0 ? $totalPassageiros / $totalVoos : 0;
         
         // Dados semanais para gráfico
-        $dadosSemanais = $this->aeroportoRepository->getDadosPassageirosPorSemana($aeroportos, $anoSelecionado);
+        $dadosSemanais = $this->aeroportoRepository->getDadosPassageirosPorSemana(
+            $aeroportos,
+            $anoSelecionado,
+            $filtrosGrafico
+        );
         
         // Anos disponíveis
         $anosDisponiveis = $this->aeroportoRepository->getAnosDisponiveis();
+        $anosDisponiveis[] = (int) date('Y');
+        $anosDisponiveis = array_values(array_unique(array_map('intval', $anosDisponiveis)));
+        rsort($anosDisponiveis);
         
         // Companhias para filtro
         $companhias = \App\Models\CompanhiaAerea::orderBy('nome')->get();
@@ -131,7 +138,8 @@ class AeroportoService
             'mediaPassageirosPorVoo',
             'dadosSemanais',
             'anosDisponiveis',
-            'anoSelecionado'
+            'anoSelecionado',
+            'filtrosGrafico'
         );
     }
     

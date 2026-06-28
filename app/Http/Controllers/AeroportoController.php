@@ -304,10 +304,18 @@ class AeroportoController extends Controller
      */
     public function informacoes(Request $request)
     {
-        $anoSelecionado = $request->get('ano', date('Y'));
+        $anoSelecionado = (int) $request->get('ano', date('Y'));
+        $filtrosGrafico = [
+            'periodo' => in_array($request->get('grafico_periodo'), ['ano', 'semestre', 'trimestre', 'mes'], true)
+                ? $request->get('grafico_periodo')
+                : 'ano',
+            'semestre' => (int) $request->get('grafico_semestre', 1),
+            'trimestre' => (int) $request->get('grafico_trimestre', 1),
+            'mes' => (int) $request->get('grafico_mes', 1),
+        ];
         
         // Buscar todos os dados através do Service
-        $data = $this->aeroportoService->getInformacoesData($anoSelecionado);
+        $data = $this->aeroportoService->getInformacoesData($anoSelecionado, $filtrosGrafico);
         
         // Retornar a view de USUÁRIO COMUM (informacoes)
         return view('aeroportos.informacoes', $data);
