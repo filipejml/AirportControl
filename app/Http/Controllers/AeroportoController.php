@@ -8,7 +8,10 @@ use App\Models\CompanhiaAerea;
 use App\Models\Deposito;
 use App\Models\Veiculo;
 use App\Services\AeroportoService;
+use App\Services\AeroportoRankingService;
+use App\Services\PeriodoFiltroService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
@@ -19,6 +22,34 @@ class AeroportoController extends Controller
     public function __construct(AeroportoService $aeroportoService)
     {
         $this->aeroportoService = $aeroportoService;
+    }
+
+    public function ranking(Request $request, AeroportoRankingService $rankingService)
+    {
+        $filters = PeriodoFiltroService::filtrosDetalhadosFromRequest($request);
+        $rankings = $rankingService->generateRankings($filters);
+
+        return view('aeroportos.ranking', [
+            'rankingsPorNota' => $rankings['rankings_por_nota'],
+            'rankingsObjetivo' => $rankings['rankings_objetivo'],
+            'rankingsPontualidade' => $rankings['rankings_pontualidade'],
+            'rankingsServicos' => $rankings['rankings_servicos'],
+            'rankingsPatio' => $rankings['rankings_patio'],
+            'rankingsPorVoos' => $rankings['rankings_por_voos'],
+            'rankingsPorPassageiros' => $rankings['rankings_por_passageiros'],
+            'estatisticas' => $rankings['estatisticas'],
+            'periodoSelecionado' => $filters['periodo'],
+            'semanaSelecionada' => $filters['semana'],
+            'anoFiltro' => $filters['ano'],
+            'mesSelecionado' => $filters['mes'],
+            'anoSelecionado' => $filters['ano_selecionado'],
+            'semanasDisponiveis' => PeriodoFiltroService::semanasDisponiveis(),
+            'anosDisponiveis' => Aeroporto::join('voos', 'aeroportos.id', '=', 'voos.aeroporto_id')
+                ->whereNotNull('voos.created_at')
+                ->pluck('voos.created_at')
+                ->map(fn ($data) => Carbon::parse($data)->year)
+                ->unique()->sortDesc()->values()->all(),
+        ]);
     }
 
     /**

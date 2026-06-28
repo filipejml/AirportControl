@@ -4,10 +4,61 @@
 namespace App\Http\Controllers;
 
 use App\Models\Fabricante;
+use App\Services\VooMetricasService;
 use Illuminate\Http\Request;
 
 class FabricanteController extends Controller
 {
+    public function informacoes()
+    {
+        $fabricantes = Fabricante::query()
+            ->with(['aeronaves.voos', 'aeronaves.companhias'])
+            ->orderBy('nome')
+            ->get()
+            ->map(function (Fabricante $fabricante) {
+                $voos = $fabricante->aeronaves->flatMap->voos;
+                $totalVoos = (int) $voos->sum('qtd_voos');
+                $mediasPorTipo = [
+                    'objetivo' => VooMetricasService::mediaPonderada($voos, 'nota_obj'),
+                    'pontualidade' => VooMetricasService::mediaPonderada($voos, 'nota_pontualidade'),
+                    'servicos' => VooMetricasService::mediaPonderada($voos, 'nota_servicos'),
+                    'patio' => VooMetricasService::mediaPonderada($voos, 'nota_patio'),
+                ];
+                $mediasValidas = collect($mediasPorTipo)->filter(fn ($media) => $media > 0);
+
+                return [
+                    'id' => $fabricante->id,
+                    'nome' => $fabricante->nome,
+                    'pais_origem' => $fabricante->pais_origem ?: 'Não informado',
+                    'total_modelos' => $fabricante->aeronaves->count(),
+                    'total_companhias' => $fabricante->aeronaves
+                        ->flatMap->companhias
+                        ->unique('id')
+                        ->count(),
+                    'total_voos' => $totalVoos,
+                    'total_passageiros' => (int) $voos->sum('total_passageiros'),
+                    'nota_geral' => $mediasValidas->isEmpty() ? 0 : round($mediasValidas->avg(), 1),
+                    'medias_por_tipo' => collect($mediasPorTipo)
+                        ->map(fn ($media) => round($media, 1))
+                        ->all(),
+                ];
+            });
+
+        $estatisticas = [
+            'total_fabricantes' => $fabricantes->count(),
+            'total_paises' => $fabricantes
+                ->pluck('pais_origem')
+                ->reject(fn ($pais) => $pais === 'Não informado')
+                ->unique()
+                ->count(),
+            'total_modelos' => $fabricantes->sum('total_modelos'),
+            'total_voos' => $fabricantes->sum('total_voos'),
+            'total_passageiros' => $fabricantes->sum('total_passageiros'),
+        ];
+
+        return view('fabricantes.informacoes', compact('fabricantes', 'estatisticas'));
+    }
+
     public function index()
     {
         $fabricantes = Fabricante::withCount('aeronaves')->orderBy('nome')->get();
@@ -41,11 +92,32 @@ class FabricanteController extends Controller
 
     public function show(Fabricante $fabricante)
     {
-        // Carregar as aeronaves e suas companhias
-        $fabricante->load(['aeronaves.companhias']);
+        // Carregar as aeronaves, companhias e movimentação operacional
+        $fabricante->load(['aeronaves.companhias', 'aeronaves.voos']);
         $fabricante->loadCount('aeronaves');
+
+        $voos = $fabricante->aeronaves->flatMap->voos;
+        $totalVoos = (int) $voos->sum('qtd_voos');
+        $medias = [
+            'objetivo' => round(VooMetricasService::mediaPonderada($voos, 'nota_obj'), 1),
+            'pontualidade' => round(VooMetricasService::mediaPonderada($voos, 'nota_pontualidade'), 1),
+            'servicos' => round(VooMetricasService::mediaPonderada($voos, 'nota_servicos'), 1),
+            'patio' => round(VooMetricasService::mediaPonderada($voos, 'nota_patio'), 1),
+        ];
+        $mediasValidas = collect($medias)->filter(fn ($media) => $media > 0);
+
+        $estatisticasOperacionais = [
+            'total_voos' => $totalVoos,
+            'total_passageiros' => (int) $voos->sum('total_passageiros'),
+            'passageiros_por_voo' => $totalVoos > 0
+                ? round($voos->sum('total_passageiros') / $totalVoos)
+                : 0,
+            'total_aeroportos' => $voos->pluck('aeroporto_id')->filter()->unique()->count(),
+            'nota_geral' => $mediasValidas->isEmpty() ? 0 : round($mediasValidas->avg(), 1),
+            'medias' => $medias,
+        ];
         
-        return view('admin.fabricantes.show', compact('fabricante'));
+        return view('admin.fabricantes.show', compact('fabricante', 'estatisticasOperacionais'));
     }
 
     public function edit(Fabricante $fabricante)

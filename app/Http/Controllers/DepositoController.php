@@ -10,6 +10,31 @@ use Illuminate\Http\Request;
 class DepositoController extends Controller
 {
     /**
+     * Display all deposits grouped by airport.
+     */
+    public function geral()
+    {
+        $aeroportos = Aeroporto::query()
+            ->with(['depositos' => fn ($query) => $query
+                ->withCount('veiculos')
+                ->orderBy('nome')])
+            ->withCount('depositos')
+            ->orderBy('nome_aeroporto')
+            ->get();
+
+        $estatisticas = [
+            'total_aeroportos' => $aeroportos->count(),
+            'aeroportos_com_depositos' => $aeroportos->where('depositos_count', '>', 0)->count(),
+            'total_depositos' => $aeroportos->sum('depositos_count'),
+            'total_veiculos' => $aeroportos->sum(
+                fn (Aeroporto $aeroporto) => $aeroporto->depositos->sum('veiculos_count')
+            ),
+        ];
+
+        return view('admin.aeroportos.depositos.geral', compact('aeroportos', 'estatisticas'));
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Aeroporto $aeroporto)

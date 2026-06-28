@@ -630,7 +630,7 @@
 
 <hr class="mt-5">
 <p class="text-center text-muted mb-0">
-    Desenvolvido por <strong>Airport Manager</strong>
+    Desenvolvido por <strong>Filipe Lopes</strong>
 </p>
 @endsection
 

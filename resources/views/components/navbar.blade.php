@@ -63,6 +63,38 @@
                         </ul>
                     </li>
                     
+                    <!-- Fabricantes com Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('fabricantes.*') ? 'active' : '' }}"
+                           href="#"
+                           id="fabricantesDropdown"
+                           role="button"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            <i class="bi bi-tools me-1"></i>Fabricantes
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="fabricantesDropdown">
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('fabricantes.informacoes') ? 'active' : '' }}"
+                                   href="{{ route('fabricantes.informacoes') }}">
+                                    <i class="bi bi-info-circle me-2"></i>Informações Gerais
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('fabricantes.index') ? 'active' : '' }}"
+                                   href="{{ route('fabricantes.index') }}">
+                                    <i class="bi bi-list-ul me-2"></i>Gerenciar Fabricantes
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('fabricantes.create') ? 'active' : '' }}"
+                                   href="{{ route('fabricantes.create') }}">
+                                    <i class="bi bi-plus-circle me-2"></i>Cadastrar Fabricante
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Aeronaves com Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {{ request()->routeIs('aeronaves.*') ? 'active' : '' }}" 
@@ -113,7 +145,19 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item {{ request()->routeIs('aeroportos.index') ? 'active' : '' }}" 
+                                <a class="dropdown-item {{ request()->routeIs('aeroportos.ranking') ? 'active' : '' }}"
+                                   href="{{ route('aeroportos.ranking') }}">
+                                    <i class="bi bi-trophy me-2"></i>Ranking de Aeroportos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('depositos.*') || request()->routeIs('aeroportos.depositos.*') ? 'active' : '' }}"
+                                   href="{{ route('depositos.index') }}">
+                                    <i class="bi bi-box-seam me-2"></i>Depósitos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeroportos.index') ? 'active' : '' }}"
                                    href="{{ route('aeroportos.index') }}">
                                     <i class="bi bi-list-ul me-2"></i>Gerenciar Aeroportos
                                 </a>
@@ -165,11 +209,26 @@
                     </li>
                     
                     <!-- Aeroportos (apenas informações gerais) -->
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('aeroportos.informacoes') ? 'active' : '' }}" 
-                           href="{{ route('aeroportos.informacoes') }}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('aeroportos.*') ? 'active' : '' }}"
+                           href="#" id="aeroportosDropdownUser" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-geo-alt me-1"></i>Aeroportos
                         </a>
+                        <ul class="dropdown-menu" aria-labelledby="aeroportosDropdownUser">
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeroportos.informacoes') ? 'active' : '' }}"
+                                   href="{{ route('aeroportos.informacoes') }}">
+                                    <i class="bi bi-info-circle me-2"></i>Informa&ccedil;&otilde;es Gerais
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeroportos.ranking') ? 'active' : '' }}"
+                                   href="{{ route('aeroportos.ranking') }}">
+                                    <i class="bi bi-trophy me-2"></i>Ranking de Aeroportos
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 @endif
 

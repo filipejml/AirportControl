@@ -100,7 +100,11 @@ Route::middleware('auth')->group(function () {
 
     // Rotas de informações de aeroportos (usuário comum)
     Route::get('/aeroportos/informacoes', [AeroportoController::class, 'informacoes'])->name('aeroportos.informacoes');
+    Route::get('/aeroportos/ranking', [AeroportoController::class, 'ranking'])->name('aeroportos.ranking');
     Route::get('/aeroportos/{aeroporto}/dashboard', [AeroportoController::class, 'dashboard'])->name('aeroportos.dashboard');
+
+    Route::get('/fabricantes/informacoes', [FabricanteController::class, 'informacoes'])
+        ->name('fabricantes.informacoes');
 
     /*
     |--------------------------------------------------------------------------
@@ -111,6 +115,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->group(function () {
         // Rotas para voos - CRUD completo
         Route::resource('voos', VooController::class);
+
+        // Visão geral de depósitos de todos os aeroportos
+        Route::get('/depositos', [DepositoController::class, 'geral'])->name('depositos.index');
     
     // Rotas para companhias aéreas - CRUD completo
     Route::resource('companhias', CompanhiaAereaController::class);
@@ -234,7 +241,18 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->group(function () {
         // Registros de sistema
         Route::get('/registros', function () {
-            return view('admin.registros.index');
+            $estatisticas = [
+                'usuarios' => \App\Models\User::count(),
+                'voos' => \App\Models\Voo::sum('qtd_voos'),
+                'aeronaves' => \App\Models\Aeronave::count(),
+                'fabricantes' => \App\Models\Fabricante::count(),
+                'companhias' => \App\Models\CompanhiaAerea::count(),
+                'aeroportos' => \App\Models\Aeroporto::count(),
+                'depositos' => \App\Models\Deposito::count(),
+                'relatorios' => \App\Models\Relatorio::count(),
+            ];
+
+            return view('admin.registros.index', compact('estatisticas'));
         })->name('registros');
 
         // Relatórios administrativos
