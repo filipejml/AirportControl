@@ -74,6 +74,7 @@ class AdminCrudRoutesTest extends TestCase
             'dashboard',
             'relatorios',
             'companhias.informacoes',
+            'companhias.ranking',
             'companhias.dashboard',
             'aeronaves.informacoes',
             'aeronaves.dashboard',

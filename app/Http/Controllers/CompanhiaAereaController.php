@@ -12,9 +12,42 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
 use App\Services\PeriodoFiltroService;
 use App\Services\VooMetricasService;
+use App\Services\CompanhiaRankingService;
 
 class CompanhiaAereaController extends Controller
 {
+    public function ranking(Request $request, CompanhiaRankingService $rankingService)
+    {
+        $filters = PeriodoFiltroService::filtrosDetalhadosFromRequest($request);
+        $rankings = $rankingService->generateRankings($filters);
+
+        return view('companhias.ranking', [
+            'rankingsPorNota' => $rankings['rankings_por_nota'],
+            'rankingsObjetivo' => $rankings['rankings_objetivo'],
+            'rankingsPontualidade' => $rankings['rankings_pontualidade'],
+            'rankingsServicos' => $rankings['rankings_servicos'],
+            'rankingsPatio' => $rankings['rankings_patio'],
+            'rankingsPorVoos' => $rankings['rankings_por_voos'],
+            'rankingsPorPassageiros' => $rankings['rankings_por_passageiros'],
+            'estatisticas' => $rankings['estatisticas'],
+            'periodoSelecionado' => $filters['periodo'],
+            'semanaSelecionada' => $filters['semana'],
+            'anoFiltro' => $filters['ano'],
+            'mesSelecionado' => $filters['mes'],
+            'anoSelecionado' => $filters['ano_selecionado'],
+            'semanasDisponiveis' => PeriodoFiltroService::semanasDisponiveis(),
+            'anosDisponiveis' => CompanhiaAerea::query()
+                ->join('voos', 'companhias_aereas.id', '=', 'voos.companhia_aerea_id')
+                ->whereNotNull('voos.created_at')
+                ->pluck('voos.created_at')
+                ->map(fn ($data) => Carbon::parse($data)->year)
+                ->unique()
+                ->sortDesc()
+                ->values()
+                ->all(),
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      */

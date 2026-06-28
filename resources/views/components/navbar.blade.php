@@ -49,6 +49,12 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item {{ request()->routeIs('companhias.ranking') ? 'active' : '' }}"
+                                   href="{{ route('companhias.ranking') }}">
+                                    <i class="bi bi-trophy me-2"></i>Ranking de Companhias
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item {{ request()->routeIs('companhias.index') ? 'active' : '' }}" 
                                    href="{{ route('companhias.index') }}">
                                     <i class="bi bi-list-ul me-2"></i>Gerenciar Companhias

@@ -90,6 +90,7 @@ Route::middleware('auth')->group(function () {
     
     // Rotas de informações de companhias aéreas (usuário comum)
     Route::get('/companhias/informacoes', [CompanhiaAereaController::class, 'informacoes'])->name('companhias.informacoes');
+    Route::get('/companhias/ranking', [CompanhiaAereaController::class, 'ranking'])->name('companhias.ranking');
     Route::get('/companhias/{companhia}/dashboard', [CompanhiaAereaController::class, 'dashboard'])->name('companhias.dashboard');
     
     // Rotas de informações de aeronaves (usuário comum)
