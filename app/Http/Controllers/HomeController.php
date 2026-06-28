@@ -6,18 +6,12 @@ use App\Models\Aeronave;
 use App\Models\Aeroporto;
 use App\Models\CompanhiaAerea;
 use App\Models\Voo;
+use App\Services\CompanhiaRankingService;
 use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
-    private const CATEGORIAS_NOTA = [
-        'objetivo' => 'nota_obj',
-        'pontualidade' => 'nota_pontualidade',
-        'servicos' => 'nota_servicos',
-        'patio' => 'nota_patio',
-    ];
-
-    public function index()
+    public function index(CompanhiaRankingService $rankingService)
     {
         $voosStats = Voo::query()
             ->selectRaw('COALESCE(SUM(qtd_voos), 0) as total_voos')
@@ -77,8 +71,13 @@ class HomeController extends Controller
             'patio' => round((float) ($medias->patio ?? 0), 1),
         ];
 
-        $melhoresCompanhias = $this->getMelhoresCompanhias();
-        $melhoresModelos = $this->getMelhoresModelos();
+        $rankingsCompanhias = $rankingService->generateRankings(['periodo' => 'geral']);
+        $melhoresCompanhias = [
+            'objetivo' => $rankingsCompanhias['rankings_objetivo']->first(),
+            'pontualidade' => $rankingsCompanhias['rankings_pontualidade']->first(),
+            'servicos' => $rankingsCompanhias['rankings_servicos']->first(),
+            'patio' => $rankingsCompanhias['rankings_patio']->first(),
+        ];
 
         return view('dashboard.home', compact(
             'stats',
@@ -86,62 +85,8 @@ class HomeController extends Controller
             'passageirosPorHorario',
             'voosPorAeroporto',
             'mediasNotas',
-            'melhoresCompanhias',
-            'melhoresModelos'
+            'melhoresCompanhias'
         ));
     }
 
-    private function getMelhoresCompanhias(): array
-    {
-        return $this->buscarMelhoresPorCategoria(
-            tabela: 'companhias_aereas',
-            chaveEstrangeira: 'voos.companhia_aerea_id',
-            colunaNome: 'companhias_aereas.nome',
-            colunasAgrupamento: ['companhias_aereas.id', 'companhias_aereas.nome'],
-        );
-    }
-
-    /**
-     * Agrupa pelo nome do modelo para reunir aeronaves distintas do mesmo modelo.
-     */
-    private function getMelhoresModelos(): array
-    {
-        return $this->buscarMelhoresPorCategoria(
-            tabela: 'aeronaves',
-            chaveEstrangeira: 'voos.aeronave_id',
-            colunaNome: 'aeronaves.modelo',
-            colunasAgrupamento: ['aeronaves.modelo'],
-        );
-    }
-
-    /**
-     * Calcula o melhor participante de cada categoria pela média ponderada.
-     */
-    private function buscarMelhoresPorCategoria(
-        string $tabela,
-        string $chaveEstrangeira,
-        string $colunaNome,
-        array $colunasAgrupamento,
-    ): array {
-        $melhores = [];
-
-        foreach (self::CATEGORIAS_NOTA as $categoria => $campoNota) {
-            $melhor = DB::table('voos')
-                ->join($tabela, $chaveEstrangeira, '=', "{$tabela}.id")
-                ->selectRaw("{$colunaNome} as nome")
-                ->selectRaw("SUM(voos.qtd_voos * voos.{$campoNota}) / NULLIF(SUM(voos.qtd_voos), 0) as media")
-                ->selectRaw('SUM(voos.qtd_voos) as total_voos')
-                ->whereNotNull("voos.{$campoNota}")
-                ->where('voos.qtd_voos', '>', 0)
-                ->groupBy(...$colunasAgrupamento)
-                ->orderByDesc('media')
-                ->orderByDesc('total_voos')
-                ->orderBy('nome')
-                ->first();
-
-            $melhores[$categoria] = $melhor?->nome;
-        }
-
-        return $melhores;
-    }
 }

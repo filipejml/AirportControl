@@ -322,7 +322,7 @@
             </div>
         </div>
 
-        {{-- Card: Melhores Companhias e Modelos --}}
+        {{-- Card: Melhores Companhias por Categoria --}}
         <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #ffc107 !important; border-radius: 8px;">
                 <div class="card-body py-3">
@@ -330,34 +330,50 @@
                         <h6 class="text-muted mb-0">Melhores por Categoria</h6>
                         <i class="bi bi-trophy-fill text-warning fs-4"></i>
                     </div>
+
                     <div class="row">
                         <div class="col-6">
+                            @php($objetivo = $melhoresCompanhias['objetivo'] ?? null)
                             <p class="small text-muted mb-1"><i class="bi bi-bullseye me-1"></i>Objetivo</p>
-                            <p class="h6 fw-bold mb-2">Companhia: <span class="text-primary">{{ $melhoresCompanhias['objetivo'] ?? 'N/A' }}</span></p>
-                            <p class="h6 fw-bold mb-3">Modelo: <span class="text-primary">{{ $melhoresModelos['objetivo'] ?? 'N/A' }}</span></p>
-                            
+                            <p class="h6 fw-bold mb-1">Companhia: <span class="text-primary">{{ $objetivo['nome'] ?? 'N/A' }}</span></p>
+                            <p class="small text-muted mb-3">
+                                Nota {{ $objetivo ? number_format($objetivo['media_objetivo'], 1, ',', '.') : '—' }}
+                                &bull; {{ $objetivo ? number_format($objetivo['total_voos'], 0, ',', '.') : 0 }} voos
+                            </p>
+
+                            @php($pontualidade = $melhoresCompanhias['pontualidade'] ?? null)
                             <p class="small text-muted mb-1"><i class="bi bi-stopwatch me-1"></i>Pontualidade</p>
-                            <p class="h6 fw-bold mb-2">Companhia: <span class="text-success">{{ $melhoresCompanhias['pontualidade'] ?? 'N/A' }}</span></p>
-                            <p class="h6 fw-bold mb-3">Modelo: <span class="text-success">{{ $melhoresModelos['pontualidade'] ?? 'N/A' }}</span></p>
+                            <p class="h6 fw-bold mb-1">Companhia: <span class="text-success">{{ $pontualidade['nome'] ?? 'N/A' }}</span></p>
+                            <p class="small text-muted mb-3">
+                                Nota {{ $pontualidade ? number_format($pontualidade['media_pontualidade'], 1, ',', '.') : '—' }}
+                                &bull; {{ $pontualidade ? number_format($pontualidade['total_voos'], 0, ',', '.') : 0 }} voos
+                            </p>
                         </div>
                         <div class="col-6">
+                            @php($servicos = $melhoresCompanhias['servicos'] ?? null)
                             <p class="small text-muted mb-1"><i class="bi bi-bell me-1"></i>Serviços</p>
-                            <p class="h6 fw-bold mb-2">Companhia: <span class="text-info">{{ $melhoresCompanhias['servicos'] ?? 'N/A' }}</span></p>
-                            <p class="h6 fw-bold mb-3">Modelo: <span class="text-info">{{ $melhoresModelos['servicos'] ?? 'N/A' }}</span></p>
-                            
+                            <p class="h6 fw-bold mb-1">Companhia: <span class="text-info">{{ $servicos['nome'] ?? 'N/A' }}</span></p>
+                            <p class="small text-muted mb-3">
+                                Nota {{ $servicos ? number_format($servicos['media_servicos'], 1, ',', '.') : '—' }}
+                                &bull; {{ $servicos ? number_format($servicos['total_voos'], 0, ',', '.') : 0 }} voos
+                            </p>
+
+                            @php($patio = $melhoresCompanhias['patio'] ?? null)
                             <p class="small text-muted mb-1"><i class="bi bi-buildings me-1"></i>Pátio</p>
-                            <p class="h6 fw-bold mb-2">Companhia: <span class="text-warning">{{ $melhoresCompanhias['patio'] ?? 'N/A' }}</span></p>
-                            <p class="h6 fw-bold mb-3">Modelo: <span class="text-warning">{{ $melhoresModelos['patio'] ?? 'N/A' }}</span></p>
+                            <p class="h6 fw-bold mb-1">Companhia: <span class="text-warning">{{ $patio['nome'] ?? 'N/A' }}</span></p>
+                            <p class="small text-muted mb-3">
+                                Nota {{ $patio ? number_format($patio['media_patio'], 1, ',', '.') : '—' }}
+                                &bull; {{ $patio ? number_format($patio['total_voos'], 0, ',', '.') : 0 }} voos
+                            </p>
                         </div>
                     </div>
+
                     <div class="mt-2 pt-2 border-top">
-                        <div class="d-flex justify-content-between align-items-center small">
-                            <span class="text-muted">Premiados</span>
-                            <span class="fw-bold text-dark">
-                                {{ count(array_filter($melhoresCompanhias ?? [], fn ($nome) => $nome !== null)) }}/4 companhias &bull;
-                                {{ count(array_filter($melhoresModelos ?? [], fn ($nome) => $nome !== null)) }}/4 modelos
-                            </span>
-                        </div>
+                        <a href="{{ route('companhias.ranking') }}"
+                           class="d-flex justify-content-between align-items-center small fw-semibold text-decoration-none">
+                            <span>Ver ranking de companhias</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
                     </div>
                 </div>
             </div>
