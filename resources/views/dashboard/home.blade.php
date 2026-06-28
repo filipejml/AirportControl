@@ -332,20 +332,20 @@
                     </div>
                     <div class="row">
                         <div class="col-6">
-                            <p class="small text-muted mb-1">🎯 Objetivo</p>
+                            <p class="small text-muted mb-1"><i class="bi bi-bullseye me-1"></i>Objetivo</p>
                             <p class="h6 fw-bold mb-2">Companhia: <span class="text-primary">{{ $melhoresCompanhias['objetivo'] ?? 'N/A' }}</span></p>
                             <p class="h6 fw-bold mb-3">Modelo: <span class="text-primary">{{ $melhoresModelos['objetivo'] ?? 'N/A' }}</span></p>
                             
-                            <p class="small text-muted mb-1">⏱️ Pontualidade</p>
+                            <p class="small text-muted mb-1"><i class="bi bi-stopwatch me-1"></i>Pontualidade</p>
                             <p class="h6 fw-bold mb-2">Companhia: <span class="text-success">{{ $melhoresCompanhias['pontualidade'] ?? 'N/A' }}</span></p>
                             <p class="h6 fw-bold mb-3">Modelo: <span class="text-success">{{ $melhoresModelos['pontualidade'] ?? 'N/A' }}</span></p>
                         </div>
                         <div class="col-6">
-                            <p class="small text-muted mb-1">🛎️ Serviços</p>
+                            <p class="small text-muted mb-1"><i class="bi bi-bell me-1"></i>Serviços</p>
                             <p class="h6 fw-bold mb-2">Companhia: <span class="text-info">{{ $melhoresCompanhias['servicos'] ?? 'N/A' }}</span></p>
                             <p class="h6 fw-bold mb-3">Modelo: <span class="text-info">{{ $melhoresModelos['servicos'] ?? 'N/A' }}</span></p>
                             
-                            <p class="small text-muted mb-1">🏢 Pátio</p>
+                            <p class="small text-muted mb-1"><i class="bi bi-buildings me-1"></i>Pátio</p>
                             <p class="h6 fw-bold mb-2">Companhia: <span class="text-warning">{{ $melhoresCompanhias['patio'] ?? 'N/A' }}</span></p>
                             <p class="h6 fw-bold mb-3">Modelo: <span class="text-warning">{{ $melhoresModelos['patio'] ?? 'N/A' }}</span></p>
                         </div>
@@ -354,8 +354,8 @@
                         <div class="d-flex justify-content-between align-items-center small">
                             <span class="text-muted">Premiados</span>
                             <span class="fw-bold text-dark">
-                                {{ count(array_filter($melhoresCompanhias ?? [])) }}/4 companhias • 
-                                {{ count(array_filter($melhoresModelos ?? [])) }}/4 modelos
+                                {{ count(array_filter($melhoresCompanhias ?? [], fn ($nome) => $nome !== null)) }}/4 companhias &bull;
+                                {{ count(array_filter($melhoresModelos ?? [], fn ($nome) => $nome !== null)) }}/4 modelos
                             </span>
                         </div>
                     </div>
