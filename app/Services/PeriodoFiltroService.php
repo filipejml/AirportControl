@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,7 @@ class PeriodoFiltroService
     }
 
     public static function aplicarPeriodoRelatorio(
-        EloquentBuilder|QueryBuilder $query,
+        EloquentBuilder|QueryBuilder|Relation $query,
         ?string $periodo,
         string $campo = 'created_at'
     ): void {
@@ -36,7 +37,7 @@ class PeriodoFiltroService
     }
 
     public static function aplicarPeriodoDetalhado(
-        EloquentBuilder|QueryBuilder $query,
+        EloquentBuilder|QueryBuilder|Relation $query,
         array $filters,
         string $campo = 'created_at'
     ): void {
