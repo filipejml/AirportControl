@@ -112,6 +112,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->group(function () {
         // Rotas para voos - CRUD completo
         Route::resource('voos', VooController::class);
+
+        // Visão geral de depósitos de todos os aeroportos
+        Route::get('/depositos', [DepositoController::class, 'geral'])->name('depositos.index');
     
     // Rotas para companhias aéreas - CRUD completo
     Route::resource('companhias', CompanhiaAereaController::class);

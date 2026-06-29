@@ -119,6 +119,12 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item {{ request()->routeIs('depositos.*') || request()->routeIs('aeroportos.depositos.*') ? 'active' : '' }}"
+                                   href="{{ route('depositos.index') }}">
+                                    <i class="bi bi-box-seam me-2"></i>Depósitos
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item {{ request()->routeIs('aeroportos.index') ? 'active' : '' }}"
                                    href="{{ route('aeroportos.index') }}">
                                     <i class="bi bi-list-ul me-2"></i>Gerenciar Aeroportos
