@@ -113,7 +113,13 @@
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item {{ request()->routeIs('aeroportos.index') ? 'active' : '' }}" 
+                                <a class="dropdown-item {{ request()->routeIs('aeroportos.ranking') ? 'active' : '' }}"
+                                   href="{{ route('aeroportos.ranking') }}">
+                                    <i class="bi bi-trophy me-2"></i>Ranking de Aeroportos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeroportos.index') ? 'active' : '' }}"
                                    href="{{ route('aeroportos.index') }}">
                                     <i class="bi bi-list-ul me-2"></i>Gerenciar Aeroportos
                                 </a>
@@ -165,11 +171,26 @@
                     </li>
                     
                     <!-- Aeroportos (apenas informações gerais) -->
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('aeroportos.informacoes') ? 'active' : '' }}" 
-                           href="{{ route('aeroportos.informacoes') }}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('aeroportos.*') ? 'active' : '' }}"
+                           href="#" id="aeroportosDropdownUser" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-geo-alt me-1"></i>Aeroportos
                         </a>
+                        <ul class="dropdown-menu" aria-labelledby="aeroportosDropdownUser">
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeroportos.informacoes') ? 'active' : '' }}"
+                                   href="{{ route('aeroportos.informacoes') }}">
+                                    <i class="bi bi-info-circle me-2"></i>Informa&ccedil;&otilde;es Gerais
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('aeroportos.ranking') ? 'active' : '' }}"
+                                   href="{{ route('aeroportos.ranking') }}">
+                                    <i class="bi bi-trophy me-2"></i>Ranking de Aeroportos
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 @endif
 

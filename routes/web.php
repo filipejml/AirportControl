@@ -100,6 +100,7 @@ Route::middleware('auth')->group(function () {
 
     // Rotas de informações de aeroportos (usuário comum)
     Route::get('/aeroportos/informacoes', [AeroportoController::class, 'informacoes'])->name('aeroportos.informacoes');
+    Route::get('/aeroportos/ranking', [AeroportoController::class, 'ranking'])->name('aeroportos.ranking');
     Route::get('/aeroportos/{aeroporto}/dashboard', [AeroportoController::class, 'dashboard'])->name('aeroportos.dashboard');
 
     /*
