@@ -103,6 +103,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/aeroportos/ranking', [AeroportoController::class, 'ranking'])->name('aeroportos.ranking');
     Route::get('/aeroportos/{aeroporto}/dashboard', [AeroportoController::class, 'dashboard'])->name('aeroportos.dashboard');
 
+    Route::get('/fabricantes/informacoes', [FabricanteController::class, 'informacoes'])
+        ->name('fabricantes.informacoes');
+
     /*
     |--------------------------------------------------------------------------
     | ROTAS DE CRUD ADMIN (ACESSO COMPLETO)

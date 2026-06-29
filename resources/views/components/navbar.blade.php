@@ -63,6 +63,38 @@
                         </ul>
                     </li>
                     
+                    <!-- Fabricantes com Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('fabricantes.*') ? 'active' : '' }}"
+                           href="#"
+                           id="fabricantesDropdown"
+                           role="button"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            <i class="bi bi-tools me-1"></i>Fabricantes
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="fabricantesDropdown">
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('fabricantes.informacoes') ? 'active' : '' }}"
+                                   href="{{ route('fabricantes.informacoes') }}">
+                                    <i class="bi bi-info-circle me-2"></i>Informações Gerais
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('fabricantes.index') ? 'active' : '' }}"
+                                   href="{{ route('fabricantes.index') }}">
+                                    <i class="bi bi-list-ul me-2"></i>Gerenciar Fabricantes
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ request()->routeIs('fabricantes.create') ? 'active' : '' }}"
+                                   href="{{ route('fabricantes.create') }}">
+                                    <i class="bi bi-plus-circle me-2"></i>Cadastrar Fabricante
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <!-- Aeronaves com Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {{ request()->routeIs('aeronaves.*') ? 'active' : '' }}" 
