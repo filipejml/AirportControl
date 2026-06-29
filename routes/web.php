@@ -241,7 +241,18 @@ Route::middleware('auth')->group(function () {
     Route::middleware('admin')->group(function () {
         // Registros de sistema
         Route::get('/registros', function () {
-            return view('admin.registros.index');
+            $estatisticas = [
+                'usuarios' => \App\Models\User::count(),
+                'voos' => \App\Models\Voo::sum('qtd_voos'),
+                'aeronaves' => \App\Models\Aeronave::count(),
+                'fabricantes' => \App\Models\Fabricante::count(),
+                'companhias' => \App\Models\CompanhiaAerea::count(),
+                'aeroportos' => \App\Models\Aeroporto::count(),
+                'depositos' => \App\Models\Deposito::count(),
+                'relatorios' => \App\Models\Relatorio::count(),
+            ];
+
+            return view('admin.registros.index', compact('estatisticas'));
         })->name('registros');
 
         // Relatórios administrativos
