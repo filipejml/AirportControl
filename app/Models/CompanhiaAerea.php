@@ -12,6 +12,16 @@ class CompanhiaAerea extends Model
 
     protected $fillable = ['nome','codigo'];
 
+    public function setNomeAttribute($value): void
+    {
+        $this->attributes['nome'] = trim($value);
+    }
+
+    public function setCodigoAttribute($value): void
+    {
+        $this->attributes['codigo'] = strtoupper(trim($value));
+    }
+
     // Relacionamento com Aeronaves (muitos-para-muitos)
     public function aeronaves()
     {

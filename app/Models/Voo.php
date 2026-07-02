@@ -9,6 +9,15 @@ use Illuminate\Support\Facades\DB;
 
 class Voo extends Model
 {
+    public static function extrairCodigoCompanhia(string $idVoo): ?string
+    {
+        $idVoo = strtoupper(trim($idVoo));
+
+        return preg_match('/^([A-Z]{2,4})-\d{4}$/', $idVoo, $resultado)
+            ? $resultado[1]
+            : null;
+    }
+
     protected $fillable = [
         'id_voo',
         'aeroporto_id',

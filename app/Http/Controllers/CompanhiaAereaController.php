@@ -81,9 +81,9 @@ class CompanhiaAereaController extends Controller
                 })
             ],
             'codigo' => [
-                'required', // TORNAR OBRIGATÓRIO
+                'required',
                 'string',
-                'max:10',
+                'regex:/^[A-Za-z]{2,4}$/',
                 Rule::unique('companhias_aereas', 'codigo')
             ],
             'aeronaves' => 'nullable|array'
@@ -100,7 +100,7 @@ class CompanhiaAereaController extends Controller
             // Se houver ID disponível, criar com ID específico
             $companhia = new CompanhiaAerea([
                 'nome' => $request->nome,
-                'codigo' => strtoupper($request->codigo) // Converter para maiúsculo
+                'codigo' => $request->codigo
             ]);
             $companhia->id = $availableId;
             $companhia->save();
@@ -108,7 +108,7 @@ class CompanhiaAereaController extends Controller
             // Se não houver IDs disponíveis, criar normalmente
             $companhia = CompanhiaAerea::create([
                 'nome' => $request->nome,
-                'codigo' => strtoupper($request->codigo) // Converter para maiúsculo
+                'codigo' => $request->codigo
             ]);
         }
 
@@ -156,9 +156,9 @@ class CompanhiaAereaController extends Controller
                 Rule::unique('companhias_aereas', 'nome')->ignore($companhia->id)
             ],
             'codigo' => [
-                'required', // TORNAR OBRIGATÓRIO
+                'required',
                 'string',
-                'max:10',
+                'regex:/^[A-Za-z]{2,4}$/',
                 Rule::unique('companhias_aereas', 'codigo')->ignore($companhia->id)
             ],
             'aeronaves' => 'nullable|array'
@@ -170,7 +170,7 @@ class CompanhiaAereaController extends Controller
 
         $companhia->update([
             'nome' => $request->nome,
-            'codigo' => strtoupper($request->codigo) // Converter para maiúsculo
+            'codigo' => $request->codigo
         ]);
 
         if ($request->has('aeronaves')) {
@@ -232,11 +232,11 @@ class CompanhiaAereaController extends Controller
     public function checkCode(Request $request)
     {
         $request->validate([
-            'codigo' => 'required|string|max:10',
+            'codigo' => ['required', 'string', 'regex:/^[A-Za-z]{2,4}$/'],
             'id' => 'nullable|integer' // Para edição, ignorar o próprio registro
         ]);
 
-        $query = CompanhiaAerea::where('codigo', strtoupper($request->codigo));
+        $query = CompanhiaAerea::where('codigo', strtoupper(trim($request->codigo)));
         
         // Se for edição, ignorar o registro atual
         if ($request->has('id') && $request->id) {

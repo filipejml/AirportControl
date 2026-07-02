@@ -7,7 +7,6 @@ use App\Models\Voo;
 use App\Models\Aeroporto;
 use App\Models\CompanhiaAerea;
 use App\Models\Aeronave;
-use App\Helpers\CompanhiaHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -104,12 +103,10 @@ class VooController extends Controller
         $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
         $companhias = CompanhiaAerea::orderBy('nome')->get();
 
-        $companhiaCodigos = $companhias->mapWithKeys(function ($companhia) {
-            return [
-                $companhia->id => strtoupper(trim($companhia->codigo ?? ''))
-                    ?: (CompanhiaHelper::buscarCodigoPorNome($companhia->nome) ?: '')
-            ];
-        })->toArray();
+        $companhiaCodigos = $companhias
+            ->pluck('codigo', 'id')
+            ->map(fn ($codigo) => strtoupper(trim($codigo)))
+            ->toArray();
         
         $ultimoVoo = Voo::with([
             'aeroporto' => function($query) {
@@ -151,13 +148,14 @@ class VooController extends Controller
             'nota_patio' => 'nullable|in:A,B,C,D,E,F'
         ]);
 
-        // Validação do código da companhia
-        $codigo = CompanhiaHelper::extrairCodigo($request->id_voo);
-        
-        if (!$codigo || !CompanhiaHelper::isCodigoValido($codigo)) {
-            $codigosValidos = implode(', ', CompanhiaHelper::getCodigosValidos());
+        $companhia = $this->companhiaDoIdVoo(
+            $request->id_voo,
+            (int) $request->companhia_aerea_id
+        );
+
+        if (!$companhia) {
             return redirect()->back()
-                ->with('error', "Código de companhia inválido! O ID do voo deve começar com um dos códigos válidos: {$codigosValidos}")
+                ->with('error', 'O código do ID do voo não corresponde à companhia selecionada.')
                 ->withInput();
         }
 
@@ -246,12 +244,14 @@ class VooController extends Controller
             'created_at' => 'nullable|date'
         ]);
 
-        $codigo = CompanhiaHelper::extrairCodigo($request->id_voo);
-        
-        if (!$codigo || !CompanhiaHelper::isCodigoValido($codigo)) {
-            $codigosValidos = implode(', ', CompanhiaHelper::getCodigosValidos());
+        $companhia = $this->companhiaDoIdVoo(
+            $request->id_voo,
+            (int) $request->companhia_aerea_id
+        );
+
+        if (!$companhia) {
             return redirect()->back()
-                ->with('error', "Código de companhia inválido! O ID do voo deve começar com um dos códigos válidos: {$codigosValidos}")
+                ->with('error', 'O código do ID do voo não corresponde à companhia selecionada.')
                 ->withInput();
         }
 
@@ -347,18 +347,17 @@ class VooController extends Controller
         $idVoo = $request->get('id_voo');
         $excludeId = $request->get('exclude_id');
         
-        $codigo = CompanhiaHelper::extrairCodigo($idVoo);
-        
-        if (!$codigo || !CompanhiaHelper::isCodigoValido($codigo)) {
+        $codigo = Voo::extrairCodigoCompanhia($idVoo ?? '');
+        $companhia = $codigo
+            ? CompanhiaAerea::where('codigo', $codigo)->first()
+            : null;
+
+        if (!$companhia) {
             return response()->json([
                 'valid' => false,
-                'message' => 'Código de companhia inválido!'
+                'message' => 'Código de companhia não cadastrado!'
             ]);
         }
-        
-        $companhia = CompanhiaAerea::where('codigo', $codigo)
-            ->orWhere('nome', 'like', '%' . CompanhiaHelper::getNomeCompanhia($codigo) . '%')
-            ->first();
         
         $exists = Voo::where('id_voo', $idVoo)
             ->when($excludeId, function($query) use ($excludeId) {
@@ -377,10 +376,10 @@ class VooController extends Controller
             'valid' => true,
             'message' => 'Código válido!',
             'codigo' => $codigo,
-            'companhia_nome' => CompanhiaHelper::getNomeCompanhia($codigo),
-            'companhia_encontrada' => $companhia ? true : false,
-            'companhia_id' => $companhia ? $companhia->id : null,
-            'companhia_nome_completo' => $companhia ? $companhia->nome : null
+            'companhia_nome' => $companhia->nome,
+            'companhia_encontrada' => true,
+            'companhia_id' => $companhia->id,
+            'companhia_nome_completo' => $companhia->nome
         ]);
     }
 
@@ -647,16 +646,8 @@ class VooController extends Controller
 
     public function buscarCompanhiaPorCodigo($codigo)
     {
-        if (!CompanhiaHelper::isCodigoValido($codigo)) {
-            return response()->json([
-                'valid' => false,
-                'message' => 'Código de companhia inválido!'
-            ]);
-        }
-        
-        $companhia = CompanhiaAerea::where('codigo', $codigo)
-            ->orWhere('nome', 'like', '%' . CompanhiaHelper::getNomeCompanhia($codigo) . '%')
-            ->first();
+        $codigo = strtoupper(trim($codigo));
+        $companhia = CompanhiaAerea::where('codigo', $codigo)->first();
         
         if ($companhia) {
             return response()->json([
@@ -668,10 +659,23 @@ class VooController extends Controller
         }
         
         return response()->json([
-            'valid' => true,
+            'valid' => false,
             'companhia_id' => null,
-            'companhia_nome' => CompanhiaHelper::getNomeCompanhia($codigo),
-            'message' => 'Código válido: ' . CompanhiaHelper::getNomeCompanhia($codigo) . ' (Companhia não cadastrada no sistema)'
+            'companhia_nome' => null,
+            'message' => 'Código de companhia não cadastrado!'
         ]);
+    }
+
+    private function companhiaDoIdVoo(string $idVoo, int $companhiaId): ?CompanhiaAerea
+    {
+        $codigo = Voo::extrairCodigoCompanhia($idVoo);
+
+        if (!$codigo) {
+            return null;
+        }
+
+        return CompanhiaAerea::whereKey($companhiaId)
+            ->where('codigo', $codigo)
+            ->first();
     }
 }
