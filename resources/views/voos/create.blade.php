@@ -1,57 +1,40 @@
 {{-- resources/views/voos/create.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Cadastrar Voo - Airport Manager')
+@section('title', 'Cadastrar novo voo')
 
 @section('content')
-<div class="container-fluid px-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex align-items-center">
+<div class="flight-create-page pb-5">
+    <header class="create-hero mb-4">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4">
+            <div class="d-flex align-items-center gap-3">
+                <span class="hero-symbol" aria-hidden="true"><i class="bi bi-airplane-engines"></i></span>
                 <div>
-                    <h2 class="fw-bold mb-1">Cadastrar Novo Voo</h2>
-                    <p class="text-muted mb-0">Preencha os dados abaixo para registrar um novo voo no sistema</p>
+                    <div class="small text-white-50 fw-semibold text-uppercase mb-1">Novo registro</div>
+                    <h1 class="h2 fw-bold mb-1">Cadastrar novo voo</h1>
+                    <p class="text-white-50 mb-0">Informe a operação, aeronave, capacidade e avaliação.</p>
                 </div>
             </div>
+            <a href="{{ route('voos.index') }}" class="btn hero-back px-3 py-2">
+                <i class="bi bi-arrow-left me-1"></i> Ir para voos
+            </a>
         </div>
-    </div>
+    </header>
 
     {{-- Card do Último Voo Cadastrado (Colapsável) --}}
-    @php
-    $ultimoVoo = \App\Models\Voo::with([
-        'aeroporto' => function($query) {
-            $query->select('id', 'nome_aeroporto');
-        },
-        'companhiaAerea' => function($query) {
-            $query->select('id', 'nome');
-        },
-        'aeronave' => function($query) {
-            $query->select('id', 'modelo', 'capacidade', 'porte');
-        }
-    ])
-    ->select([
-        'id', 'id_voo', 'aeroporto_id', 'companhia_aerea_id', 
-        'aeronave_id', 'tipo_aeronave', 'qtd_voos', 'total_passageiros',
-        'horario_voo', 'nota_obj', 'nota_pontualidade', 'nota_servicos',
-        'nota_patio', 'media_notas', 'qtd_passageiros', 'created_at', 'tipo_voo'
-    ])
-    ->orderBy('created_at', 'desc')
-    ->first();
-    @endphp
-
     @if($ultimoVoo)
-    <div class="card mb-4 border-success shadow-sm">
-        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center cursor-pointer"
+    <div class="card last-flight-card mb-4">
+        <div class="card-header last-flight-header d-flex justify-content-between align-items-center cursor-pointer"
              data-bs-toggle="collapse" 
              data-bs-target="#ultimoVooCollapse" 
              aria-expanded="false" 
              aria-controls="ultimoVooCollapse">
             <div class="d-flex align-items-center">
                 <i class="bi bi-clock-history me-2 fs-5"></i>
-                <h5 class="mb-0 fw-semibold">Último Voo Cadastrado</h5>
+                <h2 class="h6 mb-0 fw-semibold">Último voo cadastrado</h2>
             </div>
             <div class="d-flex align-items-center">
-                <small class="text-white-50 me-3">
+                <small class="text-muted me-3">
                     <i class="bi bi-calendar me-1"></i>
                     {{ $ultimoVoo->created_at->diffForHumans() }}
                 </small>
@@ -101,12 +84,7 @@
         <div class="collapse" id="ultimoVooCollapse" data-bs-parent=".card">
             <div class="card-body border-top">
                 <div class="row g-4">
-                    <div class="col-md-2 text-center">
-                        <div class="bg-light p-3 rounded-3">
-                            <i class="bi bi-airplane-engines fs-1 text-success"></i>
-                        </div>
-                    </div>
-                    <div class="col-md-10">
+                    <div class="col-12">
                         <div class="row">
                             <div class="col-md-3 mb-3">
                                 <strong class="text-muted d-block mb-1">
@@ -189,22 +167,22 @@
                                 <strong class="text-muted d-block mb-2">
                                     <i class="bi bi-star-fill me-1 text-warning"></i>Avaliações
                                 </strong>
-                                <div class="d-flex flex-wrap gap-3">
+                                @php
+                                    $mapaLetra = [10 => 'A', 9 => 'B', 8 => 'C', 6 => 'D', 4 => 'E', 2 => 'F'];
+                                @endphp
+                                <div class="ratings-grid">
                                     @if($ultimoVoo->nota_obj)
-                                    <div class="text-center">
+                                    <div class="rating-card">
                                         <small class="text-muted d-block">Objetivo</small>
                                         <span class="badge bg-primary fs-6 px-3 py-2">{{ $ultimoVoo->nota_obj }}/10</span>
                                         <small class="text-muted d-block">
-                                            @php
-                                                $mapaLetra = [10 => 'A', 9 => 'B', 8 => 'C', 6 => 'D', 4 => 'E', 2 => 'F'];
-                                                $notaLetraObj = $mapaLetra[$ultimoVoo->nota_obj] ?? '';
-                                            @endphp
+                                            @php $notaLetraObj = $mapaLetra[$ultimoVoo->nota_obj] ?? ''; @endphp
                                             {{ $notaLetraObj }}
                                         </small>
                                     </div>
                                     @endif
                                     @if($ultimoVoo->nota_pontualidade)
-                                    <div class="text-center">
+                                    <div class="rating-card">
                                         <small class="text-muted d-block">Pontualidade</small>
                                         <span class="badge bg-primary fs-6 px-3 py-2">{{ $ultimoVoo->nota_pontualidade }}/10</span>
                                         <small class="text-muted d-block">
@@ -216,7 +194,7 @@
                                     </div>
                                     @endif
                                     @if($ultimoVoo->nota_servicos)
-                                    <div class="text-center">
+                                    <div class="rating-card">
                                         <small class="text-muted d-block">Serviços</small>
                                         <span class="badge bg-primary fs-6 px-3 py-2">{{ $ultimoVoo->nota_servicos }}/10</span>
                                         <small class="text-muted d-block">
@@ -228,7 +206,7 @@
                                     </div>
                                     @endif
                                     @if($ultimoVoo->nota_patio)
-                                    <div class="text-center">
+                                    <div class="rating-card">
                                         <small class="text-muted d-block">Pátio</small>
                                         <span class="badge bg-primary fs-6 px-3 py-2">{{ $ultimoVoo->nota_patio }}/10</span>
                                         <small class="text-muted d-block">
@@ -240,7 +218,7 @@
                                     </div>
                                     @endif
                                     @if($ultimoVoo->media_notas)
-                                    <div class="text-center ms-auto">
+                                    <div class="rating-card rating-card-overall">
                                         <small class="text-muted d-block">Média Geral</small>
                                         <span class="badge bg-success fs-6 px-3 py-2">
                                             {{ number_format($ultimoVoo->media_notas, 1) }}/10
@@ -275,16 +253,6 @@
                     <i class="bi bi-arrow-repeat me-1"></i>
                     {{ $ultimoVoo->qtd_voos }} voos registrados
                 </small>
-                <div>
-                    <a href="{{ route('voos.show', $ultimoVoo) }}" class="btn btn-sm btn-outline-primary me-2">
-                        <i class="bi bi-eye me-1"></i>
-                        Ver Detalhes
-                    </a>
-                    <a href="{{ route('voos.create') }}" class="btn btn-sm btn-outline-success">
-                        <i class="bi bi-plus-circle me-1"></i>
-                        Novo Voo
-                    </a>
-                </div>
             </div>
         </div>
     </div>
@@ -306,7 +274,7 @@
     <!-- Formulário de Criação -->
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm border-0">
+            <div class="card form-shell">
                 <div class="card-body p-4">
                     <form action="{{ route('voos.store') }}" method="POST" id="formVoo">
                         @csrf
@@ -325,8 +293,8 @@
                         @endif
 
                         <!-- Informações Básicas -->
-                        <div class="mb-4">
-                            <h5 class="fw-bold pb-2 border-bottom">
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
                                 <i class="bi bi-info-circle me-2 text-primary"></i>
                                 Informações Básicas
                             </h5>
@@ -388,8 +356,8 @@
                         </div>
 
                         <!-- Companhia e Aeronave -->
-                        <div class="mb-4">
-                            <h5 class="fw-bold pb-2 border-bottom">
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
                                 <i class="bi bi-building me-2 text-primary"></i>
                                 Companhia e Aeronave
                             </h5>
@@ -489,8 +457,8 @@
                         </div>
 
                         <!-- Detalhes do Voo -->
-                        <div class="mb-4">
-                            <h5 class="fw-bold pb-2 border-bottom">
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
                                 <i class="bi bi-calendar-check me-2 text-primary"></i>
                                 Detalhes do Voo
                             </h5>
@@ -587,8 +555,8 @@
                         </div>
 
                         <!-- Notas -->
-                        <div class="mb-4">
-                            <h5 class="fw-bold pb-2 border-bottom">
+                        <div class="form-section mb-4">
+                            <h5 class="section-title">
                                 <i class="bi bi-star me-2 text-primary"></i>
                                 Avaliações (Opcional)
                             </h5>
@@ -649,8 +617,11 @@
                         </div>
 
                         <!-- Botões -->
-                        <div class="d-flex justify-content-center gap-3 align-items-center">
-                            <button type="submit" class="btn btn-primary px-5 py-2">
+                        <div class="form-actions d-flex justify-content-end gap-2 align-items-center">
+                            <a href="{{ route('voos.index') }}" class="btn btn-outline-secondary px-4 py-2">
+                                <i class="bi bi-arrow-left me-1"></i> Voltar
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4 py-2">
                                 <i class="bi bi-check-circle me-2"></i>
                                 Cadastrar Voo
                             </button>
@@ -663,6 +634,267 @@
 </div>
 
 <style>
+    .flight-create-page {
+        --create-ink: #172033;
+        --create-muted: #667085;
+        --create-border: #e4e7ec;
+        color: var(--create-ink);
+    }
+
+    .create-hero {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(1.5rem, 4vw, 2.5rem);
+        border-radius: 1.5rem;
+        color: #fff;
+        background:
+            radial-gradient(circle at 88% 15%, rgba(255,255,255,.16), transparent 24%),
+            linear-gradient(125deg, #101828 0%, #1849a9 60%, #2e90fa 100%);
+        box-shadow: 0 20px 45px rgba(16, 24, 40, .15);
+    }
+
+    .hero-symbol {
+        display: grid;
+        width: 3.75rem;
+        height: 3.75rem;
+        place-items: center;
+        flex: 0 0 auto;
+        border: 1px solid rgba(255,255,255,.28);
+        border-radius: 1.1rem;
+        background: rgba(255,255,255,.12);
+        font-size: 1.55rem;
+    }
+
+    .hero-back {
+        border-color: rgba(255,255,255,.35);
+        color: #fff;
+        background: rgba(255,255,255,.1);
+        font-weight: 600;
+    }
+
+    .hero-back:hover {
+        border-color: #fff;
+        color: #101828;
+        background: #fff;
+    }
+
+    .last-flight-card,
+    .form-shell {
+        overflow: hidden;
+        border: 1px solid var(--create-border);
+        border-radius: 1.15rem;
+        box-shadow: 0 8px 24px rgba(16, 24, 40, .05);
+    }
+
+    .last-flight-header {
+        padding: 1rem 1.2rem;
+        border: 0;
+        color: #067647;
+        background: #ecfdf3;
+    }
+
+    .ratings-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(120px, 1fr));
+        gap: .85rem;
+    }
+
+    .rating-card {
+        position: relative;
+        padding: 1rem;
+        border: 1px solid var(--create-border);
+        border-radius: .9rem;
+        background: #fff;
+        text-align: left;
+        box-shadow: 0 4px 12px rgba(16, 24, 40, .035);
+    }
+
+    .rating-card > small:first-child {
+        margin-bottom: .55rem;
+        font-size: .72rem;
+        font-weight: 650;
+        letter-spacing: .025em;
+    }
+
+    .rating-card .badge {
+        display: inline-flex;
+        padding: .4rem .65rem !important;
+        border-radius: .55rem;
+        font-size: .9rem !important;
+    }
+
+    .rating-card > small:last-child {
+        position: absolute;
+        top: .8rem;
+        right: .8rem;
+        display: grid !important;
+        width: 1.7rem;
+        height: 1.7rem;
+        place-items: center;
+        border-radius: 50%;
+        color: #344054 !important;
+        background: #f2f4f7;
+        font-weight: 750;
+    }
+
+    .rating-card-overall {
+        border-color: #abefc6;
+        background: #f6fef9;
+    }
+
+    .rounded-select {
+        position: relative;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .rounded-select-native {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+
+    .rounded-select-button {
+        display: flex;
+        width: 100%;
+        min-height: 2.85rem;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .65rem 1rem;
+        border: 1px solid #d0d5dd;
+        border-radius: 0 1rem 1rem 0;
+        color: #101828;
+        background: #fff;
+        text-align: left;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .rounded-select:not(.input-group .rounded-select) .rounded-select-button {
+        border-radius: 1rem;
+    }
+
+    .rounded-select-button:hover { border-color: #98a2b3; }
+
+    .rounded-select.open .rounded-select-button,
+    .rounded-select-button:focus {
+        border-color: #84adff;
+        outline: 0;
+        box-shadow: 0 0 0 .22rem rgba(21, 94, 239, .12);
+    }
+
+    .rounded-select-chevron {
+        transition: transform .18s ease;
+    }
+
+    .rounded-select.open .rounded-select-chevron { transform: rotate(180deg); }
+
+    .rounded-select-menu {
+        position: absolute;
+        top: calc(100% + .55rem);
+        right: 0;
+        left: 0;
+        z-index: 1080;
+        display: none;
+        max-height: 19rem;
+        padding: .45rem;
+        overflow-y: auto;
+        border: 1px solid #e4e7ec;
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 16px 35px rgba(16, 24, 40, .16);
+    }
+
+    .rounded-select.open .rounded-select-menu { display: block; }
+
+    .rounded-select-option {
+        display: block;
+        width: 100%;
+        padding: .7rem .85rem;
+        border: 0;
+        border-radius: .7rem;
+        color: #101828;
+        background: transparent;
+        text-align: left;
+    }
+
+    .rounded-select-option:hover,
+    .rounded-select-option:focus {
+        outline: 0;
+        background: #f2f4f7;
+    }
+
+    .rounded-select-option.selected {
+        color: #fff;
+        background: #1769d2;
+    }
+
+    .rounded-select-option:disabled {
+        color: #98a2b3;
+        background: transparent;
+        cursor: not-allowed;
+    }
+
+    .form-shell > .card-body { padding: clamp(1.25rem, 3vw, 2rem) !important; }
+
+    .form-section {
+        padding: 1.25rem;
+        border: 1px solid var(--create-border);
+        border-radius: 1rem;
+        background: #fcfcfd;
+    }
+
+    .section-title {
+        margin-bottom: 1.25rem;
+        padding-bottom: .85rem;
+        border-bottom: 1px solid var(--create-border);
+        font-size: 1rem;
+        font-weight: 750;
+    }
+
+    .flight-create-page .form-control,
+    .flight-create-page .form-select,
+    .flight-create-page .input-group-text {
+        min-height: 2.85rem;
+        border-color: #d0d5dd;
+    }
+
+    .flight-create-page .input-group > :first-child {
+        border-radius: .75rem 0 0 .75rem;
+    }
+
+    .flight-create-page .input-group > :last-child {
+        border-radius: 0 .75rem .75rem 0;
+    }
+
+    .form-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        margin: 0 -2rem -2rem;
+        padding: 1rem 2rem;
+        border-top: 1px solid var(--create-border);
+        background: rgba(255,255,255,.94);
+        backdrop-filter: blur(10px);
+    }
+
+    @media (max-width: 767.98px) {
+        .create-hero { border-radius: 1.15rem; }
+        .hero-back { width: 100%; }
+        .form-section { padding: 1rem; }
+        .form-actions { margin: 0 -1.25rem -1.25rem; padding: 1rem 1.25rem; }
+        .form-actions .btn { flex: 1; }
+        .ratings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (min-width: 768px) and (max-width: 1199.98px) {
+        .ratings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
     select.form-control, 
     select.form-select {
         -webkit-appearance: menulist;
@@ -689,8 +921,8 @@
         transition: background-color 0.2s ease;
     }
     
-    .card-header:hover {
-        background-color: #0a6b4e !important;
+    .last-flight-header:hover {
+        background-color: #d1fadf !important;
     }
     
     .collapse {
@@ -1191,6 +1423,104 @@ document.addEventListener('DOMContentLoaded', function() {
     qtdVoosInput.addEventListener('change', function() {
         if (this.value < 1) this.value = 1;
         calcularTotalPassageiros();
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const closeAll = (except = null) => {
+        document.querySelectorAll('.rounded-select.open').forEach((wrapper) => {
+            if (wrapper !== except) wrapper.classList.remove('open');
+        });
+    };
+
+    document.querySelectorAll('#formVoo select.form-select').forEach((select) => {
+        if (select.dataset.roundedSelect === 'ready') return;
+        select.dataset.roundedSelect = 'ready';
+        select.classList.add('rounded-select-native');
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'rounded-select';
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'rounded-select-button';
+        button.setAttribute('aria-haspopup', 'listbox');
+        button.setAttribute('aria-expanded', 'false');
+        button.innerHTML = `
+            <span class="rounded-select-label"></span>
+            <i class="bi bi-chevron-down rounded-select-chevron" aria-hidden="true"></i>
+        `;
+
+        const menu = document.createElement('div');
+        menu.className = 'rounded-select-menu';
+        menu.setAttribute('role', 'listbox');
+
+        select.parentNode.insertBefore(wrapper, select);
+        wrapper.append(select, button, menu);
+
+        const syncLabel = () => {
+            const option = select.options[select.selectedIndex];
+            button.querySelector('.rounded-select-label').textContent = option?.textContent.trim() || 'Selecione';
+        };
+
+        const rebuild = () => {
+            menu.innerHTML = '';
+
+            [...select.options].forEach((option) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = `rounded-select-option${option.selected ? ' selected' : ''}`;
+                item.textContent = option.textContent.trim();
+                item.disabled = option.disabled;
+                item.dataset.value = option.value;
+                item.setAttribute('role', 'option');
+                item.setAttribute('aria-selected', String(option.selected));
+
+                item.addEventListener('click', () => {
+                    select.value = option.value;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    wrapper.classList.remove('open');
+                    button.setAttribute('aria-expanded', 'false');
+                    button.focus();
+                });
+
+                menu.appendChild(item);
+            });
+
+            syncLabel();
+        };
+
+        button.addEventListener('click', () => {
+            const opening = !wrapper.classList.contains('open');
+            closeAll(wrapper);
+            wrapper.classList.toggle('open', opening);
+            button.setAttribute('aria-expanded', String(opening));
+        });
+
+        button.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                wrapper.classList.remove('open');
+                button.setAttribute('aria-expanded', 'false');
+            }
+
+            if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
+                event.preventDefault();
+                wrapper.classList.add('open');
+                button.setAttribute('aria-expanded', 'true');
+                const options = [...menu.querySelectorAll('.rounded-select-option:not(:disabled)')];
+                (event.key === 'ArrowDown' ? options[0] : options.at(-1))?.focus();
+            }
+        });
+
+        select.addEventListener('change', rebuild);
+        select.addEventListener('invalid', () => button.focus());
+        new MutationObserver(rebuild).observe(select, { childList: true, subtree: true });
+        rebuild();
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.rounded-select')) closeAll();
     });
 });
 </script>
