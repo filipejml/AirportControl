@@ -16,7 +16,7 @@
                 </div>
             </div>
             <a href="{{ route('voos.index') }}" class="btn hero-back px-3 py-2">
-                <i class="bi bi-arrow-left me-1"></i> Ir para voos
+                <i class="bi bi-arrow-right me-1"></i> Ir para voos
             </a>
         </div>
     </header>
