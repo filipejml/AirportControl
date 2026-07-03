@@ -1,652 +1,550 @@
-{{-- resources/views/admin/companhias/show.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Detalhes da Companhia Aérea')
+@section('title', $companhia->nome . ' | Companhia aérea')
+
+@push('styles')
+<style>
+    .company-page {
+        --company-primary: #155eef;
+        --company-ink: #172033;
+        --company-muted: #667085;
+        --company-border: #e4e7ec;
+        color: var(--company-ink);
+    }
+
+    .company-hero {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(1.5rem, 4vw, 2.75rem);
+        border: 0;
+        border-radius: 1.5rem;
+        background:
+            radial-gradient(circle at 90% 10%, rgba(255,255,255,.18), transparent 25%),
+            linear-gradient(125deg, #101828 0%, #1849a9 58%, #2e90fa 100%);
+        box-shadow: 0 20px 45px rgba(16, 24, 40, .16);
+    }
+
+    .company-mark {
+        display: grid;
+        width: 4.25rem;
+        height: 4.25rem;
+        place-items: center;
+        flex: 0 0 auto;
+        border: 1px solid rgba(255,255,255,.3);
+        border-radius: 1.25rem;
+        color: #fff;
+        background: rgba(255,255,255,.13);
+        backdrop-filter: blur(8px);
+        font-size: 1.8rem;
+    }
+
+    .company-code {
+        display: inline-flex;
+        align-items: center;
+        padding: .35rem .7rem;
+        border: 1px solid rgba(255,255,255,.28);
+        border-radius: 999px;
+        color: #fff;
+        background: rgba(255,255,255,.12);
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+    }
+
+    .hero-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        min-height: 2.75rem;
+        border-radius: .8rem;
+        font-weight: 600;
+    }
+
+    .hero-action-light {
+        border-color: rgba(255,255,255,.35);
+        color: #fff;
+        background: rgba(255,255,255,.12);
+    }
+
+    .hero-action-light:hover {
+        border-color: #fff;
+        color: #101828;
+        background: #fff;
+    }
+
+    .metric-card {
+        height: 100%;
+        padding: 1.25rem;
+        border: 1px solid var(--company-border);
+        border-radius: 1.1rem;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(16, 24, 40, .05);
+    }
+
+    .metric-icon {
+        display: grid;
+        width: 2.65rem;
+        height: 2.65rem;
+        place-items: center;
+        border-radius: .8rem;
+        font-size: 1.15rem;
+    }
+
+    .metric-value {
+        margin-top: 1rem;
+        font-size: clamp(1.65rem, 4vw, 2.15rem);
+        font-weight: 750;
+        line-height: 1;
+        letter-spacing: -.04em;
+    }
+
+    .metric-label {
+        margin-top: .45rem;
+        color: var(--company-muted);
+        font-size: .84rem;
+    }
+
+    .section-card {
+        overflow: hidden;
+        border: 1px solid var(--company-border);
+        border-radius: 1.25rem;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(16, 24, 40, .04);
+    }
+
+    .section-heading {
+        padding: 1.25rem 1.35rem;
+        border-bottom: 1px solid var(--company-border);
+    }
+
+    .section-kicker {
+        color: var(--company-primary);
+        font-size: .75rem;
+        font-weight: 750;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+    }
+
+    .company-table {
+        margin: 0;
+        min-width: 920px;
+    }
+
+    .company-table thead th {
+        padding: .85rem 1rem;
+        border-bottom-width: 1px;
+        color: var(--company-muted);
+        background: #f9fafb;
+        font-size: .73rem;
+        font-weight: 700;
+        letter-spacing: .055em;
+        text-transform: uppercase;
+    }
+
+    .company-table tbody td {
+        padding: 1rem;
+        border-color: #f0f1f3;
+    }
+
+    .aircraft-link {
+        color: var(--company-ink);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .aircraft-link:hover { color: var(--company-primary); }
+
+    .aircraft-avatar {
+        display: grid;
+        width: 2.5rem;
+        height: 2.5rem;
+        place-items: center;
+        flex: 0 0 auto;
+        border-radius: .75rem;
+        color: var(--company-primary);
+        background: #eff4ff;
+    }
+
+    .availability-switch .form-check-input {
+        width: 2.75rem;
+        height: 1.4rem;
+        margin-top: 0;
+        cursor: pointer;
+    }
+
+    .availability-switch .form-check-input:checked {
+        border-color: #12b76a;
+        background-color: #12b76a;
+    }
+
+    .aircraft-unavailable { background: #fffafa; }
+    .aircraft-unavailable .aircraft-avatar {
+        color: #98a2b3;
+        background: #f2f4f7;
+    }
+
+    .aircraft-unavailable .aircraft-link { color: #667085; }
+
+    .pending-row {
+        box-shadow: inset 4px 0 #f79009;
+        background: #fffcf5;
+    }
+
+    .floating-save {
+        position: fixed;
+        right: 1.5rem;
+        bottom: 1.5rem;
+        z-index: 1050;
+        min-height: 3.25rem;
+        padding-inline: 1.2rem;
+        border: 0;
+        border-radius: 999px;
+        box-shadow: 0 12px 30px rgba(3, 152, 85, .28);
+        font-weight: 700;
+    }
+
+    .empty-state {
+        padding: 4rem 1rem;
+        text-align: center;
+    }
+
+    @media (max-width: 767.98px) {
+        .company-hero { border-radius: 1.15rem; }
+        .company-mark { width: 3.5rem; height: 3.5rem; }
+        .hero-actions { width: 100%; }
+        .hero-actions .btn { flex: 1; }
+        .floating-save { right: 1rem; bottom: 1rem; left: 1rem; width: calc(100% - 2rem); }
+    }
+</style>
+@endpush
 
 @section('content')
-<style>
-/* Estilos para os botões de ação */
-.btn-action {
-    padding: 0.5rem 1rem;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    border-radius: 0.375rem;
-    min-width: 42px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    transition: all 0.2s ease;
-}
-.btn-action i {
-    font-size: 1.1rem;
-}
-.btn-action span {
-    display: inline-block;
-}
-.btn-action:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-.btn-action-group {
-    gap: 0.5rem !important;
-}
+@php
+    $totalAeronaves = $companhia->aeronaves->count();
+    $aeronavesDisponiveis = $companhia->aeronaves->filter(
+        fn ($aeronave) => (bool) ($aeronave->pivot->disponivel ?? true)
+    )->count();
+    $capacidadeTotal = $companhia->aeronaves->sum('capacidade');
+    $capacidadeMedia = $totalAeronaves > 0 ? round($companhia->aeronaves->avg('capacidade')) : 0;
+@endphp
 
-/* Estilo para links de modelos */
-.modelo-link {
-    color: #0d6efd;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-}
-.modelo-link:hover {
-    color: #0a58ca;
-    background-color: rgba(13, 110, 253, 0.1);
-    text-decoration: underline;
-    transform: translateX(2px);
-}
-.modelo-link i {
-    font-size: 0.9rem;
-    margin-right: 4px;
-    opacity: 0.7;
-}
-.modelo-link:hover i {
-    opacity: 1;
-}
-
-/* Estilo para card de informações adicionais */
-.info-card {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border: none;
-    border-radius: 16px;
-}
-.info-card .card-body {
-    padding: 1.25rem;
-}
-.info-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0;
-}
-.info-icon {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    border-radius: 10px;
-    color: #3b82f6;
-}
-.info-label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #6c757d;
-    margin-bottom: 2px;
-}
-.info-value {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #212529;
-}
-
-/* Ajustes responsivos */
-@media (max-width: 768px) {
-    .btn-action span {
-        display: none;
-    }
-    .btn-action {
-        min-width: 44px;
-        padding: 0.5rem;
-    }
-}
-
-/* Estilos para o toggle de disponibilidade */
-.form-check.form-switch {
-    padding-left: 2.5em;
-}
-
-.form-check-input {
-    width: 2.5em;
-    height: 1.25em;
-    cursor: pointer;
-}
-
-.form-check-input:checked {
-    background-color: #198754;
-    border-color: #198754;
-}
-
-.form-check-input:not(:checked) {
-    background-color: #dc3545;
-    border-color: #dc3545;
-}
-
-.form-check-label {
-    cursor: pointer;
-}
-
-.status-badge {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    transition: all 0.3s ease;
-}
-
-/* Estilo para linhas de aeronaves indisponíveis */
-tr.aeronave-indisponivel td:not(:last-child) {
-    opacity: 0.7;
-    background-color: #fff3f3;
-}
-
-tr.aeronave-indisponivel .modelo-link {
-    text-decoration: line-through;
-    color: #6c757d !important;
-}
-
-/* Estilo para linhas com alterações pendentes */
-.status-badge.opacity-50 {
-    opacity: 0.5 !important;
-}
-
-/* Botão de salvar flutuante */
-.floating-save-btn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 1000;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    animation: pulse 1s ease-in-out;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
-
-/* Animação para fadeOut */
-@keyframes fadeOut {
-    0% { opacity: 1; transform: translateY(0); }
-    70% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-10px); visibility: hidden; }
-}
-
-.temporary-feedback {
-    animation: fadeOut 2s ease-in-out forwards;
-}
-</style>
-
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h2 class="fw-bold">✈️ {{ $companhia->nome }}</h2>
-            <p class="text-muted">Detalhes da companhia aérea</p>
-        </div>
-        <div class="col-md-4 text-end">
-            <a href="{{ route('companhias.index') }}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Voltar
-            </a>
-            <a href="{{ route('companhias.edit', $companhia) }}" class="btn btn-primary">
-                <i class="bi bi-pencil"></i> Editar
-            </a>
-        </div>
-    </div>
-
-    <!-- Linha com estatísticas principais -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Total de Aeronaves</h5>
-                    <h2 class="display-4">{{ $companhia->aeronaves_count ?? $companhia->aeronaves->count() }}</h2>
-                    <small>aeronaves cadastradas</small>
+<div class="company-page pb-5">
+    <section class="company-hero mb-4 text-white">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
+            <div class="d-flex align-items-center gap-3 gap-md-4">
+                <div class="company-mark" aria-hidden="true">
+                    <i class="bi bi-airplane-engines"></i>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-success text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Capacidade Total</h5>
-                    <h2 class="display-4">{{ $companhia->aeronaves->sum('capacidade') }}</h2>
-                    <small>passageiros</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-info text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Média de Capacidade</h5>
-                    <h2 class="display-4">{{ $companhia->aeronaves->avg('capacidade') ? round($companhia->aeronaves->avg('capacidade')) : 0 }}</h2>
-                    <small>passageiros por aeronave</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm bg-secondary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Código</h5>
-                    <h2 class="display-4">{{ $companhia->codigo ?? '—' }}</h2>
-                    <small>código identificador</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Card com informações adicionais (data de cadastro) -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card info-card shadow-sm">
-                <div class="card-body">
-                    <h6 class="mb-3 text-muted">📋 Informações do Cadastro</h6>
-                    <div class="info-item">
-                        <div class="info-icon">
-                            <i class="bi bi-calendar-plus"></i>
-                        </div>
-                        <div>
-                            <div class="info-label">Data de Cadastro</div>
-                            <div class="info-value">{{ $companhia->created_at ? $companhia->created_at->format('d/m/Y \à\s H:i') : 'Data não disponível' }}</div>
-                        </div>
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <span class="company-code">{{ $companhia->codigo ?? 'SEM CÓDIGO' }}</span>
+                        <span class="small text-white-50">Companhia aérea #{{ $companhia->id }}</span>
                     </div>
-                    <div class="info-item">
-                        <div class="info-icon">
-                            <i class="bi bi-calendar-check"></i>
-                        </div>
-                        <div>
-                            <div class="info-label">Última Atualização</div>
-                            <div class="info-value">{{ $companhia->updated_at ? $companhia->updated_at->format('d/m/Y \à\s H:i') : 'Data não disponível' }}</div>
-                        </div>
-                    </div>
+                    <h1 class="h2 fw-bold mb-1">{{ $companhia->nome }}</h1>
+                    <p class="mb-0 text-white-50">Visão geral da frota e disponibilidade operacional.</p>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Lista de Aeronaves -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">✈️ Aeronaves da Companhia</h5>
-            @if($companhia->aeronaves->count() > 0)
-                <span class="badge bg-primary rounded-pill px-3 py-2">
-                    Total: {{ $companhia->aeronaves->count() }} aeronaves
-                </span>
-            @endif
+            <div class="hero-actions d-flex flex-wrap gap-2">
+                <a href="{{ route('companhias.index') }}" class="btn hero-action hero-action-light">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <a href="{{ route('companhias.dashboard', $companhia) }}" class="btn hero-action hero-action-light">
+                    <i class="bi bi-bar-chart-line"></i> Dashboard
+                </a>
+                <a href="{{ route('companhias.edit', $companhia) }}" class="btn btn-light hero-action text-primary">
+                    <i class="bi bi-pencil-square"></i> Editar companhia
+                </a>
+            </div>
         </div>
-        <div class="card-body">
-            @if($companhia->aeronaves->count() > 0)
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle" id="aeronavesTable">
-                        <thead class="table-light">
-                            周末
-                                <th>ID</th>
-                                <th>Modelo</th>
-                                <th>Fabricante</th>
-                                <th>Capacidade</th>
-                                <th>Porte</th>
-                                <th width="120">Disponível</th>
-                                <th width="180">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($companhia->aeronaves as $aeronave)
-                                @php
-                                    // Buscar o valor do pivot corretamente
-                                    $disponivel = isset($aeronave->pivot->disponivel) ? (bool)$aeronave->pivot->disponivel : true;
-                                @endphp
-                                <tr data-aeronave-id="{{ $aeronave->id }}" 
-                                    data-disponivel-original="{{ $disponivel ? 'true' : 'false' }}">
-                                    <td><span class="fw-semibold">#{{ $aeronave->id }}</span></td>
-                                    <td>
-                                        <a href="{{ route('aeronaves.show', $aeronave) }}" 
-                                           class="modelo-link"
-                                           title="Ver detalhes da aeronave {{ $aeronave->modelo }}">
-                                            <i class="bi bi-airplane"></i>
-                                            {{ $aeronave->modelo }}
-                                        </a>
-                                    </td>
-                                    <td>
-                                        @if($aeronave->fabricante)
-                                            <span class="text-muted">{{ $aeronave->fabricante->nome }}</span>
-                                        @else
-                                            <span class="badge bg-secondary">Não informado</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info rounded-pill px-3 py-2">
-                                            {{ $aeronave->capacidade }} passageiros
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @if($aeronave->porte == 'PC')
-                                            <span class="badge bg-info">PC - Pequeno Porte</span>
-                                        @elseif($aeronave->porte == 'MC')
-                                            <span class="badge bg-warning text-dark">MC - Médio Porte</span>
-                                        @elseif($aeronave->porte == 'LC')
-                                            <span class="badge bg-danger">LC - Grande Porte</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <div class="form-check form-switch">
-                                            <input type="checkbox" 
-                                                   class="form-check-input disponivel-toggle" 
-                                                   id="disponivel_{{ $aeronave->id }}"
-                                                   data-aeronave-id="{{ $aeronave->id }}"
-                                                   data-companhia-id="{{ $companhia->id }}"
-                                                   {{ $disponivel ? 'checked' : '' }}>
-                                            <label class="form-check-label" for="disponivel_{{ $aeronave->id }}">
-                                                <span class="badge {{ $disponivel ? 'bg-success' : 'bg-secondary' }} status-badge">
-                                                    {{ $disponivel ? 'Disponível' : 'Indisponível' }}
-                                                </span>
-                                            </label>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex gap-2 btn-action-group">
-                                            <a href="{{ route('aeronaves.edit', $aeronave) }}" 
-                                               class="btn btn-primary btn-action"
-                                               title="Editar aeronave">
-                                                <i class="bi bi-pencil"></i>
-                                                <span>Editar</span>
-                                            </a>
-                                            <form action="{{ route('aeronaves.destroy', $aeronave) }}" 
-                                                  method="POST" 
-                                                  class="d-inline"
-                                                  onsubmit="return confirm('Tem certeza que deseja excluir a aeronave {{ $aeronave->modelo }}? Esta ação não pode ser desfeita.');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                        class="btn btn-danger btn-action"
-                                                        title="Excluir aeronave">
-                                                    <i class="bi bi-trash"></i>
-                                                    <span>Excluir</span>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
+    </section>
+
+    <section class="row g-3 mb-4" aria-label="Indicadores da companhia">
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon text-primary bg-primary-subtle"><i class="bi bi-airplane"></i></div>
+                <div class="metric-value">{{ number_format($totalAeronaves, 0, ',', '.') }}</div>
+                <div class="metric-label">Aeronaves associadas</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon text-success bg-success-subtle"><i class="bi bi-check2-circle"></i></div>
+                <div class="metric-value">{{ number_format($aeronavesDisponiveis, 0, ',', '.') }}</div>
+                <div class="metric-label">Disponíveis agora</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon text-info bg-info-subtle"><i class="bi bi-people"></i></div>
+                <div class="metric-value">{{ number_format($capacidadeTotal, 0, ',', '.') }}</div>
+                <div class="metric-label">Capacidade total</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="metric-card">
+                <div class="metric-icon text-warning bg-warning-subtle"><i class="bi bi-speedometer2"></i></div>
+                <div class="metric-value">{{ number_format($capacidadeMedia, 0, ',', '.') }}</div>
+                <div class="metric-label">Média por aeronave</div>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-4">
+        <div class="col-xl-9">
+            <section class="section-card">
+                <div class="section-heading d-flex flex-column flex-sm-row justify-content-between gap-3">
+                    <div>
+                        <div class="section-kicker mb-1">Frota</div>
+                        <h2 class="h5 fw-bold mb-1">Aeronaves da companhia</h2>
+                        <p class="small text-muted mb-0">Consulte a frota e ajuste sua disponibilidade operacional.</p>
+                    </div>
+                    @if($totalAeronaves > 0)
+                        <span class="badge align-self-sm-center rounded-pill text-bg-light border px-3 py-2">
+                            {{ $totalAeronaves }} {{ $totalAeronaves === 1 ? 'aeronave' : 'aeronaves' }}
+                        </span>
+                    @endif
+                </div>
+
+                @if($totalAeronaves > 0)
+                    <div class="table-responsive">
+                        <table class="table company-table align-middle" id="aeronavesTable">
+                            <thead>
+                                <tr>
+                                    <th>Aeronave</th>
+                                    <th>Fabricante</th>
+                                    <th>Capacidade</th>
+                                    <th>Porte</th>
+                                    <th>Disponibilidade</th>
+                                    <th class="text-end">Ações</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @else
-                <div class="text-center py-5">
-                    <i class="bi bi-exclamation-circle text-muted" style="font-size: 3rem;"></i>
-                    <h5 class="text-muted mt-3">Nenhuma aeronave associada a esta companhia</h5>
-                    <a href="{{ route('aeronaves.create') }}" class="btn btn-primary btn-action mt-3">
-                        <i class="bi bi-plus-circle"></i>
-                        <span>Cadastrar Nova Aeronave</span>
-                    </a>
-                </div>
-            @endif
+                            </thead>
+                            <tbody>
+                                @foreach($companhia->aeronaves as $aeronave)
+                                    @php
+                                        $disponivel = (bool) ($aeronave->pivot->disponivel ?? true);
+                                        $porte = match($aeronave->porte) {
+                                            'PC' => ['Pequeno', 'text-bg-info'],
+                                            'MC' => ['Médio', 'text-bg-warning'],
+                                            'LC' => ['Grande', 'text-bg-danger'],
+                                            default => [$aeronave->porte ?: 'Não informado', 'text-bg-secondary'],
+                                        };
+                                    @endphp
+                                    <tr data-aeronave-id="{{ $aeronave->id }}"
+                                        data-disponivel-original="{{ $disponivel ? 'true' : 'false' }}"
+                                        class="{{ $disponivel ? '' : 'aircraft-unavailable' }}">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <span class="aircraft-avatar"><i class="bi bi-airplane"></i></span>
+                                                <div>
+                                                    <a href="{{ route('aeronaves.show', $aeronave) }}" class="aircraft-link">
+                                                        {{ $aeronave->modelo }}
+                                                    </a>
+                                                    <div class="small text-muted">ID #{{ $aeronave->id }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ $aeronave->fabricante?->nome ?? 'Não informado' }}</td>
+                                        <td><strong>{{ number_format($aeronave->capacidade, 0, ',', '.') }}</strong> <span class="small text-muted">passageiros</span></td>
+                                        <td><span class="badge {{ $porte[1] }} rounded-pill">{{ $porte[0] }}</span></td>
+                                        <td>
+                                            <div class="availability-switch d-flex align-items-center gap-2">
+                                                <div class="form-check form-switch m-0">
+                                                    <input type="checkbox"
+                                                           class="form-check-input disponivel-toggle"
+                                                           id="disponivel_{{ $aeronave->id }}"
+                                                           data-aeronave-id="{{ $aeronave->id }}"
+                                                           data-companhia-id="{{ $companhia->id }}"
+                                                           {{ $disponivel ? 'checked' : '' }}>
+                                                </div>
+                                                <label class="small fw-semibold status-label" for="disponivel_{{ $aeronave->id }}">
+                                                    {{ $disponivel ? 'Disponível' : 'Indisponível' }}
+                                                </label>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <a href="{{ route('aeronaves.edit', $aeronave) }}"
+                                                   class="btn btn-sm btn-outline-primary"
+                                                   title="Editar {{ $aeronave->modelo }}">
+                                                    <i class="bi bi-pencil"></i>
+                                                    <span class="visually-hidden">Editar</span>
+                                                </a>
+                                                <form action="{{ route('aeronaves.destroy', $aeronave) }}" method="POST"
+                                                      onsubmit="return confirm('Tem certeza que deseja excluir a aeronave {{ addslashes($aeronave->modelo) }}?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir {{ $aeronave->modelo }}">
+                                                        <i class="bi bi-trash"></i>
+                                                        <span class="visually-hidden">Excluir</span>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="empty-state">
+                        <div class="metric-icon text-primary bg-primary-subtle mx-auto mb-3"><i class="bi bi-airplane"></i></div>
+                        <h3 class="h5 fw-bold">Nenhuma aeronave associada</h3>
+                        <p class="text-muted">Edite a companhia para relacionar aeronaves à sua frota.</p>
+                        <a href="{{ route('companhias.edit', $companhia) }}" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-1"></i> Gerenciar frota
+                        </a>
+                    </div>
+                @endif
+            </section>
         </div>
+
+        <aside class="col-xl-3">
+            <section class="section-card p-4">
+                <div class="section-kicker mb-1">Cadastro</div>
+                <h2 class="h5 fw-bold mb-4">Informações</h2>
+
+                <div class="d-flex gap-3 mb-4">
+                    <span class="metric-icon text-primary bg-primary-subtle"><i class="bi bi-calendar-plus"></i></span>
+                    <div>
+                        <div class="small text-muted">Cadastrada em</div>
+                        <strong>{{ $companhia->created_at?->format('d/m/Y') ?? 'Não disponível' }}</strong>
+                        @if($companhia->created_at)
+                            <div class="small text-muted">às {{ $companhia->created_at->format('H:i') }}</div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <span class="metric-icon text-success bg-success-subtle"><i class="bi bi-arrow-repeat"></i></span>
+                    <div>
+                        <div class="small text-muted">Última atualização</div>
+                        <strong>{{ $companhia->updated_at?->format('d/m/Y') ?? 'Não disponível' }}</strong>
+                        @if($companhia->updated_at)
+                            <div class="small text-muted">às {{ $companhia->updated_at->format('H:i') }}</div>
+                        @endif
+                    </div>
+                </div>
+            </section>
+        </aside>
     </div>
 </div>
 
+<button type="button" id="floatingSaveBtn" class="btn btn-success floating-save d-none">
+    <span class="save-default"><i class="bi bi-check2-circle me-2"></i>Salvar alterações (<span id="pendingCount">0</span>)</span>
+    <span class="save-loading d-none"><span class="spinner-border spinner-border-sm me-2"></span>Salvando...</span>
+</button>
+@endsection
+
+@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Armazenar alterações pendentes
-    let pendingChanges = new Map();
+document.addEventListener('DOMContentLoaded', () => {
+    const pendingChanges = new Map();
+    const saveButton = document.getElementById('floatingSaveBtn');
+    const pendingCount = document.getElementById('pendingCount');
     let isSaving = false;
-    
-    // Criar botão de salvar flutuante
-    const saveButton = document.createElement('button');
-    saveButton.id = 'floatingSaveBtn';
-    saveButton.className = 'btn btn-success floating-save-btn d-none';
-    saveButton.innerHTML = '<i class="bi bi-check-circle me-2"></i> Salvar Alterações <span id="pendingCount">0</span>';
-    document.body.appendChild(saveButton);
-    
-    // Função para atualizar o contador de pendências
-    function updatePendingCount() {
-        const count = pendingChanges.size;
-        const countSpan = document.getElementById('pendingCount');
-        const saveBtn = document.getElementById('floatingSaveBtn');
-        
-        if (countSpan) countSpan.textContent = count;
-        
-        if (count > 0) {
-            saveBtn.classList.remove('d-none');
-            if (count === 1) {
-                saveBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i> Salvar Alteração (1 pendente)';
+
+    const setRowState = (row, available, pending = false) => {
+        row.classList.toggle('aircraft-unavailable', !available);
+        row.classList.toggle('pending-row', pending);
+        row.querySelector('.status-label').textContent = available ? 'Disponível' : 'Indisponível';
+    };
+
+    const refreshSaveButton = () => {
+        pendingCount.textContent = pendingChanges.size;
+        saveButton.classList.toggle('d-none', pendingChanges.size === 0);
+    };
+
+    const notify = (message, type = 'success') => {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3 shadow`;
+        alert.style.zIndex = '2000';
+        alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        document.body.appendChild(alert);
+        setTimeout(() => alert.remove(), 3500);
+    };
+
+    document.querySelectorAll('.disponivel-toggle').forEach((toggle) => {
+        toggle.addEventListener('change', () => {
+            const row = toggle.closest('tr');
+            const key = `${toggle.dataset.companhiaId}_${toggle.dataset.aeronaveId}`;
+            const original = row.dataset.disponivelOriginal === 'true';
+
+            if (toggle.checked === original) {
+                pendingChanges.delete(key);
+                setRowState(row, toggle.checked, false);
             } else {
-                saveBtn.innerHTML = `<i class="bi bi-check-circle me-2"></i> Salvar Alterações (${count} pendentes)`;
-            }
-        } else {
-            saveBtn.classList.add('d-none');
-        }
-    }
-    
-    // Função para atualizar o status visual da linha
-    function updateRowStatus(row, disponivel) {
-        const statusBadge = row.querySelector('.status-badge');
-        const toggleInput = row.querySelector('.disponivel-toggle');
-        
-        // Atualizar o texto e classe do badge
-        if (statusBadge) {
-            statusBadge.textContent = disponivel ? 'Disponível' : 'Indisponível';
-            statusBadge.className = `badge ${disponivel ? 'bg-success' : 'bg-secondary'} status-badge`;
-        }
-        
-        // Atualizar o checkbox
-        if (toggleInput) {
-            toggleInput.checked = disponivel;
-        }
-        
-        // Atualizar a classe da linha
-        if (disponivel) {
-            row.classList.remove('aeronave-indisponivel');
-        } else {
-            row.classList.add('aeronave-indisponivel');
-        }
-    }
-    
-    // Função para salvar todas as alterações pendentes
-    async function savePendingChanges() {
-        if (isSaving || pendingChanges.size === 0) return;
-        
-        isSaving = true;
-        const saveBtn = document.getElementById('floatingSaveBtn');
-        const originalHtml = saveBtn.innerHTML;
-        saveBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i> Salvando...';
-        saveBtn.disabled = true;
-        
-        const changes = Array.from(pendingChanges.entries());
-        let successCount = 0;
-        let errorCount = 0;
-        
-        for (const [key, data] of changes) {
-            const [companhiaId, aeronaveId] = key.split('_');
-            const disponivel = data.disponivel;
-            
-            try {
-                const response = await fetch(`/companhias/${companhiaId}/aeronaves/${aeronaveId}/disponibilidade`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ disponivel: disponivel })
+                pendingChanges.set(key, {
+                    companhiaId: toggle.dataset.companhiaId,
+                    aeronaveId: toggle.dataset.aeronaveId,
+                    disponivel: toggle.checked,
                 });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    successCount++;
-                    pendingChanges.delete(key);
-                    
-                    // Atualizar status visual da linha com o valor que foi salvo
-                    const row = document.querySelector(`tr[data-aeronave-id="${aeronaveId}"]`);
-                    if (row) {
-                        // Atualizar visualmente com o status salvo
-                        updateRowStatus(row, disponivel);
-                        
-                        // Atualizar o estado original
-                        row.setAttribute('data-disponivel-original', disponivel);
-                        
-                        // Remover opacidade do badge
-                        const badge = row.querySelector('.status-badge');
-                        if (badge) {
-                            badge.classList.remove('opacity-50');
-                        }
-                        
-                        // Mostrar feedback temporário na linha
-                        showTemporaryFeedback(row, result.message, 'success');
-                    }
-                } else {
-                    errorCount++;
-                    // Reverter o toggle visualmente para o estado original
-                    const row = document.querySelector(`tr[data-aeronave-id="${aeronaveId}"]`);
-                    if (row) {
-                        const originalDisponivel = row.getAttribute('data-disponivel-original') === 'true';
-                        updateRowStatus(row, originalDisponivel);
-                        showTemporaryFeedback(row, result.message || 'Erro ao salvar', 'error');
-                    }
-                }
-            } catch (error) {
-                errorCount++;
-                console.error('Erro ao salvar:', error);
-                
-                // Reverter o toggle visualmente para o estado original
-                const row = document.querySelector(`tr[data-aeronave-id="${aeronaveId}"]`);
-                if (row) {
-                    const originalDisponivel = row.getAttribute('data-disponivel-original') === 'true';
-                    updateRowStatus(row, originalDisponivel);
-                    showTemporaryFeedback(row, 'Erro de conexão com o servidor', 'error');
-                }
+                setRowState(row, toggle.checked, true);
             }
-        }
-        
-        // Mostrar mensagem final
-        if (successCount > 0) {
-            showGlobalMessage(`✅ ${successCount} alteração(ões) salva(s) com sucesso!`, 'success');
-        }
-        if (errorCount > 0) {
-            showGlobalMessage(`⚠️ ${errorCount} erro(s) ao salvar alterações.`, 'error');
-        }
-        
-        // Resetar estado
-        pendingChanges.clear();
-        updatePendingCount();
-        
-        saveBtn.innerHTML = originalHtml;
-        saveBtn.disabled = false;
-        isSaving = false;
-        
-        // Esconder botão se não houver mais pendências
-        if (pendingChanges.size === 0) {
-            saveBtn.classList.add('d-none');
-        }
-    }
-    
-    // Função para mostrar feedback temporário na linha
-    function showTemporaryFeedback(row, message, type) {
-        // Remover feedbacks anteriores
-        const oldFeedback = row.querySelector('.temporary-feedback');
-        if (oldFeedback) oldFeedback.remove();
-        
-        const feedbackDiv = document.createElement('div');
-        feedbackDiv.className = `temporary-feedback position-absolute end-0 top-0 mt-2 me-2 badge ${type === 'success' ? 'bg-success' : 'bg-danger'}`;
-        feedbackDiv.style.zIndex = '10';
-        feedbackDiv.style.fontSize = '0.7rem';
-        feedbackDiv.style.padding = '0.25rem 0.5rem';
-        feedbackDiv.innerHTML = message;
-        
-        // Garantir que a linha tenha position relative
-        if (getComputedStyle(row).position === 'static') {
-            row.style.position = 'relative';
-        }
-        
-        row.appendChild(feedbackDiv);
-        
-        setTimeout(() => {
-            if (feedbackDiv.parentNode) {
-                feedbackDiv.remove();
-            }
-        }, 2000);
-    }
-    
-    // Função para mostrar mensagem global
-    function showGlobalMessage(message, type) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
-        alertDiv.style.zIndex = '9999';
-        alertDiv.style.minWidth = '300px';
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        document.body.appendChild(alertDiv);
-        
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 3000);
-    }
-    
-    // Adicionar evento de clique nos toggles
-    document.querySelectorAll('.disponivel-toggle').forEach(toggle => {
-        // Remover event listeners antigos para evitar duplicação
-        const newToggle = toggle.cloneNode(true);
-        toggle.parentNode.replaceChild(newToggle, toggle);
-        
-        newToggle.addEventListener('change', function(e) {
-            e.stopPropagation();
-            
-            const aeronaveId = this.dataset.aeronaveId;
-            const companhiaId = this.dataset.companhiaId;
-            const disponivel = this.checked;
-            const row = this.closest('tr');
-            
-            // Obter o estado original do servidor
-            const originalDisponivel = row.getAttribute('data-disponivel-original') === 'true';
-            
-            // Atualizar visualmente
-            updateRowStatus(row, disponivel);
-            
-            // Armazenar alteração pendente
-            const key = `${companhiaId}_${aeronaveId}`;
-            pendingChanges.set(key, { 
-                disponivel: disponivel, 
-                originalDisponivel: originalDisponivel 
-            });
-            
-            updatePendingCount();
-            
-            // Mostrar feedback visual de que a alteração está pendente
-            const badge = row.querySelector('.status-badge');
-            if (badge) {
-                badge.classList.add('opacity-50');
-            }
+
+            refreshSaveButton();
         });
     });
-    
-    // Adicionar evento de clique no botão de salvar
-    saveButton.addEventListener('click', savePendingChanges);
-    
-    // Salvar ao sair da página se houver pendências
-    window.addEventListener('beforeunload', function(e) {
-        if (pendingChanges.size > 0) {
-            e.preventDefault();
-            e.returnValue = 'Você tem alterações pendentes. Tem certeza que deseja sair?';
-            return 'Você tem alterações pendentes. Tem certeza que deseja sair?';
+
+    saveButton.addEventListener('click', async () => {
+        if (isSaving || pendingChanges.size === 0) return;
+        isSaving = true;
+        saveButton.disabled = true;
+        saveButton.querySelector('.save-default').classList.add('d-none');
+        saveButton.querySelector('.save-loading').classList.remove('d-none');
+
+        let saved = 0;
+        let failed = 0;
+
+        for (const [key, change] of [...pendingChanges]) {
+            const row = document.querySelector(`tr[data-aeronave-id="${change.aeronaveId}"]`);
+
+            try {
+                const response = await fetch(
+                    `/companhias/${change.companhiaId}/aeronaves/${change.aeronaveId}/disponibilidade`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': @json(csrf_token()),
+                        },
+                        body: JSON.stringify({ disponivel: change.disponivel }),
+                    }
+                );
+                const result = await response.json();
+
+                if (!response.ok || !result.success) throw new Error(result.message || 'Erro ao salvar');
+
+                row.dataset.disponivelOriginal = String(change.disponivel);
+                setRowState(row, change.disponivel, false);
+                pendingChanges.delete(key);
+                saved++;
+            } catch (error) {
+                const original = row.dataset.disponivelOriginal === 'true';
+                row.querySelector('.disponivel-toggle').checked = original;
+                setRowState(row, original, false);
+                pendingChanges.delete(key);
+                failed++;
+            }
         }
+
+        if (saved) notify(`${saved} alteração(ões) salva(s) com sucesso.`);
+        if (failed) notify(`${failed} alteração(ões) não puderam ser salvas.`, 'danger');
+
+        isSaving = false;
+        saveButton.disabled = false;
+        saveButton.querySelector('.save-default').classList.remove('d-none');
+        saveButton.querySelector('.save-loading').classList.add('d-none');
+        refreshSaveButton();
     });
-    
-    // Inicializar o estado visual das linhas baseado no valor do banco
-    document.querySelectorAll('#aeronavesTable tbody tr').forEach(row => {
-        const toggle = row.querySelector('.disponivel-toggle');
-        if (toggle) {
-            const disponivelOriginal = row.getAttribute('data-disponivel-original') === 'true';
-            // Garantir que o visual está correto
-            updateRowStatus(row, disponivelOriginal);
-            // Garantir que o checkbox está correto
-            toggle.checked = disponivelOriginal;
-        }
+
+    window.addEventListener('beforeunload', (event) => {
+        if (pendingChanges.size === 0) return;
+        event.preventDefault();
+        event.returnValue = '';
     });
 });
 </script>
-@endsection
+@endpush
