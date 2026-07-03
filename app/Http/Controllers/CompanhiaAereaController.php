@@ -53,7 +53,15 @@ class CompanhiaAereaController extends Controller
      */
     public function index()
     {
-        $companhias = CompanhiaAerea::withCount('aeronaves')->get();
+        $companhias = CompanhiaAerea::query()
+            ->withCount([
+                'aeronaves',
+                'aeronaves as aeronaves_disponiveis_count' => fn ($query) =>
+                    $query->where('companhia_aeronave.disponivel', true),
+            ])
+            ->orderBy('nome')
+            ->get();
+
         return view('admin.companhias.index', compact('companhias'));
     }
 
@@ -362,6 +370,9 @@ class CompanhiaAereaController extends Controller
             $companhias = $companhias->sortByDesc($campoOrdenacao)->values();
         }
         
+        // Opções completas dos filtros, independentemente do resultado atual
+        $companhiasFiltro = CompanhiaAerea::orderBy('nome')->get(['id', 'nome']);
+
         // Buscar todos os aeroportos para os filtros
         $aeroportos = Aeroporto::orderBy('nome_aeroporto')->get();
         
@@ -395,6 +406,7 @@ class CompanhiaAereaController extends Controller
         
         return view('companhias.informacoes', compact(
             'companhias',
+            'companhiasFiltro',
             'aeroportos',
             'companiesData',
             'totalCompanhias',

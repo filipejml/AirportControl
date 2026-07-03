@@ -1,20 +1,85 @@
-{{-- resources/views/companhias/informacoes.blade.php --}}
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Companhias Aéreas - Informações Gerais</title>
+@extends('layouts.app')
 
-    <!-- Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+@section('title', 'Informações das companhias')
 
-    <!-- Ícones -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
+@push('styles')
     <style>
-        body {
-            background-color: #ffffff;
+        .companies-info-page {
+            --info-ink: #172033;
+            --info-muted: #667085;
+            --info-border: #e4e7ec;
+            color: var(--info-ink);
+        }
+
+        .info-hero {
+            position: relative;
+            overflow: hidden;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+            border-radius: 1.5rem;
+            color: #fff;
+            background:
+                radial-gradient(circle at 88% 15%, rgba(255,255,255,.16), transparent 24%),
+                linear-gradient(125deg, #101828 0%, #1849a9 60%, #2e90fa 100%);
+            box-shadow: 0 20px 45px rgba(16, 24, 40, .15);
+        }
+
+        .hero-symbol {
+            display: grid;
+            width: 3.75rem;
+            height: 3.75rem;
+            place-items: center;
+            flex: 0 0 auto;
+            border: 1px solid rgba(255,255,255,.28);
+            border-radius: 1.1rem;
+            background: rgba(255,255,255,.12);
+            font-size: 1.55rem;
+        }
+
+        .summary-card {
+            height: 100%;
+            padding: 1.1rem 1.2rem;
+            border: 1px solid var(--info-border);
+            border-radius: 1rem;
+            background: #fff;
+            box-shadow: 0 8px 22px rgba(16, 24, 40, .045);
+        }
+
+        .summary-icon {
+            display: grid;
+            width: 2.55rem;
+            height: 2.55rem;
+            place-items: center;
+            flex: 0 0 auto;
+            border-radius: .75rem;
+            font-size: 1.05rem;
+        }
+
+        .summary-value {
+            font-size: 1.55rem;
+            font-weight: 750;
+            line-height: 1;
+            letter-spacing: -.03em;
+        }
+
+        .filter-panel {
+            padding: 1.3rem;
+            border: 1px solid var(--info-border);
+            border-radius: 1.15rem;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(16, 24, 40, .04);
+        }
+
+        .filter-panel .form-select {
+            min-height: 2.75rem;
+            border-color: #d0d5dd;
+            border-radius: .75rem;
+        }
+
+        .active-filters {
+            padding: .8rem 1rem;
+            border: 1px solid #b2ddff;
+            border-radius: .9rem;
+            background: #f0f9ff;
         }
         
         .hover-shadow {
@@ -40,39 +105,72 @@
             opacity: 0.85;
             filter: grayscale(0.05);
         }
+
+        @media (max-width: 767.98px) {
+            .info-hero { border-radius: 1.15rem; }
+        }
     </style>
-</head>
-<body>
+@endpush
 
-    <!-- Navbar -->
-    @include('components.navbar')
-
-    <!-- Conteúdo -->
-    <div class="container mt-4">
-        
-        {{-- Título --}}
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1>Catálogo de Companhias Aéreas</h1>
+@section('content')
+    <div class="companies-info-page pb-5">
+        <header class="info-hero mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <span class="hero-symbol" aria-hidden="true"><i class="bi bi-bar-chart-line"></i></span>
+                <div>
+                    <div class="small text-white-50 fw-semibold text-uppercase mb-1">Visão operacional</div>
+                    <h1 class="h2 fw-bold mb-1">Informações das companhias</h1>
+                    <p class="mb-0 text-white-50">Compare frota, movimentação e desempenho das companhias aéreas.</p>
                 </div>
             </div>
-        </div>
+        </header>
+
+        <section class="row g-3 mb-4" aria-label="Resumo das companhias">
+            <div class="col-6 col-xl-3">
+                <div class="summary-card d-flex align-items-center gap-3">
+                    <span class="summary-icon text-primary bg-primary-subtle"><i class="bi bi-buildings"></i></span>
+                    <div><div class="summary-value">{{ number_format($totalCompanhias, 0, ',', '.') }}</div><div class="small text-muted">Companhias</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="summary-card d-flex align-items-center gap-3">
+                    <span class="summary-icon text-info bg-info-subtle"><i class="bi bi-airplane"></i></span>
+                    <div><div class="summary-value">{{ number_format($totalVoos, 0, ',', '.') }}</div><div class="small text-muted">Voos</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="summary-card d-flex align-items-center gap-3">
+                    <span class="summary-icon text-success bg-success-subtle"><i class="bi bi-people"></i></span>
+                    <div><div class="summary-value">{{ number_format($totalPassageiros, 0, ',', '.') }}</div><div class="small text-muted">Passageiros</div></div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-3">
+                <div class="summary-card d-flex align-items-center gap-3">
+                    <span class="summary-icon text-warning bg-warning-subtle"><i class="bi bi-star-fill"></i></span>
+                    <div><div class="summary-value">{{ number_format($mediaGeralNotas, 1, ',', '.') }}</div><div class="small text-muted">Média geral</div></div>
+                </div>
+            </div>
+        </section>
 
         {{-- Filtros --}}
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
+                <div class="filter-panel">
+                    <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                        <div>
+                            <h2 class="h5 fw-bold mb-1"><i class="bi bi-funnel me-1 text-primary"></i> Filtros</h2>
+                            <p class="small text-muted mb-0">Refine as companhias exibidas no catálogo.</p>
+                        </div>
+                    </div>
                         <form method="GET" action="{{ route('companhias.informacoes') }}" class="row g-2 align-items-end">
                             {{-- Filtro por Companhia --}}
                             <div class="col-md-4">
-                                <label for="filtro_companhia" class="form-label fw-bold">
-                                    <i class="bi bi-building"></i> Filtrar por Companhia:
+                                <label for="filtro_companhia" class="form-label fw-semibold">
+                                    Companhia
                                 </label>
                                 <select name="companhia" id="filtro_companhia" class="form-select" onchange="this.form.submit()">
                                     <option value="">Todas as Companhias</option>
-                                    @foreach($companhias as $companhia)
+                                    @foreach($companhiasFiltro as $companhia)
                                         <option value="{{ $companhia->id }}" {{ request('companhia') == $companhia->id ? 'selected' : '' }}>
                                             {{ $companhia->nome }}
                                         </option>
@@ -82,8 +180,8 @@
 
                             {{-- Filtro por Aeroporto --}}
                             <div class="col-md-3">
-                                <label for="filtro_aeroporto" class="form-label fw-bold">
-                                    <i class="bi bi-geo-alt"></i> Filtrar por Aeroporto:
+                                <label for="filtro_aeroporto" class="form-label fw-semibold">
+                                    Aeroporto
                                 </label>
                                 <select name="aeroporto" id="filtro_aeroporto" class="form-select" onchange="this.form.submit()">
                                     <option value="">Todos os Aeroportos</option>
@@ -97,8 +195,8 @@
 
                             {{-- Filtro de Ordenação --}}
                             <div class="col-md-3">
-                                <label for="filtro_ordenacao" class="form-label fw-bold">
-                                    <i class="bi bi-sort-down"></i> Ordenar por:
+                                <label for="filtro_ordenacao" class="form-label fw-semibold">
+                                    Ordenar por
                                 </label>
                                 <select name="ordenacao" id="filtro_ordenacao" class="form-select" onchange="this.form.submit()">
                                     <option value="nome_az" {{ request('ordenacao') == 'nome_az' ? 'selected' : '' }}>Ordenar por Nome (A-Z)</option>
@@ -124,7 +222,6 @@
                                 @endif
                             </div>
                         </form>
-                    </div>
                 </div>
             </div>
         </div>
@@ -133,13 +230,13 @@
         @if(request('companhia') || request('aeroporto') || request('ordenacao'))
         <div class="row mb-3">
             <div class="col-12">
-                <div class="alert alert-info d-flex align-items-center">
+                <div class="active-filters d-flex align-items-center">
                     <i class="bi bi-funnel me-2"></i>
                     <div>
                         <strong>Filtros ativos:</strong>
                         @if(request('companhia'))
                             @php
-                                $companhiaSelecionada = $companhias->firstWhere('id', request('companhia'));
+                                $companhiaSelecionada = $companhiasFiltro->firstWhere('id', request('companhia'));
                             @endphp
                             <span class="badge bg-primary ms-1">Companhia: {{ $companhiaSelecionada->nome ?? request('companhia') }}</span>
                         @endif
@@ -442,9 +539,4 @@
         </div>
         @endif
     </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-</body>
-</html>
+@endsection
