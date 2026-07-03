@@ -213,7 +213,12 @@
                     <p class="mb-0 text-white-50">Gerencie cadastros, frotas e disponibilidade operacional.</p>
                 </div>
             </div>
-            <div class="header-actions">
+            <div class="header-actions d-flex flex-column flex-sm-row gap-2">
+                @if(request('origem') === 'registros')
+                    <a href="{{ route('registros') }}" class="btn btn-outline-light fw-semibold px-4 py-2">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar para registros
+                    </a>
+                @endif
                 <a href="{{ route('companhias.create') }}" class="btn btn-light text-primary fw-semibold px-4 py-2">
                     <i class="bi bi-plus-lg me-1"></i> Nova companhia
                 </a>

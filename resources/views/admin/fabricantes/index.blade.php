@@ -17,9 +17,16 @@
                 <h1 class="h2 fw-bold mt-1 mb-1"><i class="bi bi-tools me-2"></i>Gerenciar Fabricantes</h1>
                 <p class="mb-0 opacity-75">Consulte e mantenha os fabricantes de aeronaves.</p>
             </div>
-            <a href="{{ route('fabricantes.create') }}" class="btn btn-warning fw-semibold">
-                <i class="bi bi-plus-circle me-1"></i>Novo fabricante
-            </a>
+            <div class="d-flex flex-column flex-sm-row gap-2">
+                @if(request('origem') === 'registros')
+                    <a href="{{ route('registros') }}" class="btn btn-outline-light fw-semibold">
+                        <i class="bi bi-arrow-left me-1"></i>Voltar para registros
+                    </a>
+                @endif
+                <a href="{{ route('fabricantes.create') }}" class="btn btn-warning fw-semibold">
+                    <i class="bi bi-plus-circle me-1"></i>Novo fabricante
+                </a>
+            </div>
         </div>
     </div>
 

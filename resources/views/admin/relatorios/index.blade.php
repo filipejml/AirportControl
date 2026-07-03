@@ -4,11 +4,18 @@
 
 @section('content')
 <div class="container">
-    <div class="mb-4">
+    <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3">
+        <div>
         <h3 class="fw-bold"><i class="bi bi-bar-chart"></i> Controle de Relatórios</h3>
         <p class="text-muted mb-0">
             Habilite quais relatórios estruturados na aplicação ficam visíveis para usuários comuns.
         </p>
+        </div>
+        @if(request('origem') === 'registros')
+            <a href="{{ route('registros') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar para registros
+            </a>
+        @endif
     </div>
 
     <div class="card shadow-sm">

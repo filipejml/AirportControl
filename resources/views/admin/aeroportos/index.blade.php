@@ -18,6 +18,11 @@
             <p class="text-muted">Lista de todos os aeroportos cadastrados</p>
         </div>
         <div class="col-md-4 text-end">
+            @if(request('origem') === 'registros')
+                <a href="{{ route('registros') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Voltar para registros
+                </a>
+            @endif
             {{-- ALTERADO: usar a nova rota do wizard --}}
             <a href="{{ route('aeroportos.create.step1') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Novo Aeroporto
