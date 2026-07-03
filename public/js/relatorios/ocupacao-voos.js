@@ -132,7 +132,7 @@ class RelatorioOcupacaoVoos {
         this.graficoFaixas?.destroy();
         this.graficoRanking?.destroy();
 
-        this.graficoFaixas = new Chart(document.getElementById('ocupacaoFaixasChart'), {
+        this.graficoFaixas = AirportCharts.create(document.getElementById('ocupacaoFaixasChart'), {
             type: 'doughnut',
             data: {
                 labels: ['Baixa', 'Média', 'Alta', 'Lotado'],
@@ -145,7 +145,7 @@ class RelatorioOcupacaoVoos {
         });
 
         const top = this.dados.slice(0, 10);
-        this.graficoRanking = new Chart(document.getElementById('ocupacaoRankingChart'), {
+        this.graficoRanking = AirportCharts.create(document.getElementById('ocupacaoRankingChart'), {
             type: 'bar',
             data: {
                 labels: top.map(item => item.id_voo),

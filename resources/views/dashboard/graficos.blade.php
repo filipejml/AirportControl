@@ -128,17 +128,8 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<script>
-    // Registrar o plugin de datalabels
-    Chart.register(ChartDataLabels);
-    
+<script type="module">
     // Configuração global para os datalabels - desabilitado por padrão
-    Chart.defaults.set('plugins.datalabels', {
-        display: false  // Desabilita todos os datalabels globalmente
-    });
-
     // Helper para arredondamento no JavaScript
     function round(value, decimals) {
         return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
@@ -157,7 +148,7 @@
     var medianasGerais = @json($medianasGerais ?? []);
 
     if (labelsCompanhia.length > 0 && dataCompanhia.length > 0) {
-        new Chart(document.getElementById('voosPorCompanhiaChart').getContext('2d'), {
+        AirportCharts.create(document.getElementById('voosPorCompanhiaChart').getContext('2d'), {
             type: 'bar',
             data: {
                 labels: labelsCompanhia,
@@ -250,7 +241,7 @@
             spanGaps: true
         };
 
-        new Chart(document.getElementById('passageirosPorCompanhiaChart').getContext('2d'), {
+        AirportCharts.create(document.getElementById('passageirosPorCompanhiaChart').getContext('2d'), {
             type: 'bar',
             data: {
                 labels: labelsPassageirosCompanhia,
@@ -325,7 +316,7 @@
     var dataHorario = @json($dataHorario);
     var medianaHorarioDataset = @json($medianaHorarioDataset ?? []);
 
-    new Chart(document.getElementById('voosPorHorarioChart').getContext('2d'), {
+    AirportCharts.create(document.getElementById('voosPorHorarioChart').getContext('2d'), {
         type: 'bar',
         data: {
             labels: horarios,
@@ -404,7 +395,7 @@
     var dataPassageirosHorario = @json($dataPassageirosHorario);
     var medianaPassageirosHorarioDataset = @json($medianaPassageirosHorarioDataset ?? []);
 
-    new Chart(document.getElementById('passageirosPorHorarioChart').getContext('2d'), {
+    AirportCharts.create(document.getElementById('passageirosPorHorarioChart').getContext('2d'), {
         type: 'bar',
         data: {
             labels: horarios,
@@ -486,7 +477,7 @@
     var totalTipoVoo = {{ $totalTipoVoo ?? 0 }};
     var medianaTipoVooDataset = @json($medianaTipoVooDataset ?? []);
 
-    new Chart(document.getElementById('voosPorTipoChart').getContext('2d'), {
+    AirportCharts.create(document.getElementById('voosPorTipoChart').getContext('2d'), {
         type: 'bar',
         data: {
             labels: labelsTipoVoo,
@@ -557,7 +548,7 @@
     var totalTipoAeronave = {{ $totalTipoAeronave ?? 0 }};
     var medianaTipoAeronaveDataset = @json($medianaTipoAeronaveDataset ?? []);
 
-    new Chart(document.getElementById('voosPorTipoAeronaveChart').getContext('2d'), {
+    AirportCharts.create(document.getElementById('voosPorTipoAeronaveChart').getContext('2d'), {
         type: 'bar',
         data: {
             labels: labelsTipoAeronave,
@@ -628,7 +619,7 @@
     var totalPassageirosTipoVoo = {{ $totalPassageirosTipoVoo ?? 0 }};
     var medianaPassageirosTipoVooDataset = @json($medianaPassageirosTipoVooDataset ?? []);
 
-    new Chart(document.getElementById('passageirosPorTipoVooChart').getContext('2d'), {
+    AirportCharts.create(document.getElementById('passageirosPorTipoVooChart').getContext('2d'), {
         type: 'bar',
         data: {
             labels: labelsPassageirosTipoVoo,
@@ -699,7 +690,7 @@
     var totalPassageirosTipoAeronave = {{ $totalPassageirosTipoAeronave ?? 0 }};
     var medianaPassageirosTipoAeronaveDataset = @json($medianaPassageirosTipoAeronaveDataset ?? []);
 
-    new Chart(document.getElementById('passageirosPorTipoAeronaveChart').getContext('2d'), {
+    AirportCharts.create(document.getElementById('passageirosPorTipoAeronaveChart').getContext('2d'), {
         type: 'bar',
         data: {
             labels: labelsPassageirosTipoAeronave,

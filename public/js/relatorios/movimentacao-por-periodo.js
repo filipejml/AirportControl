@@ -142,7 +142,7 @@ class RelatorioMovimentacaoPorPeriodo {
 
         this.grafico?.destroy();
         const contexto = document.getElementById('movimentacaoChart');
-        this.grafico = new Chart(contexto, {
+        this.grafico = AirportCharts.create(contexto, {
             type: 'line',
             data: {
                 labels: this.dados.map(item => item.label),

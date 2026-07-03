@@ -12,7 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @vite('resources/js/app.js')
 
     <style>
         body {
@@ -1716,7 +1716,7 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <script>
+    <script type="module">
         function atualizarFiltrosGlobais() {
             const periodo = document.getElementById('periodo').value;
             
@@ -1837,7 +1837,7 @@
             
             const coresVoosOrdenadas = horariosOrdenados.map(horario => coresHorario[horario]);
 
-            new Chart(ctxVoosHorario, {
+            AirportCharts.create(ctxVoosHorario, {
                 type: 'bar',
                 plugins: [medianLinePluginVoos],
                 data: {
@@ -1997,7 +1997,7 @@
             
             const coresPassageirosOrdenadas = horariosOrdenados.map(horario => coresHorario[horario]);
 
-            new Chart(ctxPassageirosHorario, {
+            AirportCharts.create(ctxPassageirosHorario, {
                 type: 'bar',
                 plugins: [medianLinePluginPassageiros],
                 data: {

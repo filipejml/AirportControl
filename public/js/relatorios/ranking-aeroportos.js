@@ -128,7 +128,7 @@ class RelatorioRankingAeroportos {
 
         this.grafico?.destroy();
         const top = this.dados.slice(0, 10);
-        this.grafico = new Chart(document.getElementById('rankingAeroportosChart'), {
+        this.grafico = AirportCharts.create(document.getElementById('rankingAeroportosChart'), {
             type: 'bar',
             data: {
                 labels: top.map(item => item.nome),

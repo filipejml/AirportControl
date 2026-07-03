@@ -13,10 +13,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    @vite('resources/js/app.js')
     
     <!-- Plugin para exibir valores nos gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
     <style>
         body {
@@ -578,30 +577,8 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        // Registrar o plugin de datalabels
-        Chart.register(ChartDataLabels);
-        
+    <script type="module">
         // Configuração padrão para os datalabels
-        Chart.defaults.set('plugins.datalabels', {
-            color: '#333',
-            anchor: 'end',
-            align: 'top',
-            offset: 4,
-            font: {
-                weight: 'bold',
-                size: 11
-            },
-            formatter: function(value, context) {
-                if (value === 0) return '';
-                // Formatar números grandes
-                if (value >= 1000) {
-                    return (value / 1000).toFixed(1) + 'k';
-                }
-                return value.toString();
-            }
-        });
-
         // Dados para os gráficos
         const voosPorCompanhiaData = @json($voosPorCompanhia);
         const passageirosPorCompanhiaData = @json($passageirosPorCompanhia);
@@ -612,7 +589,7 @@
         // Gráfico: Voos por Companhia (com valores nas colunas)
         if (voosPorCompanhiaData.length > 0) {
             const ctx1 = document.getElementById('voosPorCompanhiaChart').getContext('2d');
-            new Chart(ctx1, {
+            AirportCharts.create(ctx1, {
                 type: 'bar',
                 data: {
                     labels: voosPorCompanhiaData.map(item => item.companhia),
@@ -643,7 +620,7 @@
         // Gráfico: Passageiros por Companhia (com valores nas colunas)
         if (passageirosPorCompanhiaData.length > 0) {
             const ctx2 = document.getElementById('passageirosPorCompanhiaChart').getContext('2d');
-            new Chart(ctx2, {
+            AirportCharts.create(ctx2, {
                 type: 'bar',
                 data: {
                     labels: passageirosPorCompanhiaData.map(item => item.companhia),
@@ -680,7 +657,7 @@
 
         // Gráfico: Voos por Horário (com valores nas fatias)
         const ctx3 = document.getElementById('voosPorHorarioChart').getContext('2d');
-        new Chart(ctx3, {
+        AirportCharts.create(ctx3, {
             type: 'pie',
             data: {
                 labels: Object.keys(horariosData),
@@ -718,7 +695,7 @@
 
         // Gráfico: Voos por Tipo (com valores nas fatias)
         const ctx4 = document.getElementById('voosPorTipoChart').getContext('2d');
-        new Chart(ctx4, {
+        AirportCharts.create(ctx4, {
             type: 'doughnut',
             data: {
                 labels: Object.keys(tiposData),
@@ -754,7 +731,7 @@
         // Gráfico: Evolução Mensal (com valores nos pontos)
         if (evolucaoMensalData.length > 0) {
             const ctx5 = document.getElementById('evolucaoMensalChart').getContext('2d');
-            new Chart(ctx5, {
+            AirportCharts.create(ctx5, {
                 type: 'line',
                 data: {
                     labels: evolucaoMensalData.map(item => item.mes),
