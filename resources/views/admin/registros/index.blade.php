@@ -23,7 +23,7 @@
             'cor' => 'success',
             'quantidade' => $estatisticas['voos'],
             'unidade' => 'voos',
-            'lista' => route('voos.index'),
+            'lista' => route('voos.index', ['origem' => 'registros']),
             'novo' => route('voos.create'),
             'texto_novo' => 'Novo voo',
         ],

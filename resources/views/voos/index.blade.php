@@ -219,7 +219,12 @@
                     <p class="mb-0 text-white-50">Consulte, avalie e mantenha os registros operacionais.</p>
                 </div>
             </div>
-            <div class="hero-actions">
+            <div class="hero-actions d-flex flex-column flex-sm-row gap-2">
+                @if(request('origem') === 'registros')
+                    <a href="{{ route('registros') }}" class="btn btn-outline-light fw-semibold px-4 py-2">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar para registros
+                    </a>
+                @endif
                 <a href="{{ route('voos.create') }}" class="btn btn-light text-primary fw-semibold px-4 py-2">
                     <i class="bi bi-plus-lg me-1"></i> Novo voo
                 </a>
@@ -274,13 +279,16 @@
                 <p class="small text-muted mb-0">Busque por voo, aeroporto, companhia ou aeronave.</p>
             </div>
             @if($hasFilters)
-                <a href="{{ route('voos.index') }}" class="btn btn-sm btn-outline-secondary align-self-md-start">
+                <a href="{{ route('voos.index', request('origem') === 'registros' ? ['origem' => 'registros'] : []) }}" class="btn btn-sm btn-outline-secondary align-self-md-start">
                     <i class="bi bi-x-lg me-1"></i> Limpar filtros
                 </a>
             @endif
         </div>
         <form id="filterForm" method="GET" action="{{ route('voos.index') }}" class="row g-3 align-items-end">
             <input type="hidden" name="per_page" value="{{ $perPage }}">
+            @if(request('origem') === 'registros')
+                <input type="hidden" name="origem" value="registros">
+            @endif
             <div class="col-lg-4">
                 <label for="searchInput" class="form-label small fw-semibold">Busca</label>
                 <div class="search-control">
@@ -346,7 +354,7 @@
                 <h3 class="h5 fw-bold">{{ $hasFilters ? 'Nenhum voo encontrado' : 'Nenhum voo cadastrado' }}</h3>
                 <p class="text-muted">{{ $hasFilters ? 'Revise os filtros aplicados e tente novamente.' : 'Cadastre o primeiro voo para iniciar as operações.' }}</p>
                 @if($hasFilters)
-                    <a href="{{ route('voos.index') }}" class="btn btn-outline-primary">Limpar filtros</a>
+                    <a href="{{ route('voos.index', request('origem') === 'registros' ? ['origem' => 'registros'] : []) }}" class="btn btn-outline-primary">Limpar filtros</a>
                 @else
                     <a href="{{ route('voos.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Cadastrar voo</a>
                 @endif
