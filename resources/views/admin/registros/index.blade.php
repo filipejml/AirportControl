@@ -130,7 +130,7 @@
 
     <div class="row g-4" id="modulosContainer">
         @foreach($modulos as $modulo)
-            <div class="col-md-6 col-lg-3 modulo-card" data-busca="{{ Str::lower($modulo['titulo'].' '.$modulo['descricao']) }}">
+            <div class="col-md-6 modulo-card" data-busca="{{ Str::lower($modulo['titulo'].' '.$modulo['descricao']) }}">
                 <div class="module-card h-100">
                     <div class="module-accent bg-{{ $modulo['cor'] }}"></div>
                     <div class="card-body p-4">

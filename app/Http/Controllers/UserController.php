@@ -54,10 +54,33 @@ class UserController extends Controller
     /**
      * Display a listing of users.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::orderBy('created_at', 'desc')->paginate(10);
-        return view('admin.users.index', compact('users'));
+        $users = User::query()
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = $request->string('search')->trim();
+
+                $query->where(function ($subquery) use ($search) {
+                    $subquery->where('name', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when($request->filled('tipo'), fn ($query) =>
+                $query->where('tipo', $request->integer('tipo'))
+            )
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        $estatisticas = [
+            'total' => User::count(),
+            'administradores' => User::where('tipo', 0)->count(),
+            'comuns' => User::where('tipo', 1)->count(),
+            'recentes' => User::where('created_at', '>=', now()->subDays(30))->count(),
+        ];
+
+        return view('admin.users.index', compact('users', 'estatisticas'));
     }
 
     /**
