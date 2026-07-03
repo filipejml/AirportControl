@@ -43,6 +43,11 @@
             <p class="text-muted">Lista de todas as aeronaves cadastradas no sistema</p>
         </div>
         <div class="col-md-4 text-end">
+            @if(request('origem') === 'registros')
+                <a href="{{ route('registros') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left"></i> Voltar para registros
+                </a>
+            @endif
             <a href="{{ route('aeronaves.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Nova Aeronave
             </a>

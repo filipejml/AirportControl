@@ -34,7 +34,7 @@
             'cor' => 'info',
             'quantidade' => $estatisticas['aeronaves'],
             'unidade' => 'modelos',
-            'lista' => route('aeronaves.index'),
+            'lista' => route('aeronaves.index', ['origem' => 'registros']),
             'novo' => route('aeronaves.create'),
             'texto_novo' => 'Nova aeronave',
         ],
