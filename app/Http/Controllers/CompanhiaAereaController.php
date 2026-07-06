@@ -289,7 +289,7 @@ class CompanhiaAereaController extends Controller
      */
     public function informacoes(Request $request)
     {
-        $query = CompanhiaAerea::with(['aeronaves', 'aeroportos', 'voos'])
+        $query = CompanhiaAerea::with(['aeronaves', 'voos.aeroporto'])
             ->withCount('aeronaves')
             ->withSum('voos', 'qtd_voos')
             ->withSum('voos', 'total_passageiros');
@@ -301,8 +301,8 @@ class CompanhiaAereaController extends Controller
         
         // Aplicar filtro por aeroporto
         if ($request->filled('aeroporto')) {
-            $query->whereHas('aeroportos', function ($q) use ($request) {
-                $q->where('aeroportos.id', $request->aeroporto);
+            $query->whereHas('voos', function ($q) use ($request) {
+                $q->where('aeroporto_id', $request->aeroporto);
             });
         }
         
@@ -348,14 +348,19 @@ class CompanhiaAereaController extends Controller
             $companhia->media_notas = VooMetricasService::mediaGeral($companhia->voos);
             
             // Aeroportos operados com contagem de voos
-            $voosPorAeroporto = $companhia->voos->groupBy('aeroporto_id');
-            $companhia->aeroportos_com_voos = $companhia->aeroportos->map(function($aeroporto) use ($voosPorAeroporto) {
-                return [
-                    'id' => $aeroporto->id,
-                    'nome' => $aeroporto->nome_aeroporto,
-                    'voos_count' => (int) ($voosPorAeroporto->get($aeroporto->id)?->sum('qtd_voos') ?? 0)
-                ];
-            });
+            $companhia->aeroportos_com_voos = $companhia->voos
+                ->filter(fn ($voo) => $voo->aeroporto_id && $voo->aeroporto)
+                ->groupBy('aeroporto_id')
+                ->map(function ($voos) {
+                    $aeroporto = $voos->first()->aeroporto;
+
+                    return [
+                        'id' => $aeroporto->id,
+                        'nome' => $aeroporto->nome_aeroporto,
+                        'voos_count' => (int) $voos->sum('qtd_voos'),
+                    ];
+                })
+                ->values();
         }
 
         $campoOrdenacao = match ($request->get('ordenacao')) {

@@ -35,6 +35,16 @@
             font-size: 1.55rem;
         }
 
+        .info-hero .hero-actions .btn {
+            border-radius: .75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .info-hero .hero-actions .btn-outline-light:hover {
+            color: #1849a9;
+        }
+
         .summary-card {
             height: 100%;
             padding: 1.1rem 1.2rem;
@@ -69,10 +79,49 @@
             box-shadow: 0 8px 24px rgba(16, 24, 40, .04);
         }
 
-        .filter-panel .form-select {
+        .filter-panel .filter-select-button {
             min-height: 2.75rem;
-            border-color: #d0d5dd;
+            padding: .55rem 2.4rem .55rem .9rem;
+            border: 1px solid #d0d5dd;
             border-radius: .75rem;
+            color: var(--info-ink);
+            background: #fff;
+            text-align: left;
+        }
+
+        .filter-panel .filter-select-button:hover,
+        .filter-panel .filter-select-button.show {
+            border-color: #98a2b3;
+            color: var(--info-ink);
+            background: #fff;
+        }
+
+        .filter-panel .filter-select-button:focus {
+            border-color: #2e90fa;
+            box-shadow: 0 0 0 .25rem rgba(46, 144, 250, .14);
+        }
+
+        .filter-panel .filter-select-button::after {
+            position: absolute;
+            top: 50%;
+            right: 1rem;
+            transform: translateY(-50%);
+        }
+
+        .filter-panel .filter-options {
+            width: 100%;
+            max-height: 18rem;
+            padding: .4rem;
+            overflow-y: auto;
+            border: 1px solid #e4e7ec;
+            border-radius: 1rem;
+            box-shadow: 0 14px 32px rgba(16, 24, 40, .16);
+        }
+
+        .filter-panel .filter-options .dropdown-item {
+            padding: .65rem .8rem;
+            border-radius: .7rem;
+            white-space: normal;
         }
 
         .active-filters {
@@ -115,13 +164,26 @@
 @section('content')
     <div class="companies-info-page pb-5">
         <header class="info-hero mb-4">
-            <div class="d-flex align-items-center gap-3">
-                <span class="hero-symbol" aria-hidden="true"><i class="bi bi-bar-chart-line"></i></span>
-                <div>
-                    <div class="small text-white-50 fw-semibold text-uppercase mb-1">Visão operacional</div>
-                    <h1 class="h2 fw-bold mb-1">Informações das companhias</h1>
-                    <p class="mb-0 text-white-50">Compare frota, movimentação e desempenho das companhias aéreas.</p>
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="hero-symbol" aria-hidden="true"><i class="bi bi-bar-chart-line"></i></span>
+                    <div>
+                        <div class="small text-white-50 fw-semibold text-uppercase mb-1">Visão operacional</div>
+                        <h1 class="h2 fw-bold mb-1">Informações das companhias</h1>
+                        <p class="mb-0 text-white-50">Compare frota, movimentação e desempenho das companhias aéreas.</p>
+                    </div>
                 </div>
+
+                <nav class="hero-actions d-flex flex-wrap gap-2" aria-label="Navegação de companhias">
+                    <a href="{{ route('companhias.ranking') }}" class="btn btn-light">
+                        <i class="bi bi-trophy me-1"></i> Ranking
+                    </a>
+                    @if(auth()->user()?->tipo == 0)
+                        <a href="{{ route('companhias.index') }}" class="btn btn-outline-light">
+                            <i class="bi bi-gear me-1"></i> Gerenciar companhias
+                        </a>
+                    @endif
+                </nav>
             </div>
         </header>
 
@@ -168,14 +230,19 @@
                                 <label for="filtro_companhia" class="form-label fw-semibold">
                                     Companhia
                                 </label>
-                                <select name="companhia" id="filtro_companhia" class="form-select" onchange="this.form.submit()">
-                                    <option value="">Todas as Companhias</option>
-                                    @foreach($companhiasFiltro as $companhia)
-                                        <option value="{{ $companhia->id }}" {{ request('companhia') == $companhia->id ? 'selected' : '' }}>
-                                            {{ $companhia->nome }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                @php $companhiaAtual = $companhiasFiltro->firstWhere('id', request('companhia')); @endphp
+                                <input type="hidden" name="companhia" id="filtro_companhia" value="{{ request('companhia') }}">
+                                <div class="dropdown">
+                                    <button class="btn filter-select-button dropdown-toggle w-100 position-relative" type="button" data-bs-toggle="dropdown">
+                                        {{ $companhiaAtual?->nome ?? 'Todas as Companhias' }}
+                                    </button>
+                                    <ul class="dropdown-menu filter-options">
+                                        <li><button type="button" class="dropdown-item {{ request('companhia') ? '' : 'active' }}" data-filter-target="filtro_companhia" data-filter-value="">Todas as Companhias</button></li>
+                                        @foreach($companhiasFiltro as $companhia)
+                                            <li><button type="button" class="dropdown-item {{ request('companhia') == $companhia->id ? 'active' : '' }}" data-filter-target="filtro_companhia" data-filter-value="{{ $companhia->id }}">{{ $companhia->nome }}</button></li>
+                                        @endforeach
+                                    </ul>
+                                </div>
                             </div>
 
                             {{-- Filtro por Aeroporto --}}
@@ -183,14 +250,19 @@
                                 <label for="filtro_aeroporto" class="form-label fw-semibold">
                                     Aeroporto
                                 </label>
-                                <select name="aeroporto" id="filtro_aeroporto" class="form-select" onchange="this.form.submit()">
-                                    <option value="">Todos os Aeroportos</option>
-                                    @foreach($aeroportos as $aeroporto)
-                                        <option value="{{ $aeroporto->id }}" {{ request('aeroporto') == $aeroporto->id ? 'selected' : '' }}>
-                                            {{ $aeroporto->nome_aeroporto }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                @php $aeroportoAtual = $aeroportos->firstWhere('id', request('aeroporto')); @endphp
+                                <input type="hidden" name="aeroporto" id="filtro_aeroporto" value="{{ request('aeroporto') }}">
+                                <div class="dropdown">
+                                    <button class="btn filter-select-button dropdown-toggle w-100 position-relative" type="button" data-bs-toggle="dropdown">
+                                        {{ $aeroportoAtual?->nome_aeroporto ?? 'Todos os Aeroportos' }}
+                                    </button>
+                                    <ul class="dropdown-menu filter-options">
+                                        <li><button type="button" class="dropdown-item {{ request('aeroporto') ? '' : 'active' }}" data-filter-target="filtro_aeroporto" data-filter-value="">Todos os Aeroportos</button></li>
+                                        @foreach($aeroportos as $aeroporto)
+                                            <li><button type="button" class="dropdown-item {{ request('aeroporto') == $aeroporto->id ? 'active' : '' }}" data-filter-target="filtro_aeroporto" data-filter-value="{{ $aeroporto->id }}">{{ $aeroporto->nome_aeroporto }}</button></li>
+                                        @endforeach
+                                    </ul>
+                                </div>
                             </div>
 
                             {{-- Filtro de Ordenação --}}
@@ -198,16 +270,30 @@
                                 <label for="filtro_ordenacao" class="form-label fw-semibold">
                                     Ordenar por
                                 </label>
-                                <select name="ordenacao" id="filtro_ordenacao" class="form-select" onchange="this.form.submit()">
-                                    <option value="nome_az" {{ request('ordenacao') == 'nome_az' ? 'selected' : '' }}>Ordenar por Nome (A-Z)</option>
-                                    <option value="nome_za" {{ request('ordenacao') == 'nome_za' ? 'selected' : '' }}>Ordenar por Nome (Z-A)</option>
-                                    <option value="mais_voos" {{ request('ordenacao') == 'mais_voos' ? 'selected' : '' }}>Mais Voos</option>
-                                    <option value="mais_passageiros" {{ request('ordenacao') == 'mais_passageiros' ? 'selected' : '' }}>Mais Passageiros</option>
-                                    <option value="melhor_objetivo" {{ request('ordenacao') == 'melhor_objetivo' ? 'selected' : '' }}>Melhor Nota Objetivo</option>
-                                    <option value="melhor_pontualidade" {{ request('ordenacao') == 'melhor_pontualidade' ? 'selected' : '' }}>Melhor Nota Pontualidade</option>
-                                    <option value="melhor_servicos" {{ request('ordenacao') == 'melhor_servicos' ? 'selected' : '' }}>Melhor Nota Serviços</option>
-                                    <option value="melhor_patio" {{ request('ordenacao') == 'melhor_patio' ? 'selected' : '' }}>Melhor Nota Patio</option>
-                                </select>
+                                @php
+                                    $ordenacoesFiltro = [
+                                        'nome_az' => 'Ordenar por Nome (A-Z)',
+                                        'nome_za' => 'Ordenar por Nome (Z-A)',
+                                        'mais_voos' => 'Mais Voos',
+                                        'mais_passageiros' => 'Mais Passageiros',
+                                        'melhor_objetivo' => 'Melhor Nota Objetivo',
+                                        'melhor_pontualidade' => 'Melhor Nota Pontualidade',
+                                        'melhor_servicos' => 'Melhor Nota Serviços',
+                                        'melhor_patio' => 'Melhor Nota Pátio',
+                                    ];
+                                    $ordenacaoAtual = request('ordenacao', 'nome_az');
+                                @endphp
+                                <input type="hidden" name="ordenacao" id="filtro_ordenacao" value="{{ $ordenacaoAtual }}">
+                                <div class="dropdown">
+                                    <button class="btn filter-select-button dropdown-toggle w-100 position-relative" type="button" data-bs-toggle="dropdown">
+                                        {{ $ordenacoesFiltro[$ordenacaoAtual] ?? $ordenacoesFiltro['nome_az'] }}
+                                    </button>
+                                    <ul class="dropdown-menu filter-options">
+                                        @foreach($ordenacoesFiltro as $valor => $rotulo)
+                                            <li><button type="button" class="dropdown-item {{ $ordenacaoAtual === $valor ? 'active' : '' }}" data-filter-target="filtro_ordenacao" data-filter-value="{{ $valor }}">{{ $rotulo }}</button></li>
+                                        @endforeach
+                                    </ul>
+                                </div>
                             </div>
 
                             {{-- Botão Limpar Filtros --}}
@@ -327,7 +413,7 @@
                             <div class="mb-3">
                                 <p class="text-muted small mb-2">
                                     <i class="bi bi-geo-alt me-1"></i>
-                                    {{ $companhia->aeroportos->count() }} aeroportos operados
+                                    {{ $companhia->aeroportos_com_voos->count() }} aeroportos operados
                                 </p>
                             </div>
 
@@ -485,7 +571,7 @@
                             <div class="mb-3">
                                 <p class="text-muted small mb-2">
                                     <i class="bi bi-geo-alt me-1"></i>
-                                    {{ $companhia->aeroportos->count() }} aeroportos operados
+                                    {{ $companhia->aeroportos_com_voos->count() }} aeroportos operados
                                 </p>
                             </div>
 
@@ -540,3 +626,15 @@
         @endif
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.querySelectorAll('[data-filter-target]').forEach((option) => {
+        option.addEventListener('click', () => {
+            const input = document.getElementById(option.dataset.filterTarget);
+            input.value = option.dataset.filterValue;
+            input.form.submit();
+        });
+    });
+</script>
+@endpush

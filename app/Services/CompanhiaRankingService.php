@@ -38,6 +38,11 @@ class CompanhiaRankingService
                 'media_servicos' => round($medias['media_servicos'], 1),
                 'media_patio' => round($medias['media_patio'], 1),
                 'nota_geral' => round($this->mediaGeralDasCategorias($medias), 1),
+                'ultima_avaliacao_geral' => $this->ultimaAvaliacao($voos),
+                'ultima_avaliacao_objetivo' => $this->ultimaAvaliacao($voos, 'nota_obj'),
+                'ultima_avaliacao_pontualidade' => $this->ultimaAvaliacao($voos, 'nota_pontualidade'),
+                'ultima_avaliacao_servicos' => $this->ultimaAvaliacao($voos, 'nota_servicos'),
+                'ultima_avaliacao_patio' => $this->ultimaAvaliacao($voos, 'nota_patio'),
             ];
         });
 
@@ -46,7 +51,11 @@ class CompanhiaRankingService
             ->values();
 
         return [
-            'rankings_por_nota' => $this->ordenar($comAvaliacoes, 'nota_geral'),
+            'rankings_por_nota' => $this->ordenar(
+                $comAvaliacoes,
+                'nota_geral',
+                'ultima_avaliacao_geral'
+            ),
             'rankings_objetivo' => $this->ordenarCategoria($rankings, 'media_objetivo'),
             'rankings_pontualidade' => $this->ordenarCategoria($rankings, 'media_pontualidade'),
             'rankings_servicos' => $this->ordenarCategoria($rankings, 'media_servicos'),
@@ -66,21 +75,50 @@ class CompanhiaRankingService
 
     private function ordenarCategoria(Collection $rankings, string $campo): Collection
     {
+        $campoData = str_replace('media_', 'ultima_avaliacao_', $campo);
+
         return $this->ordenar(
             $rankings->filter(fn (array $item) => $item[$campo] > 0),
-            $campo
+            $campo,
+            $campoData
         );
     }
 
-    private function ordenar(Collection $rankings, string $campo): Collection
+    private function ordenar(
+        Collection $rankings,
+        string $campo,
+        ?string $campoDesempate = null
+    ): Collection
     {
         return $rankings
-            ->sort(function (array $a, array $b) use ($campo) {
+            ->sort(function (array $a, array $b) use ($campo, $campoDesempate) {
                 return $b[$campo] <=> $a[$campo]
-                    ?: $b['total_voos'] <=> $a['total_voos']
+                    ?: ($campoDesempate
+                        ? $b[$campoDesempate] <=> $a[$campoDesempate]
+                        : 0)
                     ?: strcasecmp($a['nome'], $b['nome']);
             })
             ->values();
+    }
+
+    private function ultimaAvaliacao(Collection $voos, ?string $campo = null): int
+    {
+        $avaliados = $voos->filter(function ($voo) use ($campo) {
+            if ($campo) {
+                return $voo->{$campo} !== null;
+            }
+
+            return collect([
+                $voo->nota_obj,
+                $voo->nota_pontualidade,
+                $voo->nota_servicos,
+                $voo->nota_patio,
+            ])->contains(fn ($nota) => $nota !== null);
+        });
+
+        return (int) ($avaliados->max(
+            fn ($voo) => $voo->created_at?->getTimestamp() ?? 0
+        ) ?? 0);
     }
 
     private function estatisticas(Collection $rankings, Collection $comAvaliacoes): array
