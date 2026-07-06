@@ -5,21 +5,11 @@
 
 @section('content')
 <div class="flight-create-page pb-5">
-    <header class="create-hero mb-4">
-        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4">
-            <div class="d-flex align-items-center gap-3">
-                <span class="hero-symbol" aria-hidden="true"><i class="bi bi-airplane-engines"></i></span>
-                <div>
-                    <div class="small text-white-50 fw-semibold text-uppercase mb-1">Novo registro</div>
-                    <h1 class="h2 fw-bold mb-1">Cadastrar novo voo</h1>
-                    <p class="text-white-50 mb-0">Informe a operação, aeronave, capacidade e avaliação.</p>
-                </div>
-            </div>
-            <a href="{{ route('voos.index') }}" class="btn hero-back px-3 py-2">
-                <i class="bi bi-arrow-right me-1"></i> Ir para voos
-            </a>
-        </div>
-    </header>
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{{ route('voos.index') }}" class="btn btn-primary px-3 py-2">
+            <i class="bi bi-arrow-right me-1"></i> Ir para voos
+        </a>
+    </div>
 
     {{-- Card do Último Voo Cadastrado (Colapsável) --}}
     @if($ultimoVoo)
@@ -618,9 +608,6 @@
 
                         <!-- Botões -->
                         <div class="form-actions d-flex justify-content-end gap-2 align-items-center">
-                            <a href="{{ route('voos.index') }}" class="btn btn-outline-secondary px-4 py-2">
-                                <i class="bi bi-arrow-left me-1"></i> Voltar
-                            </a>
                             <button type="submit" class="btn btn-primary px-4 py-2">
                                 <i class="bi bi-check-circle me-2"></i>
                                 Cadastrar Voo
@@ -1438,6 +1425,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (select.dataset.roundedSelect === 'ready') return;
         select.dataset.roundedSelect = 'ready';
         select.classList.add('rounded-select-native');
+        select.tabIndex = -1;
 
         const wrapper = document.createElement('div');
         wrapper.className = 'rounded-select';
@@ -1456,12 +1444,39 @@ document.addEventListener('DOMContentLoaded', () => {
         menu.className = 'rounded-select-menu';
         menu.setAttribute('role', 'listbox');
 
+        let typeaheadBuffer = '';
+        let typeaheadTimer = null;
+
+        const normalizeSearchText = (text) => text
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLocaleLowerCase('pt-BR');
+
         select.parentNode.insertBefore(wrapper, select);
         wrapper.append(select, button, menu);
 
         const syncLabel = () => {
             const option = select.options[select.selectedIndex];
             button.querySelector('.rounded-select-label').textContent = option?.textContent.trim() || 'Selecione';
+        };
+
+        const getEnabledOptions = () => [
+            ...menu.querySelectorAll('.rounded-select-option:not(:disabled)')
+        ];
+
+        const focusOption = (index) => {
+            const options = getEnabledOptions();
+            if (!options.length) return;
+
+            const normalizedIndex = (index + options.length) % options.length;
+            options[normalizedIndex].focus();
+            options[normalizedIndex].scrollIntoView({ block: 'nearest' });
+        };
+
+        const closeAndFocusButton = () => {
+            wrapper.classList.remove('open');
+            button.setAttribute('aria-expanded', 'false');
+            button.focus();
         };
 
         const rebuild = () => {
@@ -1480,15 +1495,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.addEventListener('click', () => {
                     select.value = option.value;
                     select.dispatchEvent(new Event('change', { bubbles: true }));
-                    wrapper.classList.remove('open');
-                    button.setAttribute('aria-expanded', 'false');
-                    button.focus();
+                    closeAndFocusButton();
                 });
 
                 menu.appendChild(item);
             });
 
             syncLabel();
+            button.disabled = select.disabled;
         };
 
         button.addEventListener('click', () => {
@@ -1500,16 +1514,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
         button.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
-                wrapper.classList.remove('open');
-                button.setAttribute('aria-expanded', 'false');
+                closeAndFocusButton();
             }
 
             if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
                 event.preventDefault();
-                wrapper.classList.add('open');
-                button.setAttribute('aria-expanded', 'true');
-                const options = [...menu.querySelectorAll('.rounded-select-option:not(:disabled)')];
-                (event.key === 'ArrowDown' ? options[0] : options.at(-1))?.focus();
+                const enabledNativeOptions = [...select.options].filter((option) => !option.disabled);
+                const currentIndex = enabledNativeOptions.indexOf(select.options[select.selectedIndex]);
+                const direction = event.key === 'ArrowDown' ? 1 : -1;
+                const fallbackIndex = direction > 0 ? 0 : enabledNativeOptions.length - 1;
+                const nextIndex = currentIndex < 0
+                    ? fallbackIndex
+                    : Math.min(Math.max(currentIndex + direction, 0), enabledNativeOptions.length - 1);
+                const nextOption = enabledNativeOptions[nextIndex];
+
+                if (nextOption && nextOption.value !== select.value) {
+                    select.value = nextOption.value;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            } else if (
+                event.key.length === 1 &&
+                !event.ctrlKey &&
+                !event.altKey &&
+                !event.metaKey &&
+                event.key.trim()
+            ) {
+                event.preventDefault();
+                clearTimeout(typeaheadTimer);
+                typeaheadBuffer += normalizeSearchText(event.key);
+
+                const searchableOptions = [...select.options].filter((option) =>
+                    !option.disabled && option.value !== ''
+                );
+                const matchingOption =
+                    searchableOptions.find((option) =>
+                        normalizeSearchText(option.textContent.trim()) === typeaheadBuffer ||
+                        normalizeSearchText(option.value) === typeaheadBuffer
+                    ) ||
+                    searchableOptions.find((option) =>
+                        normalizeSearchText(option.textContent.trim()).startsWith(typeaheadBuffer)
+                    ) ||
+                    searchableOptions.find((option) =>
+                        normalizeSearchText(option.textContent.trim()).includes(typeaheadBuffer)
+                    );
+
+                if (matchingOption) {
+                    select.value = matchingOption.value;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+
+                typeaheadTimer = setTimeout(() => {
+                    typeaheadBuffer = '';
+                }, 700);
+            }
+        });
+
+        menu.addEventListener('keydown', (event) => {
+            const options = getEnabledOptions();
+            const currentIndex = options.indexOf(document.activeElement);
+
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                focusOption(currentIndex + 1);
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                focusOption(currentIndex - 1);
+            } else if (event.key === 'Home') {
+                event.preventDefault();
+                focusOption(0);
+            } else if (event.key === 'End') {
+                event.preventDefault();
+                focusOption(options.length - 1);
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                closeAndFocusButton();
+            } else if (event.key === 'Tab') {
+                wrapper.classList.remove('open');
+                button.setAttribute('aria-expanded', 'false');
             }
         });
 

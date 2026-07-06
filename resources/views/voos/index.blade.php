@@ -209,28 +209,11 @@
 @endphp
 
 <div class="flights-page pb-5">
-    <header class="flights-hero mb-4">
-        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
-            <div class="d-flex align-items-center gap-3">
-                <span class="hero-symbol" aria-hidden="true"><i class="bi bi-airplane-engines"></i></span>
-                <div>
-                    <div class="small text-white-50 fw-semibold text-uppercase mb-1">Operações</div>
-                    <h1 class="h2 fw-bold mb-1">Gerenciamento de voos</h1>
-                    <p class="mb-0 text-white-50">Consulte, avalie e mantenha os registros operacionais.</p>
-                </div>
-            </div>
-            <div class="hero-actions d-flex flex-column flex-sm-row gap-2">
-                @if(request('origem') === 'registros')
-                    <a href="{{ route('registros') }}" class="btn btn-outline-light fw-semibold px-4 py-2">
-                        <i class="bi bi-arrow-left me-1"></i> Voltar para registros
-                    </a>
-                @endif
-                <a href="{{ route('voos.create') }}" class="btn btn-light text-primary fw-semibold px-4 py-2">
-                    <i class="bi bi-plus-lg me-1"></i> Novo voo
-                </a>
-            </div>
-        </div>
-    </header>
+    <div class="d-flex justify-content-end mb-4">
+        <a href="{{ route('voos.create') }}" class="btn btn-primary fw-semibold px-4 py-2">
+            <i class="bi bi-plus-lg me-1"></i> Novo voo
+        </a>
+    </div>
 
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
