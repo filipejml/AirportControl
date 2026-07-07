@@ -37,6 +37,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             AeroportoSeeder::class,
+            AeronaveSeeder::class,
+            CompanhiaAereaSeeder::class,
         ]);
     }
 }
