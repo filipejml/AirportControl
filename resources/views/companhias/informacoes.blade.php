@@ -11,38 +11,10 @@
             color: var(--info-ink);
         }
 
-        .info-hero {
-            position: relative;
-            overflow: hidden;
-            padding: clamp(1.5rem, 4vw, 2.5rem);
-            border-radius: 1.5rem;
-            color: #fff;
-            background:
-                radial-gradient(circle at 88% 15%, rgba(255,255,255,.16), transparent 24%),
-                linear-gradient(125deg, #101828 0%, #1849a9 60%, #2e90fa 100%);
-            box-shadow: 0 20px 45px rgba(16, 24, 40, .15);
-        }
-
-        .hero-symbol {
-            display: grid;
-            width: 3.75rem;
-            height: 3.75rem;
-            place-items: center;
-            flex: 0 0 auto;
-            border: 1px solid rgba(255,255,255,.28);
-            border-radius: 1.1rem;
-            background: rgba(255,255,255,.12);
-            font-size: 1.55rem;
-        }
-
-        .info-hero .hero-actions .btn {
+        .hero-actions .btn {
             border-radius: .75rem;
             font-weight: 600;
             white-space: nowrap;
-        }
-
-        .info-hero .hero-actions .btn-outline-light:hover {
-            color: #1849a9;
         }
 
         .summary-card {
@@ -155,31 +127,19 @@
             filter: grayscale(0.05);
         }
 
-        @media (max-width: 767.98px) {
-            .info-hero { border-radius: 1.15rem; }
-        }
     </style>
 @endpush
 
 @section('content')
     <div class="companies-info-page pb-5">
-        <header class="info-hero mb-4">
-            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
-                <div class="d-flex align-items-center gap-3">
-                    <span class="hero-symbol" aria-hidden="true"><i class="bi bi-bar-chart-line"></i></span>
-                    <div>
-                        <div class="small text-white-50 fw-semibold text-uppercase mb-1">Visão operacional</div>
-                        <h1 class="h2 fw-bold mb-1">Informações das companhias</h1>
-                        <p class="mb-0 text-white-50">Compare frota, movimentação e desempenho das companhias aéreas.</p>
-                    </div>
-                </div>
-
+        <header class="mb-4">
+            <div class="d-flex justify-content-end">
                 <nav class="hero-actions d-flex flex-wrap gap-2" aria-label="Navegação de companhias">
-                    <a href="{{ route('companhias.ranking') }}" class="btn btn-light">
+                    <a href="{{ route('companhias.ranking') }}" class="btn btn-primary">
                         <i class="bi bi-trophy me-1"></i> Ranking
                     </a>
                     @if(auth()->user()?->tipo == 0)
-                        <a href="{{ route('companhias.index') }}" class="btn btn-outline-light">
+                        <a href="{{ route('companhias.index') }}" class="btn btn-outline-primary">
                             <i class="bi bi-gear me-1"></i> Gerenciar companhias
                         </a>
                     @endif
