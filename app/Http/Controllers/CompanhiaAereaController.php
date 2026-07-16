@@ -546,6 +546,44 @@ class CompanhiaAereaController extends Controller
         $aeronaves = $companhia->aeronaves()
             ->with('fabricante')
             ->get();
+
+        // Métricas operacionais de cada aeronave, considerando a companhia e os filtros ativos.
+        $voosAgrupadosPorAeronave = $voosFiltrados->groupBy('aeronave_id');
+        $horarios = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
+        $tiposVoo = ['Regular', 'Charter'];
+
+        $metricasPorAeronave = $aeronaves->mapWithKeys(function ($aeronave) use (
+            $voosAgrupadosPorAeronave,
+            $horarios,
+            $tiposVoo
+        ) {
+            $voosDaAeronave = $voosAgrupadosPorAeronave->get($aeronave->id, collect());
+
+            $voosPorHorario = array_fill_keys($horarios, 0);
+            $passageirosPorHorario = array_fill_keys($horarios, 0);
+            foreach ($horarios as $horario) {
+                $voosDoHorario = $voosDaAeronave->where('horario_voo', $horario);
+                $voosPorHorario[$horario] = (int) $voosDoHorario->sum('qtd_voos');
+                $passageirosPorHorario[$horario] = (int) $voosDoHorario->sum('total_passageiros');
+            }
+
+            $voosPorTipo = array_fill_keys($tiposVoo, 0);
+            $passageirosPorTipo = array_fill_keys($tiposVoo, 0);
+            foreach ($tiposVoo as $tipo) {
+                $voosDoTipo = $voosDaAeronave->where('tipo_voo', $tipo);
+                $voosPorTipo[$tipo] = (int) $voosDoTipo->sum('qtd_voos');
+                $passageirosPorTipo[$tipo] = (int) $voosDoTipo->sum('total_passageiros');
+            }
+
+            return [$aeronave->id => [
+                'total_voos' => (int) $voosDaAeronave->sum('qtd_voos'),
+                'total_passageiros' => (int) $voosDaAeronave->sum('total_passageiros'),
+                'voos_por_horario' => $voosPorHorario,
+                'passageiros_por_horario' => $passageirosPorHorario,
+                'voos_por_tipo' => $voosPorTipo,
+                'passageiros_por_tipo' => $passageirosPorTipo,
+            ]];
+        });
         
         // Dados para os filtros
         $aeroportosDisponiveis = $companhia->aeroportos->pluck('nome_aeroporto')->unique()->values()->toArray();
@@ -594,7 +632,8 @@ class CompanhiaAereaController extends Controller
             'voosPorAeroporto',
             'passageirosPorAeroporto',
             'voosPorHorario',
-            'passageirosPorHorario'
+            'passageirosPorHorario',
+            'metricasPorAeronave'
         ));
     }
 

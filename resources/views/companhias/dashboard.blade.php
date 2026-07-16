@@ -18,6 +18,84 @@
         body {
             background-color: #ffffff;
         }
+
+        .dashboard-hero {
+            position: relative;
+            overflow: hidden;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+            border-radius: 1.5rem;
+            color: #fff;
+            background:
+                radial-gradient(circle at 88% 15%, rgba(255,255,255,.16), transparent 24%),
+                linear-gradient(125deg, #101828 0%, #1849a9 60%, #2e90fa 100%);
+            box-shadow: 0 20px 45px rgba(16, 24, 40, .15);
+        }
+
+        .dashboard-hero-symbol {
+            display: grid;
+            width: 3.75rem;
+            height: 3.75rem;
+            place-items: center;
+            flex: 0 0 auto;
+            border: 1px solid rgba(255,255,255,.28);
+            border-radius: 1.1rem;
+            background: rgba(255,255,255,.12);
+            font-size: 1.55rem;
+        }
+
+        .dashboard-hero .btn {
+            border-radius: .75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .dashboard-hero .btn-outline-light:hover {
+            color: #1849a9;
+        }
+
+        .aircraft-metric-card {
+            height: 100%;
+            padding: 1rem;
+            border: 1px solid #e9ecef;
+            border-left: 4px solid;
+            border-radius: .85rem;
+            background-color: #fff !important;
+        }
+
+        .table-hover > tbody > tr.aircraft-summary-row:hover > *,
+        .table-hover > tbody > tr.aircraft-details-row:hover > *,
+        .table-hover > tbody > tr.aircraft-details-row > * {
+            --bs-table-bg-state: #fff;
+            --bs-table-accent-bg: #fff;
+            background-color: #fff !important;
+            box-shadow: none !important;
+        }
+
+        .aircraft-metric-row + .aircraft-metric-row {
+            margin-top: .55rem;
+            padding-top: .55rem;
+            border-top: 1px solid #f0f1f3;
+        }
+
+        .aircraft-summary-row {
+            cursor: pointer;
+        }
+
+        .aircraft-summary-row:focus-visible {
+            outline: 2px solid #0d6efd;
+            outline-offset: -2px;
+        }
+
+        .aircraft-no-data > td {
+            opacity: .6;
+            filter: grayscale(.15);
+        }
+
+        .aircraft-no-data:hover > td,
+        .aircraft-no-data:focus-visible > td {
+            opacity: .6;
+            filter: grayscale(.15);
+        }
         
         .stat-card {
             transition: transform 0.2s;
@@ -77,6 +155,12 @@
             background-color: #f8f9fa;
             color: #000;
         }
+
+        @media (max-width: 767.98px) {
+            .dashboard-hero {
+                border-radius: 1.15rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -86,21 +170,29 @@
 
     <div class="container mt-4">
         <!-- Cabeçalho -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
+        <header class="dashboard-hero mb-4">
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="dashboard-hero-symbol" aria-hidden="true">
+                        <i class="bi bi-bar-chart-line"></i>
+                    </span>
                     <div>
-                        <h1 class="h2 fw-bold">Dashboard - {{ $companhia->nome }}</h1>
-                        @if($companhia->codigo)
-                            <p class="text-muted mb-0">Código: {{ $companhia->codigo }}</p>
-                        @endif
+                        <div class="small text-white-50 fw-semibold text-uppercase mb-1">Visão operacional</div>
+                        <h1 class="h2 fw-bold mb-1">Dashboard da {{ $companhia->nome }}</h1>
+                        <p class="mb-0 text-white-50">
+                            Acompanhe frota, movimentação e desempenho da companhia
+                            @if($companhia->codigo)
+                                <span class="text-white">({{ $companhia->codigo }})</span>
+                            @endif
+                        </p>
                     </div>
-                    <a href="{{ route('companhias.informacoes') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-arrow-left"></i> Voltar
-                    </a>
                 </div>
+
+                <a href="{{ route('companhias.informacoes') }}" class="btn btn-outline-light">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar
+                </a>
             </div>
-        </div>
+        </header>
 
         {{-- FILTROS --}}
         <div class="row mb-4">
@@ -1567,12 +1659,9 @@
                                         // Calcular dados para cada aeronave e ordenar por total de passageiros (decrescente)
                                         $aeronavesComDados = [];
                                         foreach($aeronaves as $aeronave) {
-                                            $totalVoosAeronave = $companhia->voos()
-                                                ->where('aeronave_id', $aeronave->id)
-                                                ->count();
-                                            $totalPassageirosAeronave = $companhia->voos()
-                                                ->where('aeronave_id', $aeronave->id)
-                                                ->sum('total_passageiros');
+                                            $metricasAeronave = $metricasPorAeronave->get($aeronave->id);
+                                            $totalVoosAeronave = $metricasAeronave['total_voos'];
+                                            $totalPassageirosAeronave = $metricasAeronave['total_passageiros'];
                                             $percentualPassageiros = $totalPassageiros > 0 
                                                 ? ($totalPassageirosAeronave / $totalPassageiros) * 100 
                                                 : 0;
@@ -1582,6 +1671,7 @@
                                                 'totalVoos' => $totalVoosAeronave,
                                                 'totalPassageiros' => $totalPassageirosAeronave,
                                                 'percentualPassageiros' => $percentualPassageiros,
+                                                'metricas' => $metricasAeronave,
                                             ];
                                         }
                                         
@@ -1597,8 +1687,16 @@
                                             $totalVoosAeronave = $dados['totalVoos'];
                                             $totalPassageirosAeronave = $dados['totalPassageiros'];
                                             $percentualPassageiros = $dados['percentualPassageiros'];
+                                            $metricasAeronave = $dados['metricas'];
+                                            $aeronaveSemDados = $totalVoosAeronave <= 0 && $totalPassageirosAeronave <= 0;
                                         @endphp
-                                        <tr class="border-bottom">
+                                        <tr class="border-bottom aircraft-summary-row {{ $aeronaveSemDados ? 'aircraft-no-data' : '' }}"
+                                            role="button"
+                                            tabindex="0"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#metricas-aeronave-{{ $aeronave->id }}"
+                                            aria-expanded="false"
+                                            aria-controls="metricas-aeronave-{{ $aeronave->id }}">
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3" style="width: 36px; height: 36px;">
@@ -1606,6 +1704,7 @@
                                                     </div>
                                                     <div>
                                                         <span class="fw-bold text-dark">{{ $aeronave->modelo }}</span>
+                                                        <i class="bi bi-chevron-down ms-1 small text-primary" aria-hidden="true"></i>
                                                         @if($totalVoosAeronave > 0)
                                                             <br>
                                                             <small class="text-success">
@@ -1652,6 +1751,68 @@
                                                 </div>
                                             </td>
                                         </tr>
+                                        <tr class="collapse aircraft-details-row {{ $aeronaveSemDados ? 'aircraft-no-data' : '' }}" id="metricas-aeronave-{{ $aeronave->id }}">
+                                            <td colspan="5" class="p-3 bg-white">
+                                                @php
+                                                    $coresHorarioAeronave = [
+                                                        'EAM' => '#0B3D91',
+                                                        'AM' => '#4DA3FF',
+                                                        'AN' => '#F97316',
+                                                        'PM' => '#DC2626',
+                                                        'ALL' => '#7E22CE',
+                                                    ];
+                                                    $coresTipoAeronave = [
+                                                        'Regular' => '#0d6efd',
+                                                        'Charter' => '#F97316',
+                                                    ];
+                                                @endphp
+                                                <div class="row g-3">
+                                                    @foreach([
+                                                        ['titulo' => 'Voos por horário', 'icone' => 'clock', 'dados' => $metricasAeronave['voos_por_horario'], 'cores' => $coresHorarioAeronave, 'cor_borda' => '#0d6efd'],
+                                                        ['titulo' => 'Passageiros por horário', 'icone' => 'people', 'dados' => $metricasAeronave['passageiros_por_horario'], 'cores' => $coresHorarioAeronave, 'cor_borda' => '#198754'],
+                                                        ['titulo' => 'Voos por tipo', 'icone' => 'airplane', 'dados' => $metricasAeronave['voos_por_tipo'], 'cores' => $coresTipoAeronave, 'cor_borda' => '#0dcaf0'],
+                                                        ['titulo' => 'Passageiros por tipo', 'icone' => 'person-check', 'dados' => $metricasAeronave['passageiros_por_tipo'], 'cores' => $coresTipoAeronave, 'cor_borda' => '#6c757d'],
+                                                    ] as $grupoMetrica)
+                                                        <div class="col-md-6 col-xl-3">
+                                                            <div class="aircraft-metric-card" style="border-left-color: {{ $grupoMetrica['cor_borda'] }} !important;">
+                                                                @php
+                                                                    $totalGrupoMetrica = array_sum($grupoMetrica['dados']);
+                                                                @endphp
+                                                                <h6 class="fw-bold mb-3">
+                                                                    <i class="bi bi-{{ $grupoMetrica['icone'] }} me-1 text-primary"></i>
+                                                                    {{ $grupoMetrica['titulo'] }}
+                                                                </h6>
+                                                                @foreach($grupoMetrica['dados'] as $rotulo => $valor)
+                                                                    @php
+                                                                        $percentualMetrica = $totalGrupoMetrica > 0
+                                                                            ? ($valor / $totalGrupoMetrica) * 100
+                                                                            : 0;
+                                                                    @endphp
+                                                                    <div class="aircraft-metric-row d-flex justify-content-between align-items-center small">
+                                                                        <span class="fw-semibold" style="color: {{ $grupoMetrica['cores'][$rotulo] ?? '#6c757d' }}">
+                                                                            {{ $rotulo }}
+                                                                        </span>
+                                                                        <span class="text-end">
+                                                                            <span class="fw-bold text-dark">{{ number_format($valor, 0, ',', '.') }}</span>
+                                                                            <small class="d-block text-muted">
+                                                                                {{ number_format($percentualMetrica, 1, ',', '.') }}%
+                                                                            </small>
+                                                                        </span>
+                                                                    </div>
+                                                                @endforeach
+                                                                <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top small">
+                                                                    <span class="fw-semibold text-muted">Total</span>
+                                                                    <span class="fw-bold text-dark">
+                                                                        {{ number_format($totalGrupoMetrica, 0, ',', '.') }}
+                                                                        <small class="text-muted ms-1">({{ $totalGrupoMetrica > 0 ? '100%' : '0%' }})</small>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </td>
+                                        </tr>
                                     @endforeach
                                 </tbody>
                                 <tfoot>
@@ -1672,9 +1833,7 @@
                                                             // Contar quantos modelos diferentes têm voos
                                                             $modelosUtilizados = 0;
                                                             foreach($aeronaves as $aeronave) {
-                                                                $totalVoosModelo = $companhia->voos()
-                                                                    ->where('aeronave_id', $aeronave->id)
-                                                                    ->count();
+                                                                $totalVoosModelo = $metricasPorAeronave->get($aeronave->id)['total_voos'];
                                                                 if($totalVoosModelo > 0) {
                                                                     $modelosUtilizados++;
                                                                 }
@@ -1755,6 +1914,15 @@
             if (periodo !== 'geral') {
                 atualizarFiltrosGlobais();
             }
+
+            document.querySelectorAll('.aircraft-summary-row').forEach((linha) => {
+                linha.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        linha.click();
+                    }
+                });
+            });
         });
 
         // ========== GRÁFICO DE VOOS POR HORÁRIO ==========
