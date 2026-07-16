@@ -141,6 +141,30 @@
             height: 4px;
             border-radius: 2px;
         }
+
+        .flight-record-card {
+            height: 100%;
+            padding: 1.25rem;
+            border: 1px solid #e9ecef;
+            border-left: 4px solid;
+            border-radius: .5rem;
+            background-color: #fff;
+        }
+
+        .flight-record-item {
+            padding: .65rem 0;
+            border-top: 1px solid #f0f1f3;
+        }
+
+        .flight-record-toggle {
+            cursor: pointer;
+        }
+
+        .flight-record-toggle:focus-visible {
+            outline: 2px solid #0d6efd;
+            outline-offset: 3px;
+            border-radius: .35rem;
+        }
         
         /* Fundo branco para todos os elementos */
         .card, .container, body {
@@ -408,6 +432,75 @@
                     </div> 
                 </div>
             </div>
+        </div>
+
+        {{-- Primeiro e último voo registrado --}}
+        <div class="row g-3 mb-4">
+            @foreach([
+                ['id' => 'primeiro-voo', 'titulo' => 'Primeiro voo registrado', 'voo' => $primeiroVoo, 'icone' => 'skip-start-circle', 'cor' => '#0d6efd'],
+                ['id' => 'ultimo-voo', 'titulo' => 'Último voo registrado', 'voo' => $ultimoVoo, 'icone' => 'skip-end-circle', 'cor' => '#198754'],
+            ] as $registroVoo)
+                @php $vooRegistro = $registroVoo['voo']; @endphp
+                <div class="col-lg-6">
+                    <article class="flight-record-card" style="border-left-color: {{ $registroVoo['cor'] }} !important;">
+                        <div class="flight-record-toggle d-flex justify-content-between align-items-center gap-3"
+                             role="button"
+                             tabindex="0"
+                             data-bs-toggle="collapse"
+                             data-bs-target=".flight-record-details"
+                             aria-expanded="false"
+                             aria-controls="primeiro-voo-detalhes ultimo-voo-detalhes">
+                            <div>
+                                <h5 class="fw-bold mb-1">
+                                    <i class="bi bi-{{ $registroVoo['icone'] }} me-2" style="color: {{ $registroVoo['cor'] }}"></i>
+                                    {{ $registroVoo['titulo'] }}
+                                </h5>
+                                <small class="text-muted">Clique para visualizar os dados</small>
+                            </div>
+                            <i class="bi bi-chevron-down text-muted" aria-hidden="true"></i>
+                        </div>
+
+                        <div class="collapse flight-record-details mt-3" id="{{ $registroVoo['id'] }}-detalhes">
+                            @if($vooRegistro)
+                                <div class="d-flex justify-content-end mb-1">
+                                    <span class="badge bg-light text-dark border">{{ $vooRegistro->id_voo }}</span>
+                                </div>
+                                <div class="row g-0">
+                                    <div class="col-sm-6 flight-record-item pe-sm-3">
+                                        <small class="text-muted d-block">Data do registro</small>
+                                        <strong>{{ $vooRegistro->created_at?->format('d/m/Y H:i') ?? 'Não informada' }}</strong>
+                                    </div>
+                                    <div class="col-sm-6 flight-record-item ps-sm-3">
+                                        <small class="text-muted d-block">Aeroporto</small>
+                                        <strong>{{ $vooRegistro->aeroporto->nome_aeroporto ?? 'Não informado' }}</strong>
+                                    </div>
+                                    <div class="col-sm-6 flight-record-item pe-sm-3">
+                                        <small class="text-muted d-block">Aeronave</small>
+                                        <strong>{{ $vooRegistro->aeronave->modelo ?? 'Não informada' }}</strong>
+                                    </div>
+                                    <div class="col-sm-6 flight-record-item ps-sm-3">
+                                        <small class="text-muted d-block">Tipo e horário</small>
+                                        <strong>{{ $vooRegistro->tipo_voo }} · {{ $vooRegistro->horario_voo }}</strong>
+                                    </div>
+                                    <div class="col-sm-6 flight-record-item pe-sm-3">
+                                        <small class="text-muted d-block">Voos</small>
+                                        <strong>{{ number_format($vooRegistro->qtd_voos, 0, ',', '.') }}</strong>
+                                    </div>
+                                    <div class="col-sm-6 flight-record-item ps-sm-3">
+                                        <small class="text-muted d-block">Passageiros</small>
+                                        <strong>{{ number_format($vooRegistro->total_passageiros, 0, ',', '.') }}</strong>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="py-4 text-center text-muted border-top">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    Nenhum voo encontrado para os filtros selecionados.
+                                </div>
+                            @endif
+                        </div>
+                    </article>
+                </div>
+            @endforeach
         </div>
 
         {{-- Legenda de Avaliação --}}
@@ -1925,6 +2018,15 @@
                     if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
                         linha.click();
+                    }
+                });
+            });
+
+            document.querySelectorAll('.flight-record-toggle').forEach((card) => {
+                card.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        card.click();
                     }
                 });
             });

@@ -438,7 +438,7 @@ class CompanhiaAereaController extends Controller
         $anoSelecionado = $request->get('ano_selecionado');
         
         // Query base para voos com filtros
-        $queryVoos = $companhia->voos()->with('aeroporto');
+        $queryVoos = $companhia->voos()->with(['aeroporto', 'aeronave.fabricante']);
         
         // Aplicar filtro de aeroporto
         if ($aeroportoSelecionado !== 'geral') {
@@ -489,8 +489,16 @@ class CompanhiaAereaController extends Controller
         $notaPatio = VooMetricasService::mediaPonderada($voosFiltrados, 'nota_patio');
         $mediaGeral = VooMetricasService::mediaGeral($voosFiltrados);
         
-        // Últimos voos com filtros (últimos 5)
-        $ultimosVoos = $voosFiltrados->sortByDesc('created_at')->take(5)->values();
+        // Primeiro, último e últimos voos com os filtros ativos.
+        $voosOrdenados = $voosFiltrados
+            ->sortBy([
+                ['created_at', 'asc'],
+                ['id', 'asc'],
+            ])
+            ->values();
+        $primeiroVoo = $voosOrdenados->first();
+        $ultimoVoo = $voosOrdenados->last();
+        $ultimosVoos = $voosOrdenados->reverse()->take(5)->values();
         
         // TOTAL DE AERONAVES
         $totalAeronaves = $companhia->aeronaves->count();
@@ -618,6 +626,8 @@ class CompanhiaAereaController extends Controller
             'notaServicos',
             'notaPatio',
             'mediaGeral',
+            'primeiroVoo',
+            'ultimoVoo',
             'ultimosVoos',
             'aeronaves',
             'aeroportosDisponiveis',
