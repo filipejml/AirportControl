@@ -188,9 +188,14 @@
                     </div>
                 </div>
 
-                <a href="{{ route('companhias.informacoes') }}" class="btn btn-outline-light">
-                    <i class="bi bi-arrow-left me-1"></i> Voltar
-                </a>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="#graficos-companhia" class="btn btn-light">
+                        <i class="bi bi-graph-up me-1"></i> Gráficos
+                    </a>
+                    <a href="{{ route('companhias.informacoes') }}" class="btn btn-outline-light">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar
+                    </a>
+                </div>
             </div>
         </header>
 
@@ -1300,7 +1305,7 @@
         </div>
 
         {{-- Análise de Voos por Horário --}}
-        <div class="row mb-4">
+        <div class="row mb-4" id="graficos-companhia">
             <div class="col-md-12">
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
