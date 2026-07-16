@@ -213,7 +213,7 @@
                 </div>
 
                 <div class="d-flex flex-wrap gap-2">
-                    <a href="#graficos-companhia" class="btn btn-light">
+                    <a href="{{ route('companhias.graficos', $companhia) }}" class="btn btn-light">
                         <i class="bi bi-graph-up me-1"></i> Gráficos
                     </a>
                     <a href="{{ route('companhias.informacoes') }}" class="btn btn-outline-light">

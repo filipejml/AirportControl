@@ -16,6 +16,49 @@ use App\Services\CompanhiaRankingService;
 
 class CompanhiaAereaController extends Controller
 {
+    public function graficos(CompanhiaAerea $companhia)
+    {
+        $voos = $companhia->voos()
+            ->with(['aeroporto', 'aeronave'])
+            ->get();
+
+        $horarios = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
+        $tipos = ['Regular', 'Charter'];
+
+        $agrupar = static function ($itens, string $campo, string $metrica) {
+            return $itens->groupBy($campo)
+                ->map(fn ($grupo) => (int) $grupo->sum($metrica))
+                ->sortDesc();
+        };
+
+        $voosPorHorario = collect($horarios)->mapWithKeys(fn ($horario) => [
+            $horario => (int) $voos->where('horario_voo', $horario)->sum('qtd_voos'),
+        ]);
+        $passageirosPorHorario = collect($horarios)->mapWithKeys(fn ($horario) => [
+            $horario => (int) $voos->where('horario_voo', $horario)->sum('total_passageiros'),
+        ]);
+        $voosPorTipo = collect($tipos)->mapWithKeys(fn ($tipo) => [
+            $tipo => (int) $voos->where('tipo_voo', $tipo)->sum('qtd_voos'),
+        ]);
+        $passageirosPorTipo = collect($tipos)->mapWithKeys(fn ($tipo) => [
+            $tipo => (int) $voos->where('tipo_voo', $tipo)->sum('total_passageiros'),
+        ]);
+
+        return view('companhias.graficos', [
+            'companhia' => $companhia,
+            'totalVoos' => (int) $voos->sum('qtd_voos'),
+            'totalPassageiros' => (int) $voos->sum('total_passageiros'),
+            'voosPorHorario' => $voosPorHorario,
+            'passageirosPorHorario' => $passageirosPorHorario,
+            'voosPorTipo' => $voosPorTipo,
+            'passageirosPorTipo' => $passageirosPorTipo,
+            'voosPorAeroporto' => $agrupar($voos, 'aeroporto.nome_aeroporto', 'qtd_voos'),
+            'passageirosPorAeroporto' => $agrupar($voos, 'aeroporto.nome_aeroporto', 'total_passageiros'),
+            'voosPorModelo' => $agrupar($voos, 'aeronave.modelo', 'qtd_voos'),
+            'passageirosPorModelo' => $agrupar($voos, 'aeronave.modelo', 'total_passageiros'),
+        ]);
+    }
+
     public function ranking(Request $request, CompanhiaRankingService $rankingService)
     {
         $filters = PeriodoFiltroService::filtrosDetalhadosFromRequest($request);
