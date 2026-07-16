@@ -48,20 +48,25 @@
             color: #6c757d;
         }
         
-        .stats-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+        .stats-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            border-spacing: 6px 0;
+            margin-top: 0;
             margin-bottom: 20px;
         }
         
-        .stat-card {
-            flex: 1;
-            min-width: 100px;
-            background: #f8f9fa;
+        .stats-table td.stat-card {
+            width: 25%;
+            background-color: #f8f9fa;
             border-radius: 5px;
-            padding: 8px;
+            padding: 10px 8px;
             text-align: center;
+            vertical-align: middle;
+            border-top: 0;
+            border-right: 0;
+            border-bottom: 0;
             border-left: 3px solid;
         }
         
@@ -93,23 +98,48 @@
             font-size: 12px;
         }
         
-        .rating-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
+        .rating-general-table,
+        .rating-categories-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: separate;
+            margin-top: 0;
         }
-        
-        .rating-label {
-            width: 80px;
-            font-size: 9px;
+
+        .rating-general-table {
+            margin-bottom: 8px;
         }
-        
+
+        .rating-general-table td,
+        .rating-categories-table td {
+            border: 0;
+            background-color: transparent;
+            padding: 4px 6px;
+            vertical-align: middle;
+        }
+
+        .rating-general-summary {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .rating-general-label {
+            margin-right: 10px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .rating-general-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #212529;
+        }
+
         .rating-bar {
-            flex: 1;
             height: 8px;
             background-color: #e9ecef;
             border-radius: 4px;
-            margin: 0 8px;
+            overflow: hidden;
         }
         
         .rating-bar-fill {
@@ -118,11 +148,31 @@
             background-color: #0d6efd;
         }
         
-        .rating-value {
-            width: 35px;
-            text-align: right;
-            font-size: 9px;
+        .rating-categories-table {
+            border-spacing: 6px 0;
+        }
+
+        .rating-categories-table td {
+            width: 25%;
+            padding: 8px;
+            text-align: center;
+            background-color: #ffffff;
+            border-top: 1px solid #dee2e6;
+            border-right: 1px solid #dee2e6;
+            border-bottom: 1px solid #dee2e6;
+            border-left: 3px solid #0d6efd;
+        }
+
+        .rating-category-value {
+            margin-bottom: 2px;
+            font-size: 14px;
             font-weight: bold;
+        }
+
+        .rating-category-label {
+            margin-bottom: 6px;
+            font-size: 8px;
+            color: #6c757d;
         }
         
         table {
@@ -250,53 +300,57 @@
     </div>
     
     {{-- Cards de Estatísticas --}}
-    <div class="stats-grid">
-        <div class="stat-card primary">
-            <div class="stat-value">{{ number_format($totalVoos, 0, ',', '.') }}</div>
-            <div class="stat-label">Voos Realizados</div>
-        </div>
-        <div class="stat-card success">
-            <div class="stat-value">{{ number_format($totalPassageiros, 0, ',', '.') }}</div>
-            <div class="stat-label">Passageiros Transportados</div>
-        </div>
-        <div class="stat-card info">
-            <div class="stat-value">{{ number_format($totalAeronaves, 0, ',', '.') }}</div>
-            <div class="stat-label">Aeronaves na Frota</div>
-        </div>
-        <div class="stat-card warning">
-            <div class="stat-value">{{ number_format($totalAeroportos, 0, ',', '.') }}</div>
-            <div class="stat-label">Aeroportos Operados</div>
-        </div>
-    </div>
+    <table class="stats-table">
+        <tr>
+            <td class="stat-card primary">
+                <div class="stat-value">{{ number_format($totalVoos, 0, ',', '.') }}</div>
+                <div class="stat-label">Voos Realizados</div>
+            </td>
+            <td class="stat-card success">
+                <div class="stat-value">{{ number_format($totalPassageiros, 0, ',', '.') }}</div>
+                <div class="stat-label">Passageiros Transportados</div>
+            </td>
+            <td class="stat-card info">
+                <div class="stat-value">{{ number_format($totalAeronaves, 0, ',', '.') }}</div>
+                <div class="stat-label">Aeronaves na Frota</div>
+            </td>
+            <td class="stat-card warning">
+                <div class="stat-value">{{ number_format($totalAeroportos, 0, ',', '.') }}</div>
+                <div class="stat-label">Aeroportos Operados</div>
+            </td>
+        </tr>
+    </table>
     
     {{-- Avaliações --}}
     <div class="ratings">
         <h4>Avaliações (0-10)</h4>
-        <div class="rating-row">
-            <div class="rating-label">Objetivo:</div>
-            <div class="rating-bar"><div class="rating-bar-fill" style="width: {{ ($notaObj / 10) * 100 }}%"></div></div>
-            <div class="rating-value">{{ number_format($notaObj, 1) }}</div>
-        </div>
-        <div class="rating-row">
-            <div class="rating-label">Pontualidade:</div>
-            <div class="rating-bar"><div class="rating-bar-fill" style="width: {{ ($notaPontualidade / 10) * 100 }}%"></div></div>
-            <div class="rating-value">{{ number_format($notaPontualidade, 1) }}</div>
-        </div>
-        <div class="rating-row">
-            <div class="rating-label">Serviços:</div>
-            <div class="rating-bar"><div class="rating-bar-fill" style="width: {{ ($notaServicos / 10) * 100 }}%"></div></div>
-            <div class="rating-value">{{ number_format($notaServicos, 1) }}</div>
-        </div>
-        <div class="rating-row">
-            <div class="rating-label">Pátio:</div>
-            <div class="rating-bar"><div class="rating-bar-fill" style="width: {{ ($notaPatio / 10) * 100 }}%"></div></div>
-            <div class="rating-value">{{ number_format($notaPatio, 1) }}</div>
-        </div>
-        <div class="rating-row mt-2">
-            <div class="rating-label fw-bold">Média Geral:</div>
-            <div class="rating-bar"><div class="rating-bar-fill" style="background-color: #ffc107; width: {{ ($mediaGeral / 10) * 100 }}%"></div></div>
-            <div class="rating-value fw-bold">{{ number_format($mediaGeral, 1) }}</div>
-        </div>
+        <table class="rating-general-table">
+            <tr>
+                <td class="rating-general-summary">
+                    <span class="rating-general-label">Média Geral</span>
+                    <span class="rating-general-value">{{ number_format($mediaGeral, 1) }}</span>
+                </td>
+            </tr>
+        </table>
+
+        <table class="rating-categories-table">
+            <tr>
+                @foreach([
+                    ['label' => 'Objetivo', 'nota' => $notaObj, 'cor' => '#0d6efd'],
+                    ['label' => 'Pontualidade', 'nota' => $notaPontualidade, 'cor' => '#198754'],
+                    ['label' => 'Serviços', 'nota' => $notaServicos, 'cor' => '#0dcaf0'],
+                    ['label' => 'Pátio', 'nota' => $notaPatio, 'cor' => '#6c757d'],
+                ] as $avaliacao)
+                    <td style="border-left-color: {{ $avaliacao['cor'] }};">
+                        <div class="rating-category-value">{{ number_format($avaliacao['nota'], 1) }}</div>
+                        <div class="rating-category-label">{{ $avaliacao['label'] }}</div>
+                        <div class="rating-bar">
+                            <div class="rating-bar-fill" style="background-color: {{ $avaliacao['cor'] }}; width: {{ ($avaliacao['nota'] / 10) * 100 }}%"></div>
+                        </div>
+                    </td>
+                @endforeach
+            </tr>
+        </table>
     </div>
     
     {{-- Gráficos de Distribuição --}}

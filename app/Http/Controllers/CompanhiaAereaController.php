@@ -712,7 +712,7 @@ class CompanhiaAereaController extends Controller
         ));
         
         // Configurar o PDF
-        $pdf->setPaper('A4', 'landscape');
+        $pdf->setPaper('A4', 'portrait');
         
         // Nome do arquivo
         $nomeArquivo = 'voos_' . preg_replace('/[^a-z0-9]/i', '_', $companhia->nome) . '.pdf';
