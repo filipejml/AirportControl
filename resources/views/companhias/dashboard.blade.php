@@ -1256,11 +1256,11 @@
                                                     @php
                                                         $totalVoosHorario = array_sum($voosPorHorario);
                                                         $horariosInfo = [
-                                                            'EAM' => ['icon' => 'moon-stars', 'color' => '#4A6A8A', 'label' => 'EAM'],
-                                                            'AM' => ['icon' => 'sunrise', 'color' => '#6c9bcf', 'label' => 'AM'],
-                                                            'AN' => ['icon' => 'sun', 'color' => '#ff8c00', 'label' => 'AN'],
-                                                            'PM' => ['icon' => 'moon', 'color' => '#dc3545', 'label' => 'PM'],
-                                                            'ALL' => ['icon' => 'clock-history', 'color' => '#9b59b6', 'label' => 'ALL'],
+                                                            'EAM' => ['icon' => 'moon-stars', 'color' => '#0B3D91', 'label' => 'EAM'],
+                                                            'AM' => ['icon' => 'sunrise', 'color' => '#4DA3FF', 'label' => 'AM'],
+                                                            'AN' => ['icon' => 'sun', 'color' => '#F97316', 'label' => 'AN'],
+                                                            'PM' => ['icon' => 'moon', 'color' => '#DC2626', 'label' => 'PM'],
+                                                            'ALL' => ['icon' => 'clock-history', 'color' => '#7E22CE', 'label' => 'ALL'],
                                                         ];
                                                         
                                                         // Ordenar na sequência correta
@@ -1828,11 +1828,11 @@
             
             // Cores específicas para cada horário
             const coresHorario = {
-                'EAM': 'rgba(74, 106, 138, 0.8)',   // Azul médio/escuro
-                'AM': 'rgba(108, 155, 207, 0.8)',    // Azul claro
-                'AN': 'rgba(255, 140, 0, 0.8)',      // Laranja
-                'PM': 'rgba(220, 53, 69, 0.8)',      // Vermelho
-                'ALL': 'rgba(155, 89, 182, 0.8)'     // Roxo
+                'EAM': 'rgba(11, 61, 145, 0.8)',     // Azul escuro
+                'AM': 'rgba(77, 163, 255, 0.8)',     // Azul claro
+                'AN': 'rgba(249, 115, 22, 0.8)',     // Laranja
+                'PM': 'rgba(220, 38, 38, 0.8)',      // Vermelho
+                'ALL': 'rgba(126, 34, 206, 0.8)'     // Roxo
             };
             
             const coresVoosOrdenadas = horariosOrdenados.map(horario => coresHorario[horario]);
@@ -1988,11 +1988,11 @@
             };
             
             const coresHorario = {
-                'EAM': 'rgba(74, 106, 138, 0.8)',
-                'AM': 'rgba(108, 155, 207, 0.8)',
-                'AN': 'rgba(255, 140, 0, 0.8)',
-                'PM': 'rgba(220, 53, 69, 0.8)',
-                'ALL': 'rgba(155, 89, 182, 0.8)'
+                'EAM': 'rgba(11, 61, 145, 0.8)',
+                'AM': 'rgba(77, 163, 255, 0.8)',
+                'AN': 'rgba(249, 115, 22, 0.8)',
+                'PM': 'rgba(220, 38, 38, 0.8)',
+                'ALL': 'rgba(126, 34, 206, 0.8)'
             };
             
             const coresPassageirosOrdenadas = horariosOrdenados.map(horario => coresHorario[horario]);

@@ -325,13 +325,20 @@
                     'PM' => 'Noite (18-00h)',
                     'ALL' => 'Diário'
                 ];
+                $horarioCores = [
+                    'EAM' => '#0B3D91',
+                    'AM' => '#4DA3FF',
+                    'AN' => '#F97316',
+                    'PM' => '#DC2626',
+                    'ALL' => '#7E22CE',
+                ];
             @endphp
             @foreach($voosPorHorario as $horario => $quantidade)
                 @php $percentual = $totalVoos > 0 ? ($quantidade / $totalVoos) * 100 : 0; @endphp
                 @if($quantidade > 0)
                 <div class="chart-item">
-                    <div class="chart-label">{{ $horarioLabels[$horario] ?? $horario }}</div>
-                    <div class="chart-bar"><div class="chart-bar-fill" style="width: {{ $percentual }}%"></div></div>
+                    <div class="chart-label" style="color: {{ $horarioCores[$horario] ?? '#6c757d' }}">{{ $horarioLabels[$horario] ?? $horario }}</div>
+                    <div class="chart-bar"><div class="chart-bar-fill" style="width: {{ $percentual }}%; background-color: {{ $horarioCores[$horario] ?? '#6c757d' }}"></div></div>
                     <div class="chart-value">{{ number_format($quantidade, 0, ',', '.') }} ({{ number_format($percentual, 1) }}%)</div>
                 </div>
                 @endif

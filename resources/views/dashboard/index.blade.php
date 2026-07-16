@@ -96,11 +96,11 @@
                                 'ALL' => '20h-05h'
                             ];
                             $cores = [
-                                'EAM' => ['bg' => '#0a58ca', 'badge' => 'bg-dark', 'bar' => 'bg-primary'],
-                                'AM' => ['bg' => '#0d6efd', 'badge' => 'bg-primary', 'bar' => 'bg-info'],
-                                'AN' => ['bg' => '#ffc107', 'badge' => 'bg-warning', 'bar' => 'bg-warning'],
-                                'PM' => ['bg' => '#dc3545', 'badge' => 'bg-danger', 'bar' => 'bg-danger'],
-                                'ALL' => ['bg' => '#6f42c1', 'badge' => 'bg-purple', 'bar' => 'bg-purple']
+                                'EAM' => ['bg' => '#0B3D91'],
+                                'AM' => ['bg' => '#4DA3FF'],
+                                'AN' => ['bg' => '#F97316'],
+                                'PM' => ['bg' => '#DC2626'],
+                                'ALL' => ['bg' => '#7E22CE']
                             ];
                         @endphp
                         @foreach($ordemHorarios as $horario)
@@ -148,11 +148,11 @@
                                 'ALL' => '20h-05h'
                             ];
                             $cores = [
-                                'EAM' => ['bg' => '#0a58ca', 'badge' => 'bg-dark', 'bar' => 'bg-primary'],
-                                'AM' => ['bg' => '#0d6efd', 'badge' => 'bg-primary', 'bar' => 'bg-info'],
-                                'AN' => ['bg' => '#ffc107', 'badge' => 'bg-warning', 'bar' => 'bg-warning'],
-                                'PM' => ['bg' => '#dc3545', 'badge' => 'bg-danger', 'bar' => 'bg-danger'],
-                                'ALL' => ['bg' => '#6f42c1', 'badge' => 'bg-purple', 'bar' => 'bg-purple']
+                                'EAM' => ['bg' => '#0B3D91'],
+                                'AM' => ['bg' => '#4DA3FF'],
+                                'AN' => ['bg' => '#F97316'],
+                                'PM' => ['bg' => '#DC2626'],
+                                'ALL' => ['bg' => '#7E22CE']
                             ];
                         @endphp
                         @foreach($ordemHorarios as $horario)

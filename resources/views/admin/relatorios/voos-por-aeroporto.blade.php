@@ -419,7 +419,14 @@ class AdminRelatorioVoosPorAeroporto {
                     'PM': '🌙 Noite (18h-00h)',
                     'ALL': '🔄 Diário'
                 };
-                return `<div class="col-6 mb-2"><strong>${nomes[key]}:</strong> ${value} voos</div>`;
+                const cores = {
+                    'EAM': '#0B3D91',
+                    'AM': '#4DA3FF',
+                    'AN': '#F97316',
+                    'PM': '#DC2626',
+                    'ALL': '#7E22CE'
+                };
+                return `<div class="col-6 mb-2"><strong style="color: ${cores[key] || '#6c757d'}">${nomes[key]}:</strong> ${value} voos</div>`;
             }).join('');
 
         modalBody.innerHTML = `

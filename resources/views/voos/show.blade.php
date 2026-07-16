@@ -77,6 +77,13 @@
         'PM' => 'Noite (18h–00h)',
         'ALL' => 'Diário',
     ];
+    $horarioCores = [
+        'EAM' => '#0B3D91',
+        'AM' => '#4DA3FF',
+        'AN' => '#F97316',
+        'PM' => '#DC2626',
+        'ALL' => '#7E22CE',
+    ];
 
     $porteLabels = [
         'PC' => 'Pequeno Porte',
@@ -169,7 +176,7 @@
                 <div class="col-sm-6 col-lg-4">
                     <div class="info-item">
                         <div class="info-label">Horário</div>
-                        <p class="info-value">{{ $horarioLabels[$voo->horario_voo] ?? $voo->horario_voo }}</p>
+                        <p class="info-value" style="color: {{ $horarioCores[$voo->horario_voo] ?? '#6c757d' }}">{{ $horarioLabels[$voo->horario_voo] ?? $voo->horario_voo }}</p>
                     </div>
                 </div>
                 <div class="col-sm-6 col-lg-3">

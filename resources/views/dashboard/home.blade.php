@@ -209,11 +209,11 @@
                                 'ALL' => '20h-05h'
                             ];
                             $cores = [
-                                'EAM' => '#0a58ca',
-                                'AM' => '#0d6efd',
-                                'AN' => '#ffc107',
-                                'PM' => '#dc3545',
-                                'ALL' => '#6f42c1'
+                                'EAM' => '#0B3D91',
+                                'AM' => '#4DA3FF',
+                                'AN' => '#F97316',
+                                'PM' => '#DC2626',
+                                'ALL' => '#7E22CE'
                             ];
                         @endphp
                         @foreach($ordemHorarios as $horario)
