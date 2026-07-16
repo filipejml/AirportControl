@@ -477,6 +477,11 @@ class CompanhiaAereaController extends Controller
         
         // Obter voos filtrados
         $voosFiltrados = $queryVoos->get();
+        $voosPaginados = (clone $queryVoos)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(10, ['*'], 'voos_page')
+            ->withQueryString();
         
         // Estatísticas básicas com filtros
         $totalVoos = $voosFiltrados->sum('qtd_voos');
@@ -498,7 +503,6 @@ class CompanhiaAereaController extends Controller
             ->values();
         $primeiroVoo = $voosOrdenados->first();
         $ultimoVoo = $voosOrdenados->last();
-        $ultimosVoos = $voosOrdenados->reverse()->take(5)->values();
         
         // TOTAL DE AERONAVES
         $totalAeronaves = $companhia->aeronaves->count();
@@ -628,7 +632,7 @@ class CompanhiaAereaController extends Controller
             'mediaGeral',
             'primeiroVoo',
             'ultimoVoo',
-            'ultimosVoos',
+            'voosPaginados',
             'aeronaves',
             'aeroportosDisponiveis',
             'semanasDisponiveis',

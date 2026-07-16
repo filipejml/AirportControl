@@ -1676,8 +1676,7 @@
             </div>
         </div>
 
-        <!-- Últimos Voos -->
-        @if($ultimosVoos->count() > 0)
+        <!-- Todos os Voos -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
@@ -1685,31 +1684,119 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <h5 class="mb-1 fw-bold text-dark">
-                                    <i class="bi bi-clock-history me-2 text-primary"></i>Últimos Voos
+                                    <i class="bi bi-list-ul me-2 text-primary"></i>Todos os Voos
                                 </h5>
-                                <p class="text-muted small mb-0">Últimos 5 registros de voos da companhia</p>
+                                <p class="text-muted small mb-0">
+                                    {{ number_format($voosPaginados->total(), 0, ',', '.') }} registro(s) — mais recentes primeiro
+                                </p>
                             </div>
-                            <div>
+                            @if(auth()->user()?->tipo == 0)
                                 <a href="{{ route('companhias.voos.pdf', $companhia->id) }}" 
                                 class="btn btn-danger btn-sm" 
                                 target="_blank">
                                     <i class="bi bi-filetype-pdf me-1"></i> Exportar Todos os Voos (PDF)
                                 </a>
-                            </div>
+                            @endif
                         </div>
                     </div>
                     <div class="card-body pt-3">
-                        {{-- Resto do conteúdo da tabela permanece igual --}}
-                        <div class="table-responsive">
-                            <table class="table table-hover table-borderless align-middle">
-                                {{-- ... resto da tabela ... --}}
-                            </table>
-                        </div>
+                        @if($voosPaginados->isEmpty())
+                            <div class="py-5 text-center text-muted">
+                                <i class="bi bi-airplane fs-2 d-block mb-2"></i>
+                                Nenhum voo encontrado para os filtros selecionados.
+                            </div>
+                        @else
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Voo</th>
+                                            <th>Aeroporto</th>
+                                            <th>Aeronave</th>
+                                            <th>Operação</th>
+                                            <th class="text-center">Quantidade</th>
+                                            <th class="text-end">Passageiros</th>
+                                            <th class="text-center">Média</th>
+                                            @if(auth()->user()?->tipo == 0)
+                                                <th class="text-end">Ações</th>
+                                            @endif
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($voosPaginados as $voo)
+                                            @php
+                                                $porte = match($voo->tipo_aeronave) {
+                                                    'PC' => 'Pequeno',
+                                                    'MC' => 'Médio',
+                                                    'LC' => 'Grande',
+                                                    default => $voo->tipo_aeronave ?: '—',
+                                                };
+                                            @endphp
+                                            <tr>
+                                                <td>
+                                                    <strong class="text-primary">{{ $voo->id_voo }}</strong>
+                                                    <div class="small text-muted">{{ $voo->created_at?->format('d/m/Y H:i') }}</div>
+                                                </td>
+                                                <td><strong>{{ $voo->aeroporto?->nome_aeroporto ?? 'Não informado' }}</strong></td>
+                                                <td>
+                                                    <strong>{{ $voo->aeronave?->modelo ?? 'Não informado' }}</strong>
+                                                    <div class="small text-muted">{{ $porte }}</div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge rounded-pill {{ $voo->tipo_voo === 'Regular' ? 'text-bg-success' : 'text-bg-info' }}">
+                                                        {{ $voo->tipo_voo }}
+                                                    </span>
+                                                    <div class="small text-muted mt-1">{{ $voo->horario_texto }}</div>
+                                                </td>
+                                                <td class="text-center fw-semibold">{{ number_format($voo->qtd_voos, 0, ',', '.') }}</td>
+                                                <td class="text-end fw-semibold">{{ number_format($voo->total_passageiros, 0, ',', '.') }}</td>
+                                                <td class="text-center fw-semibold">
+                                                    {{ $voo->media_notas ? number_format($voo->media_notas, 1, ',', '.') : '—' }}
+                                                </td>
+                                                @if(auth()->user()?->tipo == 0)
+                                                    <td>
+                                                        <div class="d-flex justify-content-end gap-2">
+                                                            <a href="{{ route('voos.show', ['voo' => $voo, 'companhia_dashboard' => $companhia->id]) }}" class="btn btn-sm btn-outline-secondary" title="Ver voo">
+                                                                <i class="bi bi-eye"></i><span class="visually-hidden">Ver</span>
+                                                            </a>
+                                                            <a href="{{ route('voos.edit', $voo) }}" class="btn btn-sm btn-outline-primary" title="Editar voo">
+                                                                <i class="bi bi-pencil"></i><span class="visually-hidden">Editar</span>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                @endif
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pt-3 mt-3 border-top">
+                                <div class="small text-muted">
+                                    Mostrando <strong>{{ $voosPaginados->firstItem() }}</strong>–<strong>{{ $voosPaginados->lastItem() }}</strong>
+                                    de <strong>{{ $voosPaginados->total() }}</strong>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <a href="{{ $voosPaginados->previousPageUrl() ?: '#' }}"
+                                       class="btn btn-sm btn-outline-secondary {{ $voosPaginados->onFirstPage() ? 'disabled' : '' }}"
+                                       aria-label="Página anterior">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                    <span class="small fw-semibold">
+                                        Página {{ $voosPaginados->currentPage() }} de {{ $voosPaginados->lastPage() }}
+                                    </span>
+                                    <a href="{{ $voosPaginados->nextPageUrl() ?: '#' }}"
+                                       class="btn btn-sm btn-outline-secondary {{ $voosPaginados->hasMorePages() ? '' : 'disabled' }}"
+                                       aria-label="Próxima página">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
-        @endif
 
         <!-- Frota de Aeronaves -->
         @if($aeronaves->count() > 0)

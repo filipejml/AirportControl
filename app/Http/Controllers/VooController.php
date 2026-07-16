@@ -215,7 +215,14 @@ class VooController extends Controller
     public function show(Voo $voo)
     {
         $voo->load(['aeroporto', 'companhiaAerea', 'aeronave.fabricante']);
-        return view('voos.show', compact('voo'));
+        $companhiaDashboardId = request()->integer('companhia_dashboard');
+        $voltarDashboardCompanhia = $companhiaDashboardId === (int) $voo->companhia_aerea_id;
+
+        return view('voos.show', compact(
+            'voo',
+            'voltarDashboardCompanhia',
+            'companhiaDashboardId'
+        ));
     }
 
     public function edit(Voo $voo)

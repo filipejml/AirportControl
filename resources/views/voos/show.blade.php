@@ -115,8 +115,11 @@
                 <a href="{{ route('voos.edit', $voo) }}" class="btn btn-warning">
                     <i class="bi bi-pencil-square me-1"></i> Editar
                 </a>
-                <a href="{{ route('voos.index') }}" class="btn btn-light">
-                    <i class="bi bi-arrow-left me-1"></i> Voltar
+                <a href="{{ $voltarDashboardCompanhia
+                    ? route('companhias.dashboard', $companhiaDashboardId)
+                    : route('voos.index') }}" class="btn btn-light">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    {{ $voltarDashboardCompanhia ? 'Voltar ao dashboard' : 'Voltar' }}
                 </a>
             </div>
         </div>
