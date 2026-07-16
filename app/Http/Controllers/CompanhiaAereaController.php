@@ -18,44 +18,93 @@ class CompanhiaAereaController extends Controller
 {
     public function graficos(CompanhiaAerea $companhia)
     {
-        $voos = $companhia->voos()
-            ->with(['aeroporto', 'aeronave'])
-            ->get();
+        $voos = $companhia->voos()->with(['aeronave', 'aeroporto'])->get();
+        $semanas = $voos
+            ->filter(fn ($voo) => $voo->created_at && $voo->aeronave)
+            ->map(fn ($voo) => $voo->created_at->format('o-\WW'))
+            ->unique()
+            ->sort()
+            ->values();
 
-        $horarios = ['EAM', 'AM', 'AN', 'PM', 'ALL'];
-        $tipos = ['Regular', 'Charter'];
+        $modelos = $voos
+            ->pluck('aeronave.modelo')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
 
-        $agrupar = static function ($itens, string $campo, string $metrica) {
-            return $itens->groupBy($campo)
-                ->map(fn ($grupo) => (int) $grupo->sum($metrica))
-                ->sortDesc();
-        };
+        $voosPorModeloSemana = $modelos->map(function ($modelo) use ($voos, $semanas) {
+            return [
+                'modelo' => $modelo,
+                'dados' => $semanas->map(function ($semana) use ($voos, $modelo) {
+                    return (int) $voos
+                        ->filter(fn ($voo) =>
+                            $voo->aeronave?->modelo === $modelo
+                            && $voo->created_at?->format('o-\WW') === $semana
+                        )
+                        ->sum('qtd_voos');
+                })->values(),
+            ];
+        })->values();
 
-        $voosPorHorario = collect($horarios)->mapWithKeys(fn ($horario) => [
-            $horario => (int) $voos->where('horario_voo', $horario)->sum('qtd_voos'),
-        ]);
-        $passageirosPorHorario = collect($horarios)->mapWithKeys(fn ($horario) => [
-            $horario => (int) $voos->where('horario_voo', $horario)->sum('total_passageiros'),
-        ]);
-        $voosPorTipo = collect($tipos)->mapWithKeys(fn ($tipo) => [
-            $tipo => (int) $voos->where('tipo_voo', $tipo)->sum('qtd_voos'),
-        ]);
-        $passageirosPorTipo = collect($tipos)->mapWithKeys(fn ($tipo) => [
-            $tipo => (int) $voos->where('tipo_voo', $tipo)->sum('total_passageiros'),
-        ]);
+        $passageirosPorModeloSemana = $modelos->map(function ($modelo) use ($voos, $semanas) {
+            return [
+                'modelo' => $modelo,
+                'dados' => $semanas->map(function ($semana) use ($voos, $modelo) {
+                    return (int) $voos
+                        ->filter(fn ($voo) =>
+                            $voo->aeronave?->modelo === $modelo
+                            && $voo->created_at?->format('o-\WW') === $semana
+                        )
+                        ->sum('total_passageiros');
+                })->values(),
+            ];
+        })->values();
+
+        $aeroportos = $voos
+            ->pluck('aeroporto.nome_aeroporto')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
+        $voosPorAeroportoSemana = $aeroportos->map(function ($aeroporto) use ($voos, $semanas) {
+            return [
+                'aeroporto' => $aeroporto,
+                'dados' => $semanas->map(function ($semana) use ($voos, $aeroporto) {
+                    return (int) $voos
+                        ->filter(fn ($voo) =>
+                            $voo->aeroporto?->nome_aeroporto === $aeroporto
+                            && $voo->created_at?->format('o-\WW') === $semana
+                        )
+                        ->sum('qtd_voos');
+                })->values(),
+            ];
+        })->values();
+
+        $passageirosPorAeroportoSemana = $aeroportos->map(function ($aeroporto) use ($voos, $semanas) {
+            return [
+                'aeroporto' => $aeroporto,
+                'dados' => $semanas->map(function ($semana) use ($voos, $aeroporto) {
+                    return (int) $voos
+                        ->filter(fn ($voo) =>
+                            $voo->aeroporto?->nome_aeroporto === $aeroporto
+                            && $voo->created_at?->format('o-\WW') === $semana
+                        )
+                        ->sum('total_passageiros');
+                })->values(),
+            ];
+        })->values();
 
         return view('companhias.graficos', [
             'companhia' => $companhia,
             'totalVoos' => (int) $voos->sum('qtd_voos'),
             'totalPassageiros' => (int) $voos->sum('total_passageiros'),
-            'voosPorHorario' => $voosPorHorario,
-            'passageirosPorHorario' => $passageirosPorHorario,
-            'voosPorTipo' => $voosPorTipo,
-            'passageirosPorTipo' => $passageirosPorTipo,
-            'voosPorAeroporto' => $agrupar($voos, 'aeroporto.nome_aeroporto', 'qtd_voos'),
-            'passageirosPorAeroporto' => $agrupar($voos, 'aeroporto.nome_aeroporto', 'total_passageiros'),
-            'voosPorModelo' => $agrupar($voos, 'aeronave.modelo', 'qtd_voos'),
-            'passageirosPorModelo' => $agrupar($voos, 'aeronave.modelo', 'total_passageiros'),
+            'semanasGrafico' => $semanas,
+            'voosPorModeloSemana' => $voosPorModeloSemana,
+            'passageirosPorModeloSemana' => $passageirosPorModeloSemana,
+            'voosPorAeroportoSemana' => $voosPorAeroportoSemana,
+            'passageirosPorAeroportoSemana' => $passageirosPorAeroportoSemana,
         ]);
     }
 
