@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RelatorioFiltrosRequest;
 use Illuminate\Http\Request;
 use App\Models\Relatorio;
 use App\Models\Aeroporto;
@@ -23,16 +24,6 @@ class RelatorioController extends Controller
         private readonly RankingAeroportosService $rankingAeroportosService,
         private readonly OcupacaoVoosService $ocupacaoVoosService
     ) {
-    }
-
-    private function validarFiltrosGlobais(Request $request, array $extras = []): array
-    {
-        return $request->validate(array_merge([
-            'periodo' => ['nullable', 'in:hoje,semana,mes,ano'],
-            'aeroporto_id' => ['nullable', 'integer', 'exists:aeroportos,id'],
-            'companhia_id' => ['nullable', 'integer', 'exists:companhias_aereas,id'],
-            'aeronave_id' => ['nullable', 'integer', 'exists:aeronaves,id'],
-        ], $extras));
     }
 
     private function opcoesFiltrosRelatorio(): array
@@ -78,9 +69,9 @@ class RelatorioController extends Controller
     /**
      * API para dados do relatório de Companhias por Aeroporto
      */
-    public function apiCompanhiasPorAeroporto(Request $request)
+    public function apiCompanhiasPorAeroporto(RelatorioFiltrosRequest $request)
     {
-        $filtros = $this->validarFiltrosGlobais($request);
+        $filtros = $request->filtros();
         $aplicarFiltrosVoos = function ($query) use ($filtros) {
             $query->with('companhiaAerea');
             FiltrosRelatorioService::aplicar($query, $filtros);
@@ -177,9 +168,9 @@ class RelatorioController extends Controller
     /**
      * API para dados do relatório de Voos por Aeroporto
      */
-    public function apiVoosPorAeroporto(Request $request)
+    public function apiVoosPorAeroporto(RelatorioFiltrosRequest $request)
     {
-        $filtros = $this->validarFiltrosGlobais($request);
+        $filtros = $request->filtros();
 
         $carregarVoos = function ($q) use ($filtros) {
             $q->with('companhiaAerea');
@@ -288,9 +279,9 @@ class RelatorioController extends Controller
         return view('relatorios.voos-por-aeroporto', compact('relatorio', 'aeroportos', 'companhias', 'aeronaves'));
     }
 
-    public function apiDesempenhoCompanhias(Request $request)
+    public function apiDesempenhoCompanhias(RelatorioFiltrosRequest $request)
     {
-        $filtros = $this->validarFiltrosGlobais($request);
+        $filtros = $request->filtros();
 
         $resultado = $this->desempenhoCompanhiasService->gerar($filtros);
 
@@ -326,13 +317,9 @@ class RelatorioController extends Controller
         );
     }
 
-    public function apiMovimentacaoPorPeriodo(Request $request)
+    public function apiMovimentacaoPorPeriodo(RelatorioFiltrosRequest $request)
     {
-        $filtros = $this->validarFiltrosGlobais($request, [
-            'agrupamento' => ['nullable', 'in:dia,semana,mes,ano'],
-            'data_inicio' => ['nullable', 'date'],
-            'data_fim' => ['nullable', 'date', 'after_or_equal:data_inicio'],
-        ]);
+        $filtros = $request->filtros();
 
         $resultado = $this->movimentacaoPorPeriodoService->gerar(
             $filtros['agrupamento'] ?? 'mes',
@@ -369,14 +356,9 @@ class RelatorioController extends Controller
         return view('relatorios.movimentacao-por-periodo', compact('relatorio', 'aeroportos', 'companhias', 'aeronaves'));
     }
 
-    public function apiRankingAeroportos(Request $request)
+    public function apiRankingAeroportos(RelatorioFiltrosRequest $request)
     {
-        $filtros = $this->validarFiltrosGlobais($request, [
-            'ordenacao' => [
-                'nullable',
-                'in:total_voos,total_passageiros,media_passageiros_por_voo,total_companhias,media_geral',
-            ],
-        ]);
+        $filtros = $request->filtros();
 
         $resultado = $this->rankingAeroportosService->gerar(
             $filtros,
@@ -411,11 +393,9 @@ class RelatorioController extends Controller
         return view('relatorios.ranking-aeroportos', compact('relatorio', 'aeroportos', 'companhias', 'aeronaves'));
     }
 
-    public function apiOcupacaoVoos(Request $request)
+    public function apiOcupacaoVoos(RelatorioFiltrosRequest $request)
     {
-        $filtros = $this->validarFiltrosGlobais($request, [
-            'faixa' => ['nullable', 'in:baixa,media,alta,lotado'],
-        ]);
+        $filtros = $request->filtros();
 
         $resultado = $this->ocupacaoVoosService->gerar(
             $filtros,
