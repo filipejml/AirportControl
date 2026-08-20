@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Data endpoints consumed by the authenticated Blade frontend.
 Route::middleware(['web', 'auth', 'throttle:internal-api'])->group(function () {
-    Route::prefix('relatorios')->name('api.relatorios.')->group(function () {
+    Route::middleware('cache.relatorios')->prefix('relatorios')->name('api.relatorios.')->group(function () {
         Route::get('/companhias-por-aeroporto', [RelatorioController::class, 'apiCompanhiasPorAeroporto'])->name('companhias-por-aeroporto');
         Route::get('/voos-por-aeroporto', [RelatorioController::class, 'apiVoosPorAeroporto'])->name('voos-por-aeroporto');
         Route::get('/desempenho-companhias', [RelatorioController::class, 'apiDesempenhoCompanhias'])->name('desempenho-companhias');
