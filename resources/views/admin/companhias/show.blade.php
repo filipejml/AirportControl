@@ -502,7 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const response = await fetch(
-                    `/companhias/${change.companhiaId}/aeronaves/${change.aeronaveId}/disponibilidade`,
+                    `/api/companhias/${change.companhiaId}/aeronaves/${change.aeronaveId}/disponibilidade`,
                     {
                         method: 'POST',
                         headers: {

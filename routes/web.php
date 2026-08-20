@@ -144,8 +144,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/aeroportos/store-step3/{aeroporto}', [AeroportoController::class, 'storeStep3'])->name('aeroportos.store.step3');
     
     // Rotas AJAX para o wizard
-    Route::post('/aeroportos/veiculos/template', [AeroportoController::class, 'getVeiculoTemplate'])->name('aeroportos.veiculos.template');
-    Route::post('/aeroportos/veiculos/check-codigo', [AeroportoController::class, 'checkVeiculoCodigo'])->name('aeroportos.veiculos.check-codigo');
     
     // CRUD padrão para aeroportos (edit, update, destroy, show, index)
     Route::get('/aeroportos', [AeroportoController::class, 'index'])->name('aeroportos.index');
@@ -168,7 +166,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/depositos/{deposito}/edit', [DepositoController::class, 'edit'])->name('depositos.edit');
         Route::put('/depositos/{deposito}', [DepositoController::class, 'update'])->name('depositos.update');
         Route::delete('/depositos/{deposito}', [DepositoController::class, 'destroy'])->name('depositos.destroy');
-        Route::post('/depositos/check-codigo', [DepositoController::class, 'checkCodigo'])->name('depositos.check-codigo');
         
         // Rotas de veículos 
         Route::get('/depositos/{deposito}/veiculos', [VeiculoController::class, 'index'])->name('depositos.veiculos.index');
@@ -181,11 +178,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/depositos/{deposito}/veiculos/{veiculo}/edit', [VeiculoController::class, 'edit'])->name('depositos.veiculos.edit');
         Route::put('/depositos/{deposito}/veiculos/{veiculo}', [VeiculoController::class, 'update'])->name('depositos.veiculos.update');
         Route::delete('/depositos/{deposito}/veiculos/{veiculo}', [VeiculoController::class, 'destroy'])->name('depositos.veiculos.destroy');
-        Route::post('/depositos/{deposito}/veiculos/check-codigo', [VeiculoController::class, 'checkCodigo'])->name('depositos.veiculos.check-codigo');
         
         // Rota AJAX para verificar código do veículo
-        Route::post('/depositos/{deposito}/veiculos/check-codigo', [VeiculoController::class, 'checkCodigo'])
-            ->name('depositos.veiculos.check-codigo');
     });
     
     /*
@@ -195,28 +189,18 @@ Route::middleware('auth')->group(function () {
     */
     
     // Verificar código da companhia aérea
-    Route::post('/companhias/check-code', [CompanhiaAereaController::class, 'checkCode'])->name('companhias.check-code');
     
     // Verificar nome da companhia aérea
-    Route::post('/companhias/check-name', [CompanhiaAereaController::class, 'checkName'])->name('companhias.check-name');
     
     // Verificar nome do aeroporto
-    Route::post('/aeroportos/check-name', [AeroportoController::class, 'checkName'])->name('aeroportos.check-name');
     
     // Atualizar disponibilidade da aeronave na companhia
-    Route::post('/companhias/{companhia}/aeronaves/{aeronave}/disponibilidade', 
-        [CompanhiaAereaController::class, 'atualizarDisponibilidade'])
-        ->name('companhias.aeronaves.disponibilidade');
     
     // Buscar aeronaves por companhia (para voos)
-    Route::get('/api/companhias/{companhiaId}/aeronaves', [VooController::class, 'getAeronavesByCompanhia'])
-        ->name('api.companhias.aeronaves');
     
     // Verificar ID do voo (evitar duplicidade)
-    Route::post('/verificar-id-voo', [VooController::class, 'verificarIdVoo'])->name('verificar.id.voo');
     
     // Buscar companhia pelo código do voo
-    Route::get('/api/buscar-companhia/{codigo}', [VooController::class, 'buscarCompanhiaPorCodigo'])->name('buscar.companhia');
     
     /*
     |--------------------------------------------------------------------------
@@ -297,7 +281,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('fabricantes', FabricanteController::class);
 
         // Verificar modelo de aeronave (AJAX)
-        Route::get('/api/verificar-modelo', [AeronaveController::class, 'verificarModelo'])->name('verificar.modelo');
     });
     
     /*
@@ -307,26 +290,7 @@ Route::middleware('auth')->group(function () {
     */
     // ==================== APIS DOS RELATÓRIOS ====================
     // API para dados do relatório de Companhias por Aeroporto
-    Route::get('/api/relatorios/companhias-por-aeroporto', 
-        [RelatorioController::class, 'apiCompanhiasPorAeroporto']
-    )->name('api.relatorios.companhias-por-aeroporto');
     
     // API para dados do relatório de Voos por Aeroporto
-    Route::get('/api/relatorios/voos-por-aeroporto', 
-        [RelatorioController::class, 'apiVoosPorAeroporto']
-    )->name('api.relatorios.voos-por-aeroporto');
-
-    Route::get('/api/relatorios/desempenho-companhias',
-        [RelatorioController::class, 'apiDesempenhoCompanhias']
-    )->name('api.relatorios.desempenho-companhias');
-    Route::get('/api/relatorios/movimentacao-por-periodo',
-        [RelatorioController::class, 'apiMovimentacaoPorPeriodo']
-    )->name('api.relatorios.movimentacao-por-periodo');
-    Route::get('/api/relatorios/ranking-aeroportos',
-        [RelatorioController::class, 'apiRankingAeroportos']
-    )->name('api.relatorios.ranking-aeroportos');
-    Route::get('/api/relatorios/ocupacao-voos',
-        [RelatorioController::class, 'apiOcupacaoVoos']
-    )->name('api.relatorios.ocupacao-voos');
     // ============================================================
 });
