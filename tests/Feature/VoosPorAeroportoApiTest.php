@@ -139,6 +139,33 @@ class VoosPorAeroportoApiTest extends TestCase
             ->actingAs($user)
             ->getJson(route('api.relatorios.voos-por-aeroporto', ['periodo' => 'invalido']))
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('periodo');
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('error.code', 'validation_failed')
+            ->assertJsonStructure(['error' => ['details' => ['periodo']]]);
+    }
+
+    public function test_unauthenticated_api_request_returns_json_401(): void
+    {
+        $this
+            ->getJson(route('api.relatorios.voos-por-aeroporto'))
+            ->assertUnauthorized()
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('error.code', 'unauthenticated');
+    }
+
+    public function test_non_admin_api_request_returns_json_403(): void
+    {
+        $user = new User(['tipo' => 1]);
+        $user->id = 1;
+
+        $this
+            ->actingAs($user)
+            ->getJson(route('verificar.modelo', ['modelo' => 'A320']))
+            ->assertForbidden()
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('data', null)
+            ->assertJsonPath('error.code', 'forbidden');
     }
 }

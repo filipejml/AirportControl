@@ -113,6 +113,8 @@ class OcupacaoVoosApiTest extends TestCase
         $this->actingAs($user)
             ->getJson(route('api.relatorios.ocupacao-voos', ['faixa' => 'invalida']))
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('faixa');
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error.code', 'validation_failed')
+            ->assertJsonStructure(['error' => ['details' => ['faixa']]]);
     }
 }

@@ -104,7 +104,9 @@ class RankingAeroportosApiTest extends TestCase
                 'ordenacao' => 'invalida',
             ]))
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('ordenacao');
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error.code', 'validation_failed')
+            ->assertJsonStructure(['error' => ['details' => ['ordenacao']]]);
     }
 
     private function criarVoo(

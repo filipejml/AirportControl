@@ -119,7 +119,9 @@ class MovimentacaoPorPeriodoApiTest extends TestCase
                 'data_fim' => '2026-01-01',
             ]))
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('data_fim');
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error.code', 'validation_failed')
+            ->assertJsonStructure(['error' => ['details' => ['data_fim']]]);
     }
 
     private function criarVoo(
