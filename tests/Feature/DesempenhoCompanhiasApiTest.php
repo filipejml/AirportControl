@@ -104,7 +104,7 @@ class DesempenhoCompanhiasApiTest extends TestCase
             ->assertJsonPath('data.0.voos_regulares', 4)
             ->assertJsonPath('data.0.voos_charter', 0)
             ->assertJsonPath('data.0.media_geral', 8)
-            ->assertJsonPath('totais.total_companhias', 1)
-            ->assertJsonPath('totais.total_voos', 4);
+            ->assertJsonPath('meta.totals.total_companhias', 1)
+            ->assertJsonPath('meta.totals.total_voos', 4);
     }
 }

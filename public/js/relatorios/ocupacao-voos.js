@@ -182,8 +182,8 @@ class RelatorioOcupacaoVoos {
             }
 
             this.dados = resultado.data;
-            this.atualizarTotais(resultado.totais);
-            this.renderizarGraficos(resultado.distribuicao);
+            this.atualizarTotais(resultado.meta.totals);
+            this.renderizarGraficos(resultado.meta.distribution);
 
             if (!this.dados.length) {
                 this.mostrarMensagem('Sem dados para esse filtro.', false, true);

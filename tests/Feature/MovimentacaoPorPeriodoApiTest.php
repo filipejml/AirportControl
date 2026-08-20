@@ -95,17 +95,17 @@ class MovimentacaoPorPeriodoApiTest extends TestCase
                 'data_fim' => '2026-02-28',
             ]))
             ->assertOk()
-            ->assertJsonPath('filtros.agrupamento', 'mes')
+            ->assertJsonPath('meta.filters.agrupamento', 'mes')
             ->assertJsonPath('data.0.total_voos', 2)
             ->assertJsonPath('data.0.voos_regulares', 2)
             ->assertJsonPath('data.0.variacao_percentual', null)
             ->assertJsonPath('data.1.total_voos', 3)
             ->assertJsonPath('data.1.voos_charter', 3)
             ->assertJsonPath('data.1.variacao_percentual', 50)
-            ->assertJsonPath('totais.total_periodos', 2)
-            ->assertJsonPath('totais.total_voos', 5)
-            ->assertJsonPath('totais.total_passageiros', 500)
-            ->assertJsonPath('totais.maior_movimento.total_voos', 3);
+            ->assertJsonPath('meta.totals.total_periodos', 2)
+            ->assertJsonPath('meta.totals.total_voos', 5)
+            ->assertJsonPath('meta.totals.total_passageiros', 500)
+            ->assertJsonPath('meta.totals.maior_movimento.total_voos', 3);
     }
 
     public function test_end_date_must_not_precede_start_date(): void

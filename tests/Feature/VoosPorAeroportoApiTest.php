@@ -118,9 +118,9 @@ class VoosPorAeroportoApiTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertJsonPath('periodo', 'hoje')
-            ->assertJsonPath('totais.total_voos', 2)
-            ->assertJsonPath('totais.total_passageiros', 200)
+            ->assertJsonPath('meta.filters.periodo', 'hoje')
+            ->assertJsonPath('meta.totals.total_voos', 2)
+            ->assertJsonPath('meta.totals.total_passageiros', 200)
             ->assertJsonPath('data.0.voos_regulares', 2)
             ->assertJsonPath('data.0.voos_charter', 0)
             ->assertJsonPath('data.0.voos_por_horario.AM', 2)

@@ -220,7 +220,7 @@ class AdminRelatorioVoosPorAeroporto {
             if (result.success) {
                 this.dadosOriginais = result.data;
                 this.dadosFiltrados = [...result.data];
-                this.totais = result.totais;
+                this.totais = result.meta.totals;
                 this.aplicarOrdenacao();
                 this.renderizarTabela();
                 this.atualizarCardsTotais();

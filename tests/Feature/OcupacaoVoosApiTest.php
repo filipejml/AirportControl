@@ -99,10 +99,10 @@ class OcupacaoVoosApiTest extends TestCase
             ->assertJsonPath('data.0.total_passageiros', 300)
             ->assertJsonPath('data.0.taxa_ocupacao', 75)
             ->assertJsonPath('data.0.faixa_ocupacao', 'alta')
-            ->assertJsonPath('totais.total_voos', 4)
-            ->assertJsonPath('totais.assentos_ofertados', 400)
-            ->assertJsonPath('totais.taxa_ocupacao_geral', 75)
-            ->assertJsonPath('distribuicao.alta', 1);
+            ->assertJsonPath('meta.totals.total_voos', 4)
+            ->assertJsonPath('meta.totals.assentos_ofertados', 400)
+            ->assertJsonPath('meta.totals.taxa_ocupacao_geral', 75)
+            ->assertJsonPath('meta.distribution.alta', 1);
     }
 
     public function test_invalid_occupancy_range_is_rejected(): void

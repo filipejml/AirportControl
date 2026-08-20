@@ -88,10 +88,10 @@ class RankingAeroportosApiTest extends TestCase
             ->assertJsonPath('data.0.media_passageiros_por_voo', 100)
             ->assertJsonPath('data.1.nome', 'Aeroporto B')
             ->assertJsonPath('data.1.posicao', 2)
-            ->assertJsonPath('totais.total_aeroportos', 2)
-            ->assertJsonPath('totais.total_voos', 6)
-            ->assertJsonPath('totais.total_passageiros', 400)
-            ->assertJsonPath('totais.lider.nome', 'Aeroporto A');
+            ->assertJsonPath('meta.totals.total_aeroportos', 2)
+            ->assertJsonPath('meta.totals.total_voos', 6)
+            ->assertJsonPath('meta.totals.total_passageiros', 400)
+            ->assertJsonPath('meta.totals.lider.nome', 'Aeroporto A');
     }
 
     public function test_invalid_ordering_is_rejected(): void

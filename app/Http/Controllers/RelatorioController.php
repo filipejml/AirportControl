@@ -44,6 +44,18 @@ class RelatorioController extends Controller
         ];
     }
 
+    private function respostaApiRelatorio(mixed $data, array $filters, array $meta = [])
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+            'meta' => array_merge([
+                'filters' => $filters,
+                'timestamp' => now()->toIso8601String(),
+            ], $meta),
+        ]);
+    }
+
     /**
      * LISTAGEM (ADMIN + USUÁRIO)
      */
@@ -107,12 +119,7 @@ class RelatorioController extends Controller
                 ];
             });
 
-        return response()->json([
-            'success' => true,
-            'data' => $dados,
-            'timestamp' => now()->toIso8601String(),
-            'filters' => $filtros,
-        ]);
+        return $this->respostaApiRelatorio($dados, $filtros);
     }
     
     /**
@@ -251,13 +258,8 @@ class RelatorioController extends Controller
             'media_geral_geral' => round(VooMetricasService::mediaGeral($todosVoos), 2),
         ];
         
-        return response()->json([
-            'success' => true,
-            'data' => $dados,
-            'totais' => $totais,
-            'periodo' => $filtros['periodo'] ?? null,
-            'filtros' => $filtros,
-            'timestamp' => now()->toIso8601String(),
+        return $this->respostaApiRelatorio($dados, $filtros, [
+            'totals' => $totais,
         ]);
     }
     
@@ -292,12 +294,11 @@ class RelatorioController extends Controller
 
         $resultado = $this->desempenhoCompanhiasService->gerar($filtros);
 
-        return response()->json([
-            'success' => true,
-            ...$resultado,
-            'filtros' => $filtros,
-            'timestamp' => now()->toIso8601String(),
-        ]);
+        return $this->respostaApiRelatorio(
+            $resultado['data'],
+            $filtros,
+            ['totals' => $resultado['totais']]
+        );
     }
 
     public function adminDesempenhoCompanhias()
@@ -340,12 +341,11 @@ class RelatorioController extends Controller
             $filtros
         );
 
-        return response()->json([
-            'success' => true,
-            ...$resultado,
-            'filtros' => $filtros,
-            'timestamp' => now()->toIso8601String(),
-        ]);
+        return $this->respostaApiRelatorio(
+            $resultado['data'],
+            $filtros,
+            ['totals' => $resultado['totais']]
+        );
     }
 
     public function adminMovimentacaoPorPeriodo()
@@ -383,12 +383,11 @@ class RelatorioController extends Controller
             $filtros['ordenacao'] ?? 'total_voos'
         );
 
-        return response()->json([
-            'success' => true,
-            ...$resultado,
-            'filtros' => $filtros,
-            'timestamp' => now()->toIso8601String(),
-        ]);
+        return $this->respostaApiRelatorio(
+            $resultado['data'],
+            $filtros,
+            ['totals' => $resultado['totais']]
+        );
     }
 
     public function adminRankingAeroportos()
@@ -423,12 +422,14 @@ class RelatorioController extends Controller
             $filtros['faixa'] ?? null
         );
 
-        return response()->json([
-            'success' => true,
-            ...$resultado,
-            'filtros' => $filtros,
-            'timestamp' => now()->toIso8601String(),
-        ]);
+        return $this->respostaApiRelatorio(
+            $resultado['data'],
+            $filtros,
+            [
+                'totals' => $resultado['totais'],
+                'distribution' => $resultado['distribuicao'],
+            ]
+        );
     }
 
     public function adminOcupacaoVoos()

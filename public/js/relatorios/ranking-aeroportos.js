@@ -172,7 +172,7 @@ class RelatorioRankingAeroportos {
             }
 
             this.dados = resultado.data;
-            this.atualizarTotais(resultado.totais);
+            this.atualizarTotais(resultado.meta.totals);
             this.renderizarGrafico();
 
             if (!this.dados.length) {

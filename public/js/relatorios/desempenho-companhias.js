@@ -177,7 +177,7 @@ class RelatorioDesempenhoCompanhias {
             }
 
             this.dados = resultado.data;
-            this.atualizarTotais(resultado.totais);
+            this.atualizarTotais(resultado.meta.totals);
 
             if (!this.dados.length) {
                 this.mostrarVazio();
