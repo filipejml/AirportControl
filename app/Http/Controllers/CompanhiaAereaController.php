@@ -238,7 +238,13 @@ class CompanhiaAereaController extends Controller
      */
     public function edit(CompanhiaAerea $companhia)
     {
-        $aeronaves = Aeronave::with('fabricante')->get();
+        $aeronaves = Aeronave::with('fabricante')
+            ->orderByRaw(
+                'CASE WHEN EXISTS (SELECT 1 FROM companhia_aeronave WHERE companhia_aerea_id = ? AND aeronave_id = aeronaves.id) THEN 0 ELSE 1 END',
+                [$companhia->id]
+            )
+            ->orderByDesc('capacidade')
+            ->get();
         $companhia->load('aeronaves');
         return view('admin.companhias.edit', compact('companhia', 'aeronaves'));
     }

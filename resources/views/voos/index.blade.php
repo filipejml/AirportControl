@@ -347,6 +347,7 @@
                 <table class="table table-hover flights-table align-middle" id="voosTable">
                     <thead>
                         <tr>
+                            <th class="text-center">ID</th>
                             <th>Voo</th>
                             <th>Aeroporto</th>
                             <th>Companhia</th>
@@ -373,6 +374,7 @@
                                 };
                             @endphp
                             <tr>
+                                <td class="text-center fw-semibold text-muted">#{{ $voo->id }}</td>
                                 <td>
                                     <a href="{{ route('voos.show', $voo) }}" class="flight-code text-decoration-none">
                                         {{ $voo->id_voo }}
@@ -447,6 +449,10 @@
                         </select>
                     </label>
                     <div class="d-flex align-items-center gap-2">
+                        <a href="{{ $voos->url(1) }}"
+                           class="page-button {{ $voos->onFirstPage() ? 'disabled' : '' }}" aria-label="Primeira pagina">
+                            <i class="bi bi-chevron-bar-left"></i>
+                        </a>
                         <a href="{{ $voos->previousPageUrl() ?: '#' }}"
                            class="page-button {{ $voos->onFirstPage() ? 'disabled' : '' }}" aria-label="Página anterior">
                             <i class="bi bi-chevron-left"></i>
@@ -455,6 +461,10 @@
                         <a href="{{ $voos->nextPageUrl() ?: '#' }}"
                            class="page-button {{ $voos->hasMorePages() ? '' : 'disabled' }}" aria-label="Próxima página">
                             <i class="bi bi-chevron-right"></i>
+                        </a>
+                        <a href="{{ $voos->url($voos->lastPage()) }}"
+                           class="page-button {{ $voos->hasMorePages() ? '' : 'disabled' }}" aria-label="Ultima pagina">
+                            <i class="bi bi-chevron-bar-right"></i>
                         </a>
                     </div>
                 </div>

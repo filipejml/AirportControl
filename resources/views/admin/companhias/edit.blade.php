@@ -93,9 +93,18 @@
                     @endphp
                     
                     @if($aeronaves->count() > 0)
+                        <div class="input-group mb-3">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="search"
+                                   class="form-control"
+                                   id="aeronaveSearch"
+                                   placeholder="Pesquisar modelo de aeronave..."
+                                   aria-label="Pesquisar modelo de aeronave">
+                        </div>
+
                         <div class="row g-4" id="aeronavesContainer">
                             @foreach($aeronaves as $aeronave)
-                                <div class="col-md-4 col-lg-3">
+                                <div class="col-md-4 col-lg-3" data-modelo="{{ mb_strtolower($aeronave->modelo, 'UTF-8') }}">
                                     <div class="aeronave-card {{ in_array($aeronave->id, $selectedAeronaves) ? 'selected' : '' }}" 
                                          data-id="{{ $aeronave->id }}"
                                          onclick="toggleCard(this)">
@@ -129,6 +138,10 @@
                                     </div>
                                 </div>
                             @endforeach
+                        </div>
+
+                        <div class="alert alert-info mt-3 d-none" id="aeronavesSearchEmpty">
+                            Nenhuma aeronave encontrada para esse modelo.
                         </div>
                         
                         <div class="mt-3">
@@ -608,6 +621,7 @@ function updateSubmitButton() {
 document.addEventListener('DOMContentLoaded', function() {
     const selectAllBtn = document.getElementById('selectAllBtn');
     const deselectAllBtn = document.getElementById('deselectAllBtn');
+    const aeronaveSearch = document.getElementById('aeronaveSearch');
     const nomeInput = document.getElementById('nome');
     const codigoInput = document.getElementById('codigo');
     const companyId = {{ $companhia->id }};
@@ -618,6 +632,22 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (deselectAllBtn) {
         deselectAllBtn.onclick = deselectAll;
+    }
+
+    if (aeronaveSearch) {
+        aeronaveSearch.addEventListener('input', function() {
+            const query = this.value.trim().toLocaleLowerCase('pt-BR');
+            const aeronaves = document.querySelectorAll('#aeronavesContainer > [data-modelo]');
+            let visibleCount = 0;
+
+            aeronaves.forEach(function(aeronave) {
+                const matches = aeronave.dataset.modelo.includes(query);
+                aeronave.classList.toggle('d-none', !matches);
+                if (matches) visibleCount++;
+            });
+
+            document.getElementById('aeronavesSearchEmpty')?.classList.toggle('d-none', visibleCount > 0);
+        });
     }
     
     if (nomeInput) {
